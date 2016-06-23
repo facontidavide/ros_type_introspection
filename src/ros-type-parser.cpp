@@ -161,7 +161,7 @@ void printRosType(const RosTypeMap& type_map, const std::string& type_name, int 
         }
     }
     else{
-         std::cout << type << " not found " << std::endl;
+        std::cout << type << " not found " << std::endl;
     }
 }
 
@@ -169,7 +169,7 @@ template <typename T> T ReadFromBufferAndMoveForward( uint8_t** buffer)
 {
     for (int i=0; i< sizeof(T); i++)
     {
-        printf(" %02X ", (*buffer)[i] );
+        //     printf(" %02X ", (*buffer)[i] );
     }
     T destination =  (*( reinterpret_cast<T*>( *buffer ) ) );
     *buffer +=  sizeof(T);
@@ -183,7 +183,7 @@ void buildOffsetTable( const RosTypeMap& type_map,
                        uint8_t** buffer_ptr,
                        RosTypeFlat* flat_container )
 {
-    std::cout << ">>>>>>>>   "<< type_name  << std::endl;
+    // std::cout << ">>>>>>>>   "<< type_name  << std::endl;
     const std::string separator(".");
 
     boost::string_ref type ( type_name );
@@ -193,7 +193,7 @@ void buildOffsetTable( const RosTypeMap& type_map,
     {
         vect_size = ReadFromBufferAndMoveForward<int32_t>( buffer_ptr );
         type.remove_suffix(2);
-        std::cout << "vect_size : "<< vect_size  << std::endl;
+        //   std::cout << "vect_size : "<< vect_size  << std::endl;
     }
 
     for (int v=0; v<vect_size; v++)
@@ -209,12 +209,12 @@ void buildOffsetTable( const RosTypeMap& type_map,
         if( type.compare( "float64") == 0 )
         {
             value = ReadFromBufferAndMoveForward<double>(buffer_ptr);
-            (*flat_container)[ prefix + suffix ] = value;
+            flat_container->value[ prefix + suffix ] = value;
         }
         else if( type.compare( "uint32") == 0)
         {
             value = (double) ReadFromBufferAndMoveForward<uint32_t>(buffer_ptr);
-            (*flat_container)[ prefix + suffix ] = value;
+            flat_container->value[ prefix + suffix ] = value;
         }
         else if( type.compare("time") == 0 )
         {
@@ -222,14 +222,16 @@ void buildOffsetTable( const RosTypeMap& type_map,
         }
         else if( type.compare("string") == 0 )
         {
-            //  std::string value;
+            std::string id;
             int32_t string_size = ReadFromBufferAndMoveForward<int32_t>( buffer_ptr );
 
-            //  value.reserve( string_size );
-            //  value.append( (const char*)(*buffer_ptr), string_size );
+            id.reserve( string_size );
+            id.append( (const char*)(*buffer_ptr), string_size );
 
-            std::cout << "string_size : "<< string_size  << std::endl;
+            //    std::cout << "string_size : "<< string_size  << std::endl;
             (*buffer_ptr) += string_size;
+
+            flat_container->id[ prefix + suffix ] = id;
         }
         else {       // try recursion
             auto it = type_map.find( type.to_string() );
@@ -239,7 +241,7 @@ void buildOffsetTable( const RosTypeMap& type_map,
 
                 for (int i=0; i< fields.size(); i++ )
                 {
-                    std::cout << "subfield: "<<  fields[i].field_name << " / " <<  fields[i].type_name << std::endl;
+                    //      std::cout << "subfield: "<<  fields[i].field_name << " / " <<  fields[i].type_name << std::endl;
 
                     buildOffsetTable(type_map, fields[i].type_name,
                                      (prefix + suffix + separator + fields[i].field_name  ),
@@ -250,15 +252,84 @@ void buildOffsetTable( const RosTypeMap& type_map,
                 std::cout << " type not recognized: " <<  type << std::endl;
             }
         }
-
     }
-
-
-    std::cout << "<<<<<< " << std::endl;
 }
 
 
+void applyNameTransform( std::vector< std::pair<const char*, const char*> >  rules,
+                         const RosTypeFlat& container_in,
+                         RosTypeFlat* container_out)
+{
+    for (int r=0; r<rules.size(); r++)
+    {
+        boost::string_ref rule( rules[r].first );
+        int pos =  rule.find_first_of('#');
+        boost::string_ref rule_prefix( rule.substr(0, pos) );
+        boost::string_ref rule_suffix( rule.substr(pos+1, rule.length() - pos)  );
 
+        boost::string_ref substitution( rules[r].second );
+        pos =  substitution.find_first_of('#');
+        boost::string_ref substitution_prefix( substitution.substr(0, pos) );
+        boost::string_ref substitution_suffix( substitution.substr(pos+1, substitution.length())  );
 
+        for (auto it = container_in.value.begin(); it != container_in.value.end(); it++)
+        {
+            boost::string_ref name ( it->first );
+            double value = it->second;
+            int posA = name.find( rule_prefix );
+
+            bool found = (posA != name.npos) ;
+
+            if( !found) continue;
+
+            posA += rule_prefix.length();
+
+            int posB = posA;
+            while ( name.at(posB) != ']')
+            {
+                posB++;
+            }
+            boost::string_ref prefix = name.substr( 0,    posA-1 );
+            boost::string_ref index  = name.substr( posA, posB-posA );
+            boost::string_ref suffix = name.substr( posB+1, name.length()-posB-1 );
+
+            std::string key =
+                    substitution_prefix.to_string() +
+                    index.to_string() +
+                    substitution_suffix.to_string();
+
+            const auto st = container_in.id.find( key );
+            if( st != container_in.id.end())
+            {
+                const std::string& new_key = st->second;
+                std::string  new_name =
+                        prefix.to_string() +
+                        std::string(".") +
+                        new_key;
+                if( suffix.length() > 0)
+                {
+                    new_name.append(".") .append(suffix.to_string());
+                }
+
+                container_out->value.insert( std::make_pair(new_name, value ) );
+            }
+        }
+    }
+}
+
+std::ostream& operator<<(std::ostream& ss, const RosTypeFlat& container)
+{
+
+    for (auto it= container.id.begin(); it != container.id.end(); it++)
+    {
+        ss<< it->first << " = " << it->second << std::endl;
+    }
+
+    for (auto it= container.value.begin(); it != container.value.end(); it++)
+    {
+        ss << it->first << " = " << it->second << std::endl;
+    }
+    return ss;
+}
 
 }

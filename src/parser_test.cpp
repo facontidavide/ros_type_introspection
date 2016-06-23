@@ -1,7 +1,7 @@
 #include "topic_tools/shape_shifter.h"
 #include <boost/algorithm/string.hpp>
 #include <boost/serialization/serialization.hpp>
-
+#include <boost/utility/string_ref.hpp>
 #include <geometry_msgs/Pose.h>
 #include <sensor_msgs/JointState.h>
 #include <tf/tfMessage.h>
@@ -38,15 +38,15 @@ int main(int argc, char **argv)
     printRosTypeMap( type_map );
 
     std::cout << "------------------------------"  << std::endl;
- //   printRosType( type_map, "Pose");
+    //   printRosType( type_map, "Pose");
 
     std::cout << "------------------------------"  << std::endl;
-  //  printRosType( type_map, "JointState");
+    //  printRosType( type_map, "JointState");
 
     std::cout << "------------------------------"  << std::endl;
     printRosType( type_map, "tfMessage");
 
-   /* geometry_msgs::Pose pose;
+    /* geometry_msgs::Pose pose;
 
     pose.position.x = 1;
     pose.position.y = 2;
@@ -67,15 +67,12 @@ int main(int argc, char **argv)
 
         buildOffsetTable(type_map, "Pose", "Pose", &buffer_ptr,  &flat_container);
 
-        for (auto it= flat_container.begin(); it != flat_container.end(); it++)
-        {
-            std::cout<< it->first << " = " << it->second << std::endl;
-        }
+                 std::cout<< flat_container << std::endl;
     }
 
     std::cout << "------------------------------"  << std::endl;
 
-
+*/
     sensor_msgs::JointState joint_state;
 
     joint_state.header.seq = 2016;
@@ -110,12 +107,24 @@ int main(int argc, char **argv)
 
         buildOffsetTable(type_map, "JointState", "JointState", &buffer_ptr,  &flat_container);
 
-        for (auto it= flat_container.begin(); it != flat_container.end(); it++)
-        {
-            std::cout<< it->first << " = " << it->second << std::endl;
-        }
+        std::cout << "------------------------------"  << std::endl;
+        std::cout<< flat_container << std::endl;
+
+        //-------------------------------------------------------
+        std::vector< std::pair<const char*, const char*> > rules;
+        rules.push_back( std::make_pair( "JointState.position[#]", "JointState.name[#]") );
+        rules.push_back( std::make_pair( "JointState.effort[#]", "JointState.name[#]") );
+        rules.push_back( std::make_pair( "JointState.velocity[#]", "JointState.name[#]") );
+        rules.push_back( std::make_pair( "TransformStamped[#]", "TransformStamped[#].Header.frame_id") );
+
+        RosTypeFlat renamed_container;
+        applyNameTransform( rules, flat_container, &renamed_container );
+
+        std::cout << "------------------------------"  << std::endl;
+         std::cout<< renamed_container << std::endl;
+
     }
-*/
+
 
     return 0;
 }

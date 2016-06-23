@@ -27,10 +27,13 @@ public:
 
 typedef std::map<std::string, RosType> RosTypeMap;
 
-typedef std::map<std::string, double> RosTypeFlat;
+typedef struct{
+    std::map<std::string, double> value;
+    std::map<std::string, std::string> id;
+}RosTypeFlat;
 
 //------------------------------
-
+std::ostream& operator<<(std::ostream& s, const RosTypeFlat& c);
 
 void parseRosTypeDescription(
         const std::string & type_name,
@@ -45,6 +48,10 @@ void buildOffsetTable(const RosTypeMap& type_map,
                        std::string prefix,
                        uint8_t** buffer_ptr,
                        RosTypeFlat* flat_container);
+
+void applyNameTransform( std::vector< std::pair<const char*, const char*> >  rules,
+                         const RosTypeFlat& container_in,
+                         RosTypeFlat* container_out);
 
 }
 
