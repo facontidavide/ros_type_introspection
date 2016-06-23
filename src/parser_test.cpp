@@ -4,7 +4,7 @@
 
 #include <geometry_msgs/Pose.h>
 #include <sensor_msgs/JointState.h>
-
+#include <tf/tfMessage.h>
 #include <sstream>
 #include <iostream>
 
@@ -17,39 +17,36 @@ int main(int argc, char **argv)
     using namespace ros::message_traits;
     using namespace RosTypeParser;
 
-    std::cout << "------------------------------"  << std::endl;
+    RosTypeMap type_map;
 
-    std::vector<Type> type_hierarchy;
-    std::vector<Field> flat;
-
-    type_hierarchy = parseRosTypeDescription(
+    parseRosTypeDescription(
                 DataType<geometry_msgs::Pose >::value(),
-                Definition<geometry_msgs::Pose >::value()   );
+                Definition<geometry_msgs::Pose >::value(),
+                &type_map );
 
-    flat = buildFlatTypeHierarchy( "pose", type_hierarchy,
-                                   DataType<geometry_msgs::Pose >::value());
+    parseRosTypeDescription(
+                DataType<sensor_msgs::JointState >::value(),
+                Definition<sensor_msgs::JointState >::value(),
+                &type_map );
 
-    for (int i=0; i<flat.size(); i++ )
-    {
-        std::cout << ">> "<< flat[i].field_name <<  " / " << flat[i].type_name  << std::endl;
-    }
-
+    parseRosTypeDescription(
+                DataType<tf::tfMessage >::value(),
+                Definition<tf::tfMessage >::value(),
+                &type_map );
 
     std::cout << "------------------------------"  << std::endl;
+    printRosTypeMap( type_map );
 
-    type_hierarchy = parseRosTypeDescription(
-                DataType<sensor_msgs::JointState >::value(),
-                Definition<sensor_msgs::JointState >::value()   );
+    std::cout << "------------------------------"  << std::endl;
+ //   printRosType( type_map, "Pose");
 
-    flat = buildFlatTypeHierarchy( "joint_state", type_hierarchy,
-                                   DataType<sensor_msgs::JointState >::value());
+    std::cout << "------------------------------"  << std::endl;
+  //  printRosType( type_map, "JointState");
 
-    for (int i=0; i<flat.size(); i++ )
-    {
-        std::cout << ">> "<< flat[i].field_name <<  "\t/ " << flat[i].type_name  << std::endl;
-    }
+    std::cout << "------------------------------"  << std::endl;
+    printRosType( type_map, "tfMessage");
 
-    geometry_msgs::Pose pose;
+   /* geometry_msgs::Pose pose;
 
     pose.position.x = 1;
     pose.position.y = 2;
@@ -59,14 +56,66 @@ int main(int argc, char **argv)
     pose.orientation.y = 5;
     pose.orientation.z = 6;
     pose.orientation.w = 7;
-    /*
-    std::vector<uint8_t> buffer;
 
-    ros::serialization::OStream stream(buffer.data(), buffer.size());
+    {
+        std::vector<uint8_t> buffer(64*1024);
+        ros::serialization::OStream stream(buffer.data(), buffer.size());
+        ros::serialization::Serializer< geometry_msgs::Pose>::write(stream, pose);
 
-    ros::serialization::Serializer< geometry_msgs::Pose>(stream, pose);
+        RosTypeFlat flat_container;
+        uint8_t* buffer_ptr = buffer.data();
+
+        buildOffsetTable(type_map, "Pose", "Pose", &buffer_ptr,  &flat_container);
+
+        for (auto it= flat_container.begin(); it != flat_container.end(); it++)
+        {
+            std::cout<< it->first << " = " << it->second << std::endl;
+        }
+    }
+
+    std::cout << "------------------------------"  << std::endl;
 
 
+    sensor_msgs::JointState joint_state;
+
+    joint_state.header.seq = 2016;
+    joint_state.header.stamp = { 1234, 5678};
+    joint_state.header.frame_id = "pippo";
+
+    joint_state.name.resize( 3 );
+    joint_state.position.resize( 3 );
+    joint_state.velocity.resize( 3 );
+    joint_state.effort.resize( 3 );
+
+    std::string names[3];
+    names[0] = std::string("hola");
+    names[1] = std::string("ciao");
+    names[2] = std::string("bye");
+
+    for (int i=0; i<3; i++)
+    {
+        joint_state.name[i] = names[i];
+        joint_state.position[i]= 11+i;
+        joint_state.velocity[i]= 21+i;
+        joint_state.effort[i]= 31+i;
+    }
+
+    {
+        std::vector<uint8_t> buffer(64*1024);
+        ros::serialization::OStream stream(buffer.data(), buffer.size());
+        ros::serialization::Serializer<sensor_msgs::JointState>::write(stream, joint_state);
+
+        RosTypeFlat flat_container;
+        uint8_t* buffer_ptr = buffer.data();
+
+        buildOffsetTable(type_map, "JointState", "JointState", &buffer_ptr,  &flat_container);
+
+        for (auto it= flat_container.begin(); it != flat_container.end(); it++)
+        {
+            std::cout<< it->first << " = " << it->second << std::endl;
+        }
+    }
 */
+
     return 0;
 }

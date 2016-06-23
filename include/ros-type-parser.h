@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <map>
 
 namespace RosTypeParser{
 
@@ -10,24 +11,40 @@ typedef struct
 {
     std::string type_name;
     std::string field_name;
-} Field;
 
-typedef struct
+} RosTypeField;
+
+class RosType
 {
-    std::string type_name;
-    std::vector<Field> fields;
-}Type;
+public:
+    std::string full_name;
+    std::vector<RosTypeField> fields;
+
+    RosType( std::string name):
+        full_name(name) { }
+
+};
+
+typedef std::map<std::string, RosType> RosTypeMap;
+
+typedef std::map<std::string, double> RosTypeFlat;
+
+//------------------------------
 
 
-
-std::vector<Field> buildFlatTypeHierarchy(std::string prefix,
-             const std::vector<Type>& types,
-             const std::string& type_name);
-
-std::vector<Type>  parseRosTypeDescription(
+void parseRosTypeDescription(
         const std::string & type_name,
-        const std::string & msg_definition );
+        const std::string & msg_definition,
+        RosTypeMap* type_map);
 
+void printRosTypeMap( const RosTypeMap& type_map );
+void printRosType(const RosTypeMap& type_map, const std::string& type_name, int indent = 0 );
+
+void buildOffsetTable(const RosTypeMap& type_map,
+                       const std::string& type_name,
+                       std::string prefix,
+                       uint8_t** buffer_ptr,
+                       RosTypeFlat* flat_container);
 
 }
 
