@@ -105,7 +105,7 @@ int main(int argc, char **argv)
         RosTypeFlat flat_container;
         uint8_t* buffer_ptr = buffer.data();
 
-        buildOffsetTable(type_map, "JointState", "JointState", &buffer_ptr,  &flat_container);
+        buildRosFlatType(type_map, "JointState", "JointState", &buffer_ptr,  &flat_container);
 
         std::cout << "------------------------------"  << std::endl;
         std::cout<< flat_container << std::endl;
@@ -116,12 +116,18 @@ int main(int argc, char **argv)
         rules.push_back( std::make_pair( "JointState.effort[#]", "JointState.name[#]") );
         rules.push_back( std::make_pair( "JointState.velocity[#]", "JointState.name[#]") );
         rules.push_back( std::make_pair( "TransformStamped[#]", "TransformStamped[#].Header.frame_id") );
+        rules.push_back( std::make_pair( "KeyValue[#].value", "KeyValue[#].name" ) );
+        rules.push_back( std::make_pair( "DiagnosticStatus[#]", "DiagnosticStatus[#].name" ) );
 
-        RosTypeFlat renamed_container;
-        applyNameTransform( rules, flat_container, &renamed_container );
+     //   RosTypeFlat renamed_container;
+        applyNameTransform( rules, &flat_container );
 
         std::cout << "------------------------------"  << std::endl;
-         std::cout<< renamed_container << std::endl;
+
+        for (auto it= flat_container.value_renamed.begin(); it != flat_container.value_renamed.end(); it++)
+        {
+             std::cout << ">>    " << it->first << " = " << it->second << std::endl;
+        }
 
     }
 

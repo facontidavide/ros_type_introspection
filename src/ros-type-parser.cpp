@@ -9,6 +9,7 @@
 namespace RosTypeParser{
 
 const std::string VECTOR_SYMBOL("[]");
+const std::string SEPARATOR(".");
 
 
 bool isCommentOrEmpty(const std::string& line)
@@ -177,15 +178,12 @@ template <typename T> T ReadFromBufferAndMoveForward( uint8_t** buffer)
 }
 
 
-void buildOffsetTable( const RosTypeMap& type_map,
+void buildRosFlatType( const RosTypeMap& type_map,
                        const std::string& type_name,
                        std::string prefix,
                        uint8_t** buffer_ptr,
                        RosTypeFlat* flat_container )
 {
-    // std::cout << ">>>>>>>>   "<< type_name  << std::endl;
-    const std::string separator(".");
-
     boost::string_ref type ( type_name );
     int32_t vect_size = 1;
 
@@ -218,7 +216,9 @@ void buildOffsetTable( const RosTypeMap& type_map,
         }
         else if( type.compare("time") == 0 )
         {
-            (*buffer_ptr) += sizeof( ros::Time );
+            ros::Time time = ReadFromBufferAndMoveForward<ros::Time>(buffer_ptr);
+            double value = time.toSec();
+            flat_container->value[ prefix + suffix ] = value;
         }
         else if( type.compare("string") == 0 )
         {
@@ -231,7 +231,7 @@ void buildOffsetTable( const RosTypeMap& type_map,
             //    std::cout << "string_size : "<< string_size  << std::endl;
             (*buffer_ptr) += string_size;
 
-            flat_container->id[ prefix + suffix ] = id;
+            flat_container->name_id[ prefix + suffix ] = id;
         }
         else {       // try recursion
             auto it = type_map.find( type.to_string() );
@@ -243,8 +243,8 @@ void buildOffsetTable( const RosTypeMap& type_map,
                 {
                     //      std::cout << "subfield: "<<  fields[i].field_name << " / " <<  fields[i].type_name << std::endl;
 
-                    buildOffsetTable(type_map, fields[i].type_name,
-                                     (prefix + suffix + separator + fields[i].field_name  ),
+                    buildRosFlatType(type_map, fields[i].type_name,
+                                     (prefix + suffix + SEPARATOR + fields[i].field_name  ),
                                      buffer_ptr, flat_container );
                 }
             }
@@ -257,9 +257,10 @@ void buildOffsetTable( const RosTypeMap& type_map,
 
 
 void applyNameTransform( std::vector< std::pair<const char*, const char*> >  rules,
-                         const RosTypeFlat& container_in,
-                         RosTypeFlat* container_out)
+                         RosTypeFlat* container)
 {
+    std::set<std::string> substituted_items;
+
     for (int r=0; r<rules.size(); r++)
     {
         boost::string_ref rule( rules[r].first );
@@ -272,7 +273,7 @@ void applyNameTransform( std::vector< std::pair<const char*, const char*> >  rul
         boost::string_ref substitution_prefix( substitution.substr(0, pos) );
         boost::string_ref substitution_suffix( substitution.substr(pos+1, substitution.length())  );
 
-        for (auto it = container_in.value.begin(); it != container_in.value.end(); it++)
+        for (auto it = container->value.begin(); it != container->value.end(); it++)
         {
             boost::string_ref name ( it->first );
             double value = it->second;
@@ -280,7 +281,10 @@ void applyNameTransform( std::vector< std::pair<const char*, const char*> >  rul
 
             bool found = (posA != name.npos) ;
 
-            if( !found) continue;
+            if( !found){
+                continue;
+            }
+            substituted_items.insert( it->first );
 
             posA += rule_prefix.length();
 
@@ -298,21 +302,32 @@ void applyNameTransform( std::vector< std::pair<const char*, const char*> >  rul
                     index.to_string() +
                     substitution_suffix.to_string();
 
-            const auto st = container_in.id.find( key );
-            if( st != container_in.id.end())
+            const auto st = container->name_id.find( key );
+            if( st != container->name_id.end())
             {
                 const std::string& new_key = st->second;
                 std::string  new_name =
                         prefix.to_string() +
-                        std::string(".") +
+                        SEPARATOR +
                         new_key;
                 if( suffix.length() > 0)
                 {
-                    new_name.append(".") .append(suffix.to_string());
+                    new_name.append( SEPARATOR ) .append(suffix.to_string());
                 }
-
-                container_out->value.insert( std::make_pair(new_name, value ) );
+                container->value_renamed[new_name] = value;
             }
+            else{
+                //just move it without changes
+                container->value_renamed[ it->first ] = value;
+            }
+        }
+    }
+
+    for (auto it = container->value.begin(); it != container->value.end(); it++)
+    {
+        if( substituted_items.find( it->first) == substituted_items.end() )
+        {
+            container->value_renamed[ it->first ] = it->second;
         }
     }
 }
@@ -320,7 +335,7 @@ void applyNameTransform( std::vector< std::pair<const char*, const char*> >  rul
 std::ostream& operator<<(std::ostream& ss, const RosTypeFlat& container)
 {
 
-    for (auto it= container.id.begin(); it != container.id.end(); it++)
+    for (auto it= container.name_id.begin(); it != container.name_id.end(); it++)
     {
         ss<< it->first << " = " << it->second << std::endl;
     }

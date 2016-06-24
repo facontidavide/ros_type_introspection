@@ -28,8 +28,9 @@ public:
 typedef std::map<std::string, RosType> RosTypeMap;
 
 typedef struct{
+    std::map<std::string, double> value_renamed;
     std::map<std::string, double> value;
-    std::map<std::string, std::string> id;
+    std::map<std::string, std::string> name_id;
 }RosTypeFlat;
 
 //------------------------------
@@ -43,15 +44,14 @@ void parseRosTypeDescription(
 void printRosTypeMap( const RosTypeMap& type_map );
 void printRosType(const RosTypeMap& type_map, const std::string& type_name, int indent = 0 );
 
-void buildOffsetTable(const RosTypeMap& type_map,
+void buildRosFlatType(const RosTypeMap& type_map,
                        const std::string& type_name,
                        std::string prefix,
                        uint8_t** buffer_ptr,
                        RosTypeFlat* flat_container);
 
 void applyNameTransform( std::vector< std::pair<const char*, const char*> >  rules,
-                         const RosTypeFlat& container_in,
-                         RosTypeFlat* container_out);
+                         RosTypeFlat* container);
 
 }
 
