@@ -8,6 +8,7 @@ include_directories(
      ${ROS_DIRECTORY}/include )
 
 SET( SRC_RTI
+   include/catch.h
    include/ros-type-parser.h
    src/ros-type-parser.cpp
 

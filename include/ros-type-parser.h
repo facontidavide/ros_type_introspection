@@ -20,9 +20,10 @@ public:
     std::string full_name;
     std::vector<RosTypeField> fields;
 
+    RosType() {}
+
     RosType( std::string name):
         full_name(name) { }
-
 };
 
 typedef std::map<std::string, RosType> RosTypeMap;
@@ -47,7 +48,7 @@ void printRosType(const RosTypeMap& type_map, const std::string& type_name, int 
 void buildRosFlatType(const RosTypeMap& type_map,
                        const std::string& type_name,
                        std::string prefix,
-                       uint8_t** buffer_ptr,
+                       uint8_t **buffer_ptr,
                        RosTypeFlat* flat_container);
 
 void applyNameTransform( std::vector< std::pair<const char*, const char*> >  rules,
