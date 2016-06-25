@@ -100,16 +100,13 @@ int main( int argc, char** argv)
         tf_msg.transforms[i].transform.rotation.w = 70 +i;
     }
 
-    RosTypeFlat flat_container;
     std::vector<uint8_t> buffer(64*1024);
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    for (int i=0; i<10000;i++)
+    for (int i=0; i<100000;i++)
     {
-        flat_container.name_id.clear();
-        flat_container.value.clear();
-        flat_container.value_renamed.clear();
+         RosTypeFlat flat_container;
 
         ros::serialization::OStream stream(buffer.data(), buffer.size());
         ros::serialization::Serializer<tf::tfMessage>::write(stream, tf_msg);

@@ -5,6 +5,7 @@
 #include <ros/ros.h>
 #include <iostream>
 #include <sstream>
+#include <functional>
 
 namespace RosTypeParser{
 
@@ -194,70 +195,50 @@ void buildRosFlatType(const RosTypeMap& type_map,
         is_vector = true;
     }
 
-    for (int v=0; v<vect_size; v++)
+    std::function<void(const String&)> deserializeAndStore;
+
+    if( type.compare( "float64") == 0 )
     {
-        double value = -1;
-        String suffix;
-
-        if( is_vector )
-        {
-            auto num = boost::lexical_cast<std::string>( v );
-            suffix.append("[").append( num.data(), num.length() ).append("]");
-        }
-
-       // std::cout << " prefix "  << prefix << std::endl;
-        String key (prefix);
-       // std::cout << " key "  << key << std::endl;
-        key.append( suffix );
-        //std::cout << " key "  << key << std::endl;
-
-        if( type.compare( "float64") == 0 )
-        {
-            value = ReadFromBufferAndMoveForward<double>(buffer_ptr);
+        deserializeAndStore = [&](const String& key){
+            double value = ReadFromBufferAndMoveForward<double>(buffer_ptr);
             flat_container->value[key ] = value;
-         //   auto it = flat_container->value.find( key );
-         //   std::cout << key << "  :  " << it->first << " : " << it->second << std::endl;
-        }
-        else if( type.compare( "uint32") == 0)
-        {
-            value = (double) ReadFromBufferAndMoveForward<uint32_t>(buffer_ptr);
+        };
+    }
+    else if( type.compare( "uint32") == 0 )
+    {
+        deserializeAndStore = [&](const String& key){
+            double value = (double)ReadFromBufferAndMoveForward<uint32_t>(buffer_ptr);
             flat_container->value[key ] = value;
-           // auto it = flat_container->value.find( key );
-           // std::cout << key << "  :  " << it->first << " : " << it->second << std::endl;
-        }
-        else if( type.compare("time") == 0 )
-        {
+        };
+    }
+    else if( type.compare("time") == 0 )
+    {
+        deserializeAndStore = [&](const String& key){
             ros::Time time = ReadFromBufferAndMoveForward<ros::Time>(buffer_ptr);
             double value = time.toSec();
             flat_container->value[ key ] = value;
-          //  auto it = flat_container->value.find( key );
-           // std::cout << key << "  :  " << it->first << " : " << it->second << std::endl;
-        }
-        else if( type.compare("string") == 0 )
-        {
-
+        };
+    }
+    else if( type.compare("string") == 0 )
+    {
+        deserializeAndStore = [&](const String& key){
             int32_t string_size = ReadFromBufferAndMoveForward<int32_t>( buffer_ptr );
-
             String id( (const char*)(*buffer_ptr), string_size );
-
-            //    std::cout << "string_size : "<< string_size  << std::endl;
             (*buffer_ptr) += string_size;
-
             flat_container->name_id[ key ] = id;
-           // auto it = flat_container->name_id.find( key );
-           // std::cout << key << "  :  " << it->first << " : " << it->second << std::endl;
-        }
-        else {       // try recursion
+        };
+    }
+    else {
+        deserializeAndStore = [&](const String& key)
+        {
             auto it = type_map.find( String( type.data(), type.size() ) );
             if( it != type_map.end())
             {
                 auto& fields  = it->second.fields;
 
-                for (int i=0; i< fields.size(); i++ )
-                {
-              //      std::cout << "subfield: "<<  fields[i].field_name << " / " <<  fields[i].type_name << std::endl;
-                    String new_prefix( prefix );
-                    new_prefix.append( suffix ).append( SEPARATOR );
+                for (int i=0; i< fields.size(); i++ ) {
+                    String new_prefix( key );
+                    new_prefix.append( SEPARATOR );
                     new_prefix.append( fields[i].field_name.data(), fields[i].field_name.size())  ;
 
                     buildRosFlatType(type_map, (fields[i].type_name),
@@ -268,7 +249,20 @@ void buildRosFlatType(const RosTypeMap& type_map,
             else {
                 std::cout << " type not recognized: " <<  type << std::endl;
             }
+        };
+    }
+
+
+    for (int v=0; v<vect_size; v++)
+    {
+        String key (prefix);
+        if( is_vector )
+        {
+            char suffix[16];
+            sprintf(suffix,"[%d]", v);
+            key.append( suffix );
         }
+        deserializeAndStore(key);
     }
 }
 
@@ -300,7 +294,7 @@ void applyNameTransform( const std::vector< SubstitutionRule >&  rules,
             if( posC == name.npos) continue;
 
             boost::string_ref name_prefix = name.substr( 0, posA );
-            boost::string_ref index = name.substr(posB, posC-posB );
+            boost::string_ref index       = name.substr(posB, posC-posB );
             boost::string_ref name_suffix = name.substr( posC, name.length() - posC );
 
             int res = std::strncmp( name_suffix.data(), rule.pattern_suf.data(),  rule.pattern_suf.length() );
@@ -391,15 +385,6 @@ SubstitutionRule::SubstitutionRule(const char *pattern, const char *name_locatio
     pos = substitution_pre.find_first_of('#');
     substitution_pre.remove_suffix( substitution_pre.length() - pos );
     substitution_suf.remove_prefix( pos+1 );
-
-    /*  std::cout << pattern_pre << std::endl;
-    std::cout << pattern_suf << std::endl;
-
-    std::cout << location_pre << std::endl;
-    std::cout << location_suf << std::endl;
-
-    std::cout << substitution_pre << std::endl;
-    std::cout << substitution_suf << std::endl;*/
 }
 
 }

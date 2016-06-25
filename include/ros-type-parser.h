@@ -36,6 +36,7 @@ typedef struct{
     std::map<String, double> value_renamed;
     std::map<String, double> value;
     std::map<String, String> name_id;
+
 }RosTypeFlat;
 
 //------------------------------
