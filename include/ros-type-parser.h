@@ -2,11 +2,13 @@
 #define ROSTYPEPARSER_H
 
 #include <vector>
-#include <string>
+#include <string.hpp>
 #include <map>
 #include <boost/utility/string_ref.hpp>
 
 namespace RosTypeParser{
+
+typedef sso23::string String;
 
 typedef struct
 {
@@ -30,9 +32,9 @@ public:
 typedef std::map<std::string, RosType> RosTypeMap;
 
 typedef struct{
-    std::map<std::string, double> value_renamed;
-    std::map<std::string, double> value;
-    std::map<std::string, std::string> name_id;
+    std::map<String, double> value_renamed;
+    std::map<String, double> value;
+    std::map<String, String> name_id;
 }RosTypeFlat;
 
 //------------------------------
@@ -47,8 +49,8 @@ void printRosTypeMap( const RosTypeMap& type_map );
 void printRosType(const RosTypeMap& type_map, const std::string& type_name, int indent = 0 );
 
 void buildRosFlatType(const RosTypeMap& type_map,
-                       const std::string& type_name,
-                       std::string prefix,
+                       const std::string &type_name,
+                       String prefix,
                        uint8_t **buffer_ptr,
                        RosTypeFlat* flat_container);
 

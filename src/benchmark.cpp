@@ -41,6 +41,29 @@ std::vector<SubstitutionRule> Rules()
 
 int main( int argc, char** argv)
 {
+    String test("Hello");
+
+    std::cout << test << " is sso "<< test.isSso()<< std::endl;
+
+    test.append("0123456789", 10);
+    std::cout << test << " is sso "<< test.isSso()<< std::endl;
+
+    test.append("0123456789", 10);
+    std::cout << test << " is sso "<< test.isSso()<< std::endl;
+
+
+    test.append("0123456789", 10);
+    std::cout << test << " is sso "<< test.isSso()<< std::endl;
+
+    test.resize(25);
+    std::cout << test << " is sso "<< test.isSso()<< std::endl;
+
+    test.resize(20);
+    std::cout << test << " is sso "<< test.isSso()<< std::endl;
+
+    test.resize(50);
+    std::cout << test << " is sso "<< test.isSso()<< std::endl;
+
     RosTypeParser::RosTypeMap type_map;
 
     parseRosTypeDescription(

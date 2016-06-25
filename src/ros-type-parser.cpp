@@ -9,10 +9,10 @@
 namespace RosTypeParser{
 
 const std::string VECTOR_SYMBOL("[]");
-const std::string SEPARATOR(".");
+const String SEPARATOR(".");
 
 
-bool isCommentOrEmpty(const std::string& line)
+inline bool isCommentOrEmpty(const std::string& line)
 {
     if(line.empty()) return true;
 
@@ -24,7 +24,7 @@ bool isCommentOrEmpty(const std::string& line)
     return (line[index] == '#');
 }
 
-bool isSeparator(const std::string& line)
+inline bool isSeparator(const std::string& line)
 {
     if(line.size() != 80 ) return false;
     for (int i=0; i<80; i++)
@@ -35,17 +35,15 @@ bool isSeparator(const std::string& line)
 }
 
 
-std::string strippedTypeName( std::string line)
+inline boost::string_ref strippedTypeName(const boost::string_ref& line )
 {
-    for(int index = line.size() -1; index >=0; index--)
+    boost::string_ref output( line );
+    int pos = line.find_last_of('/');
+    if( pos != output.npos )
     {
-        if( line[index] == '/')
-        {
-            line.erase(0,index+1);
-            break;
-        }
+        output.remove_prefix( pos+1 );
     }
-    return line;
+    return output;
 }
 
 
@@ -56,10 +54,10 @@ void parseRosTypeDescription(
 {
     std::istringstream messageDescriptor(msg_definition);
 
-    std::string current_type_name = strippedTypeName(type_name);
+    auto current_type_name = strippedTypeName(type_name);
 
-    if( type_map->find( current_type_name ) == type_map->end())
-        type_map->insert( std::make_pair( current_type_name, RosType(type_name) ) );
+    (*type_map)[ current_type_name.to_string() ] = RosType(type_name );
+
 
     for (std::string line; std::getline(messageDescriptor, line, '\n') ; )
     {
@@ -81,8 +79,7 @@ void parseRosTypeDescription(
 
             current_type_name = strippedTypeName(line);
 
-            if( type_map->find( current_type_name) == type_map->end())
-                type_map->insert( std::make_pair( current_type_name, RosType( line ) ) );
+            (*type_map)[ current_type_name.to_string() ] = RosType(line );
         }
         else{
             RosTypeField field;
@@ -91,9 +88,9 @@ void parseRosTypeDescription(
             ss2 >> field.type_name;
             ss2 >> field.field_name;
 
-            field.type_name = strippedTypeName( field.type_name );
+            field.type_name = strippedTypeName( field.type_name ).to_string();
 
-            auto& fields = type_map->find(current_type_name)->second.fields;
+            auto& fields = type_map->find(current_type_name.to_string())->second.fields;
 
             bool found = false;
             for (int i=0; i<fields.size(); i++)
@@ -178,13 +175,14 @@ template <typename T> T ReadFromBufferAndMoveForward( uint8_t** buffer)
 }
 
 
-void buildRosFlatType( const RosTypeMap& type_map,
-                       const std::string& type_name,
-                       std::string prefix,
-                       uint8_t** buffer_ptr,
-                       RosTypeFlat* flat_container )
+void buildRosFlatType(const RosTypeMap& type_map,
+                      const std::string &type_name,
+                      String prefix,
+                      uint8_t** buffer_ptr,
+                      RosTypeFlat* flat_container )
 {
-    boost::string_ref type ( type_name );
+
+    boost::string_ref type ( type_name.data(), type_name.size() );
     int32_t vect_size = 1;
 
     bool is_vector = false;
@@ -198,41 +196,52 @@ void buildRosFlatType( const RosTypeMap& type_map,
     for (int v=0; v<vect_size; v++)
     {
         double value = -1;
-        std::string suffix;
+        String suffix;
 
         if( is_vector )
         {
-            suffix.append("[").append( boost::lexical_cast<std::string>( v ) ).append("]");
+            auto num = boost::lexical_cast<std::string>( v );
+            suffix.append("[").append( num.data(), num.length() ).append("]");
         }
+
+        String key (prefix);
+        key.append( suffix );
 
         if( type.compare( "float64") == 0 )
         {
             value = ReadFromBufferAndMoveForward<double>(buffer_ptr);
-            flat_container->value[ prefix + suffix ] = value;
+            flat_container->value[key ] = value;
+           // auto it = flat_container->value.find( key );
+           // std::cout << key << "  :  " << it->first << " : " << it->second << std::endl;
         }
         else if( type.compare( "uint32") == 0)
         {
             value = (double) ReadFromBufferAndMoveForward<uint32_t>(buffer_ptr);
-            flat_container->value[ prefix + suffix ] = value;
+            flat_container->value[key ] = value;
+            //auto it = flat_container->value.find( key );
+           // std::cout << key << "  :  " << it->first << " : " << it->second << std::endl;
         }
         else if( type.compare("time") == 0 )
         {
             ros::Time time = ReadFromBufferAndMoveForward<ros::Time>(buffer_ptr);
             double value = time.toSec();
-            flat_container->value[ prefix + suffix ] = value;
+            flat_container->value[ key ] = value;
+            //auto it = flat_container->value.find( key );
+            //std::cout << key << "  :  " << it->first << " : " << it->second << std::endl;
         }
         else if( type.compare("string") == 0 )
         {
-            std::string id;
+
             int32_t string_size = ReadFromBufferAndMoveForward<int32_t>( buffer_ptr );
 
-            id.reserve( string_size );
-            id.append( (const char*)(*buffer_ptr), string_size );
+            String id( (const char*)(*buffer_ptr), string_size );
 
             //    std::cout << "string_size : "<< string_size  << std::endl;
             (*buffer_ptr) += string_size;
 
-            flat_container->name_id[ prefix + suffix ] = id;
+            flat_container->name_id[ key ] = id;
+            //auto it = flat_container->value.find( key );
+            //std::cout << key << "  :  " << it->first << " : " << it->second << std::endl;
         }
         else {       // try recursion
             auto it = type_map.find( type.to_string() );
@@ -242,10 +251,13 @@ void buildRosFlatType( const RosTypeMap& type_map,
 
                 for (int i=0; i< fields.size(); i++ )
                 {
-                    //      std::cout << "subfield: "<<  fields[i].field_name << " / " <<  fields[i].type_name << std::endl;
+                    // std::cout << "subfield: "<<  fields[i].field_name << " / " <<  fields[i].type_name << std::endl;
+                    String new_prefix( prefix );
+                    new_prefix.append( suffix ).append( SEPARATOR );
+                    new_prefix.append( fields[i].field_name.data(), fields[i].field_name.size())  ;
 
-                    buildRosFlatType(type_map, fields[i].type_name,
-                                     (prefix + suffix + SEPARATOR + fields[i].field_name  ),
+                    buildRosFlatType(type_map, (fields[i].type_name),
+                                     new_prefix,
                                      buffer_ptr, flat_container );
                 }
             }
@@ -262,7 +274,7 @@ void applyNameTransform( const std::vector< SubstitutionRule >&  rules,
 {
     for (auto it = container->value.begin(); it != container->value.end(); it++)
     {
-        boost::string_ref name ( it->first );
+        boost::string_ref name ( it->first.data(),  it->first.size());
         double value = it->second;
 
         bool substitution_done = false;
@@ -305,13 +317,16 @@ void applyNameTransform( const std::vector< SubstitutionRule >&  rules,
             auto substitutor = container->name_id.find( key ) ;
             if( substitutor != container->name_id.end())
             {
-                const std::string& index_replacement = substitutor->second;
+                auto& index_replacement = substitutor->second;
 
                 char new_name[256];
                 int name_index = 0;
                 for (const char c: name_prefix           )  new_name[name_index++] = c;
                 for (const char c: rule.substitution_pre )  new_name[name_index++] = c;
-                for (const char c: index_replacement     )  new_name[name_index++] = c;
+
+                for (int i=0; i< index_replacement.size(); i++ )
+                    new_name[name_index++] = index_replacement.at(i);
+
                 for (const char c: rule.substitution_suf )  new_name[name_index++] = c;
                 for (const char c: name_suffix           )  new_name[name_index++] = c;
                 new_name[name_index] = '\0';

@@ -202,7 +202,7 @@ TEST_CASE( "Deserialize Pose", "RosType deserialization" )
 
     buildRosFlatType(type_map, "Pose", "Pose", &buffer_ptr,  &flat_container);
 
-    std::map< std::string, double > expected_result;
+    std::map< String, double > expected_result;
     expected_result["Pose.position.x"] = 1;
     expected_result["Pose.position.y"] = 2;
     expected_result["Pose.position.z"] = 3;
@@ -221,8 +221,21 @@ TEST_CASE( "Deserialize Pose", "RosType deserialization" )
         std::cout << it.first << " >>>>> " << it.second << std::endl;
     }
 
-    compare( flat_container.value,         expected_result );
-    compare( flat_container.value_renamed, expected_result );
+    {//---------------------------------------------------
+        auto& flatA =  flat_container.value_renamed;
+        auto& flatB = expected_result;
+        REQUIRE( flatA.size() == flatB.size() );
+
+        for (auto itA = flatA.begin() ; itA != flatA.end(); itA++)
+        {
+            auto itB = flatB.find( itA->first );
+            std::cout <<  itA->first << " : " << itA->second << std::endl;
+
+            REQUIRE( itB != flatB.end() );
+            REQUIRE( itA->first  == itB->first );
+            REQUIRE( itA->second == itB->second );
+        }
+    }  //---------------------------------------------------
 
 
 }
@@ -263,7 +276,7 @@ TEST_CASE( "Deserialize JointState", "RosType deserialization" )
         joint_state.effort[i]= 31+i;
     }
 
-    std::map< std::string, double > expected_result;
+    std::map< String, double > expected_result;
     expected_result["JointState.header.seq"] = 2016;
     expected_result["JointState.header.stamp"] = 1234.567;
 
@@ -298,8 +311,8 @@ TEST_CASE( "Deserialize JointState", "RosType deserialization" )
         std::cout << it.first << " >>>>> " << it.second << std::endl;
     }
 
-    //---------------------------------------------------
-    {
+
+    {//---------------------------------------------------
         auto& flatA =  flat_container.value_renamed;
         auto& flatB = expected_result;
         REQUIRE( flatA.size() == flatB.size() );
@@ -313,8 +326,7 @@ TEST_CASE( "Deserialize JointState", "RosType deserialization" )
             REQUIRE( itA->first  == itB->first );
             REQUIRE( itA->second == itB->second );
         }
-    }
-    //---------------------------------------------------
+    }  //---------------------------------------------------
 
     // repeat. Nothing should change
     buffer_ptr = buffer.data();
@@ -322,8 +334,7 @@ TEST_CASE( "Deserialize JointState", "RosType deserialization" )
     applyNameTransform( Rules() , &flat_container );
 
 
-    //---------------------------------------------------
-    {
+    { //---------------------------------------------------
         auto& flatA =  flat_container.value_renamed;
         auto& flatB = expected_result;
         REQUIRE( flatA.size() == flatB.size() );
@@ -337,8 +348,8 @@ TEST_CASE( "Deserialize JointState", "RosType deserialization" )
             REQUIRE( itA->first  == itB->first );
             REQUIRE( itA->second == itB->second );
         }
-    }
-    //---------------------------------------------------
+    } //---------------------------------------------------
+
 }
 
 
@@ -361,7 +372,7 @@ TEST_CASE( "Deserialize Transform", "RosType deserialization" )
 
     const char* suffix[3] = { "_A", "_B", "_C" };
 
-    std::map< std::string, double > expected_result;
+    std::map< String, double > expected_result;
 
     for (int i=0; i< tf_msg.transforms.size() ; i++)
     {
@@ -371,10 +382,10 @@ TEST_CASE( "Deserialize Transform", "RosType deserialization" )
 
         tf_msg.transforms[i].child_frame_id = std::string("child").append(suffix[i]);
 
-        std::string prefix = std::string( "msgTransform.transform.frame" ).append(suffix[i]);
+        String prefix = String( "msgTransform.transform.frame" ).append(suffix[i]);
 
-        expected_result[ prefix + (".header.seq")   ] = tf_msg.transforms[i].header.seq;
-        expected_result[ prefix + (".header.stamp") ] = 1234 + i;
+        expected_result[ prefix + String(".header.seq")   ] = tf_msg.transforms[i].header.seq;
+        expected_result[ prefix + String(".header.stamp") ] = 1234 + i;
 
         tf_msg.transforms[i].transform.translation.x = 10 +i;
         tf_msg.transforms[i].transform.translation.y = 20 +i;
@@ -385,14 +396,14 @@ TEST_CASE( "Deserialize Transform", "RosType deserialization" )
         tf_msg.transforms[i].transform.rotation.z = 60 +i;
         tf_msg.transforms[i].transform.rotation.w = 70 +i;
 
-        expected_result[ prefix + (".translation.x") ] = tf_msg.transforms[i].transform.translation.x;
-        expected_result[ prefix + (".translation.y") ] = tf_msg.transforms[i].transform.translation.y;
-        expected_result[ prefix + (".translation.z") ] = tf_msg.transforms[i].transform.translation.z;
+        expected_result[ prefix + String(".translation.x") ] = tf_msg.transforms[i].transform.translation.x;
+        expected_result[ prefix + String(".translation.y") ] = tf_msg.transforms[i].transform.translation.y;
+        expected_result[ prefix + String(".translation.z") ] = tf_msg.transforms[i].transform.translation.z;
 
-        expected_result[ prefix + (".rotation.x") ] = tf_msg.transforms[i].transform.rotation.x;
-        expected_result[ prefix + (".rotation.y") ] = tf_msg.transforms[i].transform.rotation.y;
-        expected_result[ prefix + (".rotation.z") ] = tf_msg.transforms[i].transform.rotation.z;
-        expected_result[ prefix + (".rotation.w") ] = tf_msg.transforms[i].transform.rotation.w;
+        expected_result[ prefix + String(".rotation.x") ] = tf_msg.transforms[i].transform.rotation.x;
+        expected_result[ prefix + String(".rotation.y") ] = tf_msg.transforms[i].transform.rotation.y;
+        expected_result[ prefix + String(".rotation.z") ] = tf_msg.transforms[i].transform.rotation.z;
+        expected_result[ prefix + String(".rotation.w") ] = tf_msg.transforms[i].transform.rotation.w;
 
     }
 
@@ -406,14 +417,14 @@ TEST_CASE( "Deserialize Transform", "RosType deserialization" )
     buildRosFlatType(type_map, "tfMessage", "msgTransform", &buffer_ptr,  &flat_container);
     applyNameTransform( Rules(), &flat_container );
 
-//    std::cout <<  "---------------------------" << std::endl;
-//    for(auto&it: flat_container.value_renamed) {
-//        std::cout << it.first << " >> " << it.second << std::endl;
-//    }
-//    std::cout <<  "---------------------------" << std::endl;
-//    for(auto&it: expected_result) {
-//        std::cout << it.first << " >>>>> " << it.second << std::endl;
-//    }
+    std::cout <<  "---------------------------" << std::endl;
+    for(auto&it: flat_container.value_renamed) {
+        std::cout << it.first << " >> " << it.second << std::endl;
+    }
+    std::cout <<  "---------------------------" << std::endl;
+    for(auto&it: expected_result) {
+        std::cout << it.first << " >>>>> " << it.second << std::endl;
+    }
 
     { //---------------------------------------------------
         auto& flatA =  flat_container.value_renamed;
