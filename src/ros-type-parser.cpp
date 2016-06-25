@@ -318,14 +318,13 @@ void applyNameTransform( const std::vector< SubstitutionRule >&  rules,
 
                 container->value_renamed[new_name] = value;
 
-                std::cout << "---------------" << std::endl;
-
+                /*std::cout << "---------------" << std::endl;
                 std::cout << "index        " << index << std::endl;
                 std::cout << "name_prefix  " << name_prefix << std::endl;
                 std::cout << "key  " << key << std::endl;
                 std::cout << "new_name   " << new_name << std::endl;
                 std::cout << "---------------" << std::endl;
-
+                */
                 // DON'T apply more than one rule
                 substitution_done = true;
                 break;

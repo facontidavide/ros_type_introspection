@@ -10,41 +10,11 @@
 #include <tf/tfMessage.h>
 #include <sstream>
 #include <iostream>
-
+#include <chrono>
 #include "ros-type-parser.h"
 
 using namespace ros::message_traits;
 using namespace RosTypeParser;
-
-/*
-int main( int argc, char** argv)
-{
-
-    std::vector<SubstitutionRule> rules;
-    rules.push_back( SubstitutionRule(".position[#]",
-                                      ".name[#]",
-                                      ".#.position") );
-    rules.push_back( SubstitutionRule(".transforms[#].transform",
-                                      ".transforms[#].header.frame_id",
-                                      ".transform.#") );
-
-    RosTypeFlat flat;
-
-    flat.value[   "JointState.position[0]"] = 1;
-    flat.value[   "JointState.position[1]"] = 2;
-    flat.name_id[ "JointState.name[0]"] = "AAA";
-    flat.name_id[ "JointState.name[1]"] = "BBB";
-
-    flat.value[   "tfMessage.transforms[0].transform.translation.x"] = 1;
-    flat.name_id[ "tfMessage.transforms[0].header.frame_id"] = "CCC";
-
-
-
-    applyNameTransform( rules, &flat );
-
-    return 0;
-}
-*/
 
 std::vector<SubstitutionRule> Rules()
 {
@@ -70,8 +40,6 @@ std::vector<SubstitutionRule> Rules()
                                       ".transform.#.header") );
     return rules;
 }
-
-
 
 void compare( const RosTypeMap& mapA, const RosTypeMap& mapB )
 {
@@ -437,16 +405,15 @@ TEST_CASE( "Deserialize Transform", "RosType deserialization" )
 
     buildRosFlatType(type_map, "tfMessage", "msgTransform", &buffer_ptr,  &flat_container);
     applyNameTransform( Rules(), &flat_container );
-    /*
-    std::cout <<  "---------------------------" << std::endl;
-    for(auto&it: flat_container.value_renamed) {
-        std::cout << it.first << " >> " << it.second << std::endl;
-    }
-    std::cout <<  "---------------------------" << std::endl;
-    for(auto&it: expected_result) {
-        std::cout << it.first << " >>>>> " << it.second << std::endl;
-    }
-*/
+
+//    std::cout <<  "---------------------------" << std::endl;
+//    for(auto&it: flat_container.value_renamed) {
+//        std::cout << it.first << " >> " << it.second << std::endl;
+//    }
+//    std::cout <<  "---------------------------" << std::endl;
+//    for(auto&it: expected_result) {
+//        std::cout << it.first << " >>>>> " << it.second << std::endl;
+//    }
 
     { //---------------------------------------------------
         auto& flatA =  flat_container.value_renamed;
