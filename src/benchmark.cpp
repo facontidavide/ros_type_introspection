@@ -43,6 +43,9 @@ int main( int argc, char** argv)
 {
     String test("Hello");
 
+    String longname("Hello0123456789_0123456789_0123456789");
+    std::cout << longname << " is sso "<< longname.isSso()<< std::endl;
+
     std::cout << test << " is sso "<< test.isSso()<< std::endl;
 
     test.append("0123456789", 10);

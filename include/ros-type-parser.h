@@ -10,10 +10,11 @@ namespace RosTypeParser{
 
 typedef sso23::string String;
 
+
 typedef struct
 {
-    std::string type_name;
-    std::string field_name;
+    String type_name;
+    String field_name;
 
 } RosTypeField;
 
@@ -29,7 +30,7 @@ public:
         full_name(name) { }
 };
 
-typedef std::map<std::string, RosType> RosTypeMap;
+typedef std::map<String, RosType> RosTypeMap;
 
 typedef struct{
     std::map<String, double> value_renamed;
@@ -49,7 +50,7 @@ void printRosTypeMap( const RosTypeMap& type_map );
 void printRosType(const RosTypeMap& type_map, const std::string& type_name, int indent = 0 );
 
 void buildRosFlatType(const RosTypeMap& type_map,
-                       const std::string &type_name,
+                       const String &type_name,
                        String prefix,
                        uint8_t **buffer_ptr,
                        RosTypeFlat* flat_container);

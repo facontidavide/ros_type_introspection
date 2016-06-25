@@ -22,6 +22,16 @@ add_library(RosTypeIntrospection ${SRC_RTI} )
 
 INSTALL(TARGETS RosTypeIntrospection DESTINATION ${CMAKE_INSTALL_PREFIX} )
 
+add_executable( parser_test   src/parser_test.cpp)
+
+target_link_libraries( parser_test
+    RosTypeIntrospection
+    ${ROS_DIRECTORY}/lib/libroscpp.so
+    ${ROS_DIRECTORY}/lib/librosbag.so
+    ${ROS_DIRECTORY}/lib/librosbag_storage.so
+    ${ROS_DIRECTORY}/lib/librostime.so
+    ${ROS_DIRECTORY}/lib/libroscpp_serialization.so
+    )
 
 add_executable( benchmark   src/benchmark.cpp)
 

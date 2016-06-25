@@ -154,8 +154,9 @@ public:
         size_t old_size = this->size();
         if(new_size <= sso_capacity) {
             if( this->sso() == false ) {
-                Traits::assign(m_data.sso.string[new_size], static_cast<CharT>(0));
-                Traits::move( m_data.sso.string, m_data.non_sso.ptr, std::min(old_size, new_size) );
+                CharT* ptr = m_data.non_sso.ptr;
+                Traits::move( m_data.sso.string, ptr, std::min(old_size, new_size) );
+                delete[] ptr;
             }
             Traits::assign(m_data.sso.string[new_size], static_cast<CharT>(0));
             set_sso_size(new_size);
@@ -244,6 +245,11 @@ public:
         return sso();
     }
 
+    int compare(const basic_string& other)
+    {
+        return strcmp( data(), other.data() );
+    }
+
 
 private:
     void set_moved_from() {
@@ -307,18 +313,19 @@ private:
 private:
     union Data {
         struct NonSSO {
+            CharT overhead[64 - sizeof( CharT*) - 2*sizeof(std::size_t) - sizeof(CharT) ];
             CharT* ptr;
             std::size_t size;
             std::size_t capacity;
         } non_sso;
         struct SSO {
-            CharT string [31];  //[sizeof(NonSSO) / sizeof(CharT) - 1];
+            CharT string [ sizeof(NonSSO) / sizeof(CharT) - 1];
             UCharT size;
         } sso;
     } m_data;
 
 public:
-    static std::size_t const sso_capacity = 31; // sizeof(typename Data::NonSSO) / sizeof(CharT) - 1;
+    static std::size_t const sso_capacity =  sizeof(typename Data::NonSSO) / sizeof(CharT)  - 1;
 };
 
 template <typename CharT, typename Traits>

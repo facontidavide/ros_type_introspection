@@ -35,7 +35,7 @@ inline bool isSeparator(const std::string& line)
 }
 
 
-inline boost::string_ref strippedTypeName(const boost::string_ref& line )
+inline String strippedTypeName(const boost::string_ref& line )
 {
     boost::string_ref output( line );
     int pos = line.find_last_of('/');
@@ -43,7 +43,7 @@ inline boost::string_ref strippedTypeName(const boost::string_ref& line )
     {
         output.remove_prefix( pos+1 );
     }
-    return output;
+    return String( output.data(), output.length() );
 }
 
 
@@ -56,7 +56,7 @@ void parseRosTypeDescription(
 
     auto current_type_name = strippedTypeName(type_name);
 
-    (*type_map)[ current_type_name.to_string() ] = RosType(type_name );
+    (*type_map)[ current_type_name ] = RosType(type_name );
 
 
     for (std::string line; std::getline(messageDescriptor, line, '\n') ; )
@@ -79,18 +79,19 @@ void parseRosTypeDescription(
 
             current_type_name = strippedTypeName(line);
 
-            (*type_map)[ current_type_name.to_string() ] = RosType(line );
+            (*type_map)[ current_type_name ] = RosType(line );
         }
         else{
             RosTypeField field;
 
+            std::string temp;
             std::stringstream ss2(line);
-            ss2 >> field.type_name;
-            ss2 >> field.field_name;
+            ss2 >> temp;
+            field.type_name = strippedTypeName( temp.data());
+            ss2 >> temp;
+            field.field_name = String( temp.data(), temp.length());
 
-            field.type_name = strippedTypeName( field.type_name ).to_string();
-
-            auto& fields = type_map->find(current_type_name.to_string())->second.fields;
+            auto& fields = type_map->find(current_type_name)->second.fields;
 
             bool found = false;
             for (int i=0; i<fields.size(); i++)
@@ -124,7 +125,7 @@ void printRosTypeMap(const RosTypeMap& type_map)
     }
 }
 
-
+/*
 void printRosType(const RosTypeMap& type_map, const std::string& type_name, int indent  )
 {
     for (int d=0; d<indent; d++) std::cout << "  ";
@@ -136,19 +137,19 @@ void printRosType(const RosTypeMap& type_map, const std::string& type_name, int 
         type.remove_suffix(2);
     }
 
-    auto it = type_map.find( type.to_string() );
+    auto it = type_map.find( String(type.data(), type.length()) );
     if( it != type_map.end())
     {
         auto fields = it->second.fields;
         for (int i=0; i< fields.size(); i++)
         {
-            boost::string_ref field_type ( fields[i].type_name );
+            auto field_type ( fields[i].type_name );
             if( field_type.ends_with( VECTOR_SYMBOL))
             {
                 field_type.remove_suffix(2);
             }
 
-            if( type_map.find( field_type.to_string() ) == type_map.end()) // go deeper with recursion
+            if( type_map.find( field_type ) == type_map.end()) // go deeper with recursion
             {
                 for (int d=0; d<indent; d++) std::cout << "   ";
                 std::cout << "   " << fields[i].field_name <<" : " << fields[i].type_name << std::endl;
@@ -161,7 +162,7 @@ void printRosType(const RosTypeMap& type_map, const std::string& type_name, int 
     else{
         std::cout << type << " not found " << std::endl;
     }
-}
+}*/
 
 template <typename T> T ReadFromBufferAndMoveForward( uint8_t** buffer)
 {
@@ -176,7 +177,7 @@ template <typename T> T ReadFromBufferAndMoveForward( uint8_t** buffer)
 
 
 void buildRosFlatType(const RosTypeMap& type_map,
-                      const std::string &type_name,
+                      const String &type_name,
                       String prefix,
                       uint8_t** buffer_ptr,
                       RosTypeFlat* flat_container )
@@ -204,21 +205,24 @@ void buildRosFlatType(const RosTypeMap& type_map,
             suffix.append("[").append( num.data(), num.length() ).append("]");
         }
 
+       // std::cout << " prefix "  << prefix << std::endl;
         String key (prefix);
+       // std::cout << " key "  << key << std::endl;
         key.append( suffix );
+        //std::cout << " key "  << key << std::endl;
 
         if( type.compare( "float64") == 0 )
         {
             value = ReadFromBufferAndMoveForward<double>(buffer_ptr);
             flat_container->value[key ] = value;
-           // auto it = flat_container->value.find( key );
-           // std::cout << key << "  :  " << it->first << " : " << it->second << std::endl;
+         //   auto it = flat_container->value.find( key );
+         //   std::cout << key << "  :  " << it->first << " : " << it->second << std::endl;
         }
         else if( type.compare( "uint32") == 0)
         {
             value = (double) ReadFromBufferAndMoveForward<uint32_t>(buffer_ptr);
             flat_container->value[key ] = value;
-            //auto it = flat_container->value.find( key );
+           // auto it = flat_container->value.find( key );
            // std::cout << key << "  :  " << it->first << " : " << it->second << std::endl;
         }
         else if( type.compare("time") == 0 )
@@ -226,8 +230,8 @@ void buildRosFlatType(const RosTypeMap& type_map,
             ros::Time time = ReadFromBufferAndMoveForward<ros::Time>(buffer_ptr);
             double value = time.toSec();
             flat_container->value[ key ] = value;
-            //auto it = flat_container->value.find( key );
-            //std::cout << key << "  :  " << it->first << " : " << it->second << std::endl;
+          //  auto it = flat_container->value.find( key );
+           // std::cout << key << "  :  " << it->first << " : " << it->second << std::endl;
         }
         else if( type.compare("string") == 0 )
         {
@@ -240,18 +244,18 @@ void buildRosFlatType(const RosTypeMap& type_map,
             (*buffer_ptr) += string_size;
 
             flat_container->name_id[ key ] = id;
-            //auto it = flat_container->value.find( key );
-            //std::cout << key << "  :  " << it->first << " : " << it->second << std::endl;
+           // auto it = flat_container->name_id.find( key );
+           // std::cout << key << "  :  " << it->first << " : " << it->second << std::endl;
         }
         else {       // try recursion
-            auto it = type_map.find( type.to_string() );
+            auto it = type_map.find( String( type.data(), type.size() ) );
             if( it != type_map.end())
             {
                 auto& fields  = it->second.fields;
 
                 for (int i=0; i< fields.size(); i++ )
                 {
-                    // std::cout << "subfield: "<<  fields[i].field_name << " / " <<  fields[i].type_name << std::endl;
+              //      std::cout << "subfield: "<<  fields[i].field_name << " / " <<  fields[i].type_name << std::endl;
                     String new_prefix( prefix );
                     new_prefix.append( suffix ).append( SEPARATOR );
                     new_prefix.append( fields[i].field_name.data(), fields[i].field_name.size())  ;

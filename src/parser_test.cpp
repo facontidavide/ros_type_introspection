@@ -40,7 +40,7 @@ std::vector<SubstitutionRule> Rules()
                                       ".transform.#.header") );
     return rules;
 }
-
+/*
 void compare( const RosTypeMap& mapA, const RosTypeMap& mapB )
 {
     REQUIRE( mapA.size() == mapB.size() );
@@ -351,7 +351,7 @@ TEST_CASE( "Deserialize JointState", "RosType deserialization" )
     } //---------------------------------------------------
 
 }
-
+*/
 
 TEST_CASE( "Deserialize Transform", "RosType deserialization" )
 //int func()
