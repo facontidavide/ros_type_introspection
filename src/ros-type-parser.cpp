@@ -187,11 +187,12 @@ void buildRosFlatType( const RosTypeMap& type_map,
     boost::string_ref type ( type_name );
     int32_t vect_size = 1;
 
+    bool is_vector = false;
     if( type.ends_with( VECTOR_SYMBOL ) )
     {
         vect_size = ReadFromBufferAndMoveForward<int32_t>( buffer_ptr );
         type.remove_suffix(2);
-        //   std::cout << "vect_size : "<< vect_size  << std::endl;
+        is_vector = true;
     }
 
     for (int v=0; v<vect_size; v++)
@@ -199,7 +200,7 @@ void buildRosFlatType( const RosTypeMap& type_map,
         double value = -1;
         std::string suffix;
 
-        if( vect_size > 1)
+        if( is_vector )
         {
             suffix.append("[").append( boost::lexical_cast<std::string>( v ) ).append("]");
         }
@@ -256,80 +257,88 @@ void buildRosFlatType( const RosTypeMap& type_map,
 }
 
 
-void applyNameTransform( std::vector< std::pair<const char*, const char*> >  rules,
+void applyNameTransform( const std::vector< SubstitutionRule >&  rules,
                          RosTypeFlat* container)
 {
-    std::set<std::string> substituted_items;
-
-    for (int r=0; r<rules.size(); r++)
-    {
-        boost::string_ref rule( rules[r].first );
-        int pos =  rule.find_first_of('#');
-        boost::string_ref rule_prefix( rule.substr(0, pos) );
-        boost::string_ref rule_suffix( rule.substr(pos+1, rule.length() - pos)  );
-
-        boost::string_ref substitution( rules[r].second );
-        pos =  substitution.find_first_of('#');
-        boost::string_ref substitution_prefix( substitution.substr(0, pos) );
-        boost::string_ref substitution_suffix( substitution.substr(pos+1, substitution.length())  );
-
-        for (auto it = container->value.begin(); it != container->value.end(); it++)
-        {
-            boost::string_ref name ( it->first );
-            double value = it->second;
-            int posA = name.find( rule_prefix );
-
-            bool found = (posA != name.npos) ;
-
-            if( !found){
-                continue;
-            }
-            substituted_items.insert( it->first );
-
-            posA += rule_prefix.length();
-
-            int posB = posA;
-            while ( name.at(posB) != ']')
-            {
-                posB++;
-            }
-            boost::string_ref prefix = name.substr( 0,    posA-1 );
-            boost::string_ref index  = name.substr( posA, posB-posA );
-            boost::string_ref suffix = name.substr( posB+1, name.length()-posB-1 );
-
-            std::string key =
-                    substitution_prefix.to_string() +
-                    index.to_string() +
-                    substitution_suffix.to_string();
-
-            const auto st = container->name_id.find( key );
-            if( st != container->name_id.end())
-            {
-                const std::string& new_key = st->second;
-                std::string  new_name =
-                        prefix.to_string() +
-                        SEPARATOR +
-                        new_key;
-                if( suffix.length() > 0)
-                {
-                    new_name.append( SEPARATOR ) .append(suffix.to_string());
-                }
-                container->value_renamed[new_name] = value;
-            }
-            else{
-                //just move it without changes
-                container->value_renamed[ it->first ] = value;
-            }
-        }
-    }
-
     for (auto it = container->value.begin(); it != container->value.end(); it++)
     {
-        if( substituted_items.find( it->first) == substituted_items.end() )
+        boost::string_ref name ( it->first );
+        double value = it->second;
+
+        bool substitution_done = false;
+
+        for (int r=0; r < rules.size(); r++)
         {
-            container->value_renamed[ it->first ] = it->second;
+            const auto& rule = rules[r];
+
+            int posA = name.find(rule.pattern_pre );
+            if( posA == name.npos) { continue; }
+
+            int posB = posA + rule.pattern_pre.length();
+            int posC = posB;
+
+            while( isdigit(  name.at(posC) ) && posC < name.npos)
+            {
+                posC++;
+            }
+            if( posC == name.npos) continue;
+
+            boost::string_ref name_prefix = name.substr( 0, posA );
+            boost::string_ref index = name.substr(posB, posC-posB );
+            boost::string_ref name_suffix = name.substr( posC, name.length() - posC );
+
+            int res = std::strncmp( name_suffix.data(), rule.pattern_suf.data(),  rule.pattern_suf.length() );
+            if( res != 0)
+            {
+                continue;
+            }
+            name_suffix.remove_prefix( rule.pattern_suf.length() );
+
+            char key[256];
+            int buffer_index = 0;
+            for (const char c: name_prefix       )  key[buffer_index++] = c;
+            for (const char c: rule.location_pre )  key[buffer_index++] = c;
+            for (const char c: index             )  key[buffer_index++] = c;
+            for (const char c: rule.location_suf )  key[buffer_index++] = c;
+            key[buffer_index] = '\0';
+
+            auto substitutor = container->name_id.find( key ) ;
+            if( substitutor != container->name_id.end())
+            {
+                const std::string& index_replacement = substitutor->second;
+
+                char new_name[256];
+                int name_index = 0;
+                for (const char c: name_prefix           )  new_name[name_index++] = c;
+                for (const char c: rule.substitution_pre )  new_name[name_index++] = c;
+                for (const char c: index_replacement     )  new_name[name_index++] = c;
+                for (const char c: rule.substitution_suf )  new_name[name_index++] = c;
+                for (const char c: name_suffix           )  new_name[name_index++] = c;
+                new_name[name_index] = '\0';
+
+                container->value_renamed[new_name] = value;
+
+                std::cout << "---------------" << std::endl;
+
+                std::cout << "index        " << index << std::endl;
+                std::cout << "name_prefix  " << name_prefix << std::endl;
+                std::cout << "key  " << key << std::endl;
+                std::cout << "new_name   " << new_name << std::endl;
+                std::cout << "---------------" << std::endl;
+
+                // DON'T apply more than one rule
+                substitution_done = true;
+                break;
+            }
+        }
+
+        if( !substitution_done)
+        {
+            //just move it without changes
+            container->value_renamed[ it->first ] = value;
         }
     }
+
 }
 
 std::ostream& operator<<(std::ostream& ss, const RosTypeFlat& container)
@@ -345,6 +354,34 @@ std::ostream& operator<<(std::ostream& ss, const RosTypeFlat& container)
         ss << it->first << " = " << it->second << std::endl;
     }
     return ss;
+}
+
+SubstitutionRule::SubstitutionRule(const char *pattern, const char *name_location, const char *substitution):
+    pattern_pre(pattern),            pattern_suf(pattern),
+    location_pre(name_location),     location_suf(name_location),
+    substitution_pre(substitution),  substitution_suf(substitution)
+{
+    int pos;
+    pos = pattern_pre.find_first_of('#');
+    pattern_pre.remove_suffix( pattern_pre.length() - pos );
+    pattern_suf.remove_prefix( pos+1 );
+
+    pos = location_pre.find_first_of('#');
+    location_pre.remove_suffix( location_pre.length() - pos );
+    location_suf.remove_prefix( pos+1 );
+
+    pos = substitution_pre.find_first_of('#');
+    substitution_pre.remove_suffix( substitution_pre.length() - pos );
+    substitution_suf.remove_prefix( pos+1 );
+
+    /*  std::cout << pattern_pre << std::endl;
+    std::cout << pattern_suf << std::endl;
+
+    std::cout << location_pre << std::endl;
+    std::cout << location_suf << std::endl;
+
+    std::cout << substitution_pre << std::endl;
+    std::cout << substitution_suf << std::endl;*/
 }
 
 }

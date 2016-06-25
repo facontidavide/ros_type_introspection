@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <boost/utility/string_ref.hpp>
 
 namespace RosTypeParser{
 
@@ -51,7 +52,22 @@ void buildRosFlatType(const RosTypeMap& type_map,
                        uint8_t **buffer_ptr,
                        RosTypeFlat* flat_container);
 
-void applyNameTransform( std::vector< std::pair<const char*, const char*> >  rules,
+
+class SubstitutionRule{
+public:
+    SubstitutionRule(const char* pattern, const char* name_location, const char*substitution);
+
+    boost::string_ref pattern_suf;
+    boost::string_ref pattern_pre;
+
+    boost::string_ref location_suf;
+    boost::string_ref location_pre;
+
+    boost::string_ref substitution_suf;
+    boost::string_ref substitution_pre;
+};
+
+void applyNameTransform(const std::vector<SubstitutionRule> &rules,
                          RosTypeFlat* container);
 
 }

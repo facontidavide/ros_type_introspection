@@ -16,17 +16,58 @@
 using namespace ros::message_traits;
 using namespace RosTypeParser;
 
-std::vector< std::pair<const char*, const char*> > Rules()
+/*
+int main( int argc, char** argv)
 {
-    std::vector< std::pair<const char*, const char*> > rules;
 
-    rules.push_back( std::make_pair( "JointState.position[#]", "JointState.name[#]") );
-    rules.push_back( std::make_pair( "JointState.effort[#]", "JointState.name[#]") );
-    rules.push_back( std::make_pair( "JointState.velocity[#]", "JointState.name[#]") );
-    rules.push_back( std::make_pair( "TransformStamped[#]", "TransformStamped[#].Header.frame_id") );
-    rules.push_back( std::make_pair( "KeyValue[#].value", "KeyValue[#].name" ) );
-    rules.push_back( std::make_pair( "DiagnosticStatus[#]", "DiagnosticStatus[#].name" ) );
+    std::vector<SubstitutionRule> rules;
+    rules.push_back( SubstitutionRule(".position[#]",
+                                      ".name[#]",
+                                      ".#.position") );
+    rules.push_back( SubstitutionRule(".transforms[#].transform",
+                                      ".transforms[#].header.frame_id",
+                                      ".transform.#") );
 
+    RosTypeFlat flat;
+
+    flat.value[   "JointState.position[0]"] = 1;
+    flat.value[   "JointState.position[1]"] = 2;
+    flat.name_id[ "JointState.name[0]"] = "AAA";
+    flat.name_id[ "JointState.name[1]"] = "BBB";
+
+    flat.value[   "tfMessage.transforms[0].transform.translation.x"] = 1;
+    flat.name_id[ "tfMessage.transforms[0].header.frame_id"] = "CCC";
+
+
+
+    applyNameTransform( rules, &flat );
+
+    return 0;
+}
+*/
+
+std::vector<SubstitutionRule> Rules()
+{
+    std::vector<SubstitutionRule> rules;
+    rules.push_back( SubstitutionRule(".position[#]",
+                                      ".name[#]",
+                                      ".#.position") );
+
+    rules.push_back( SubstitutionRule(".velocity[#]",
+                                      ".name[#]",
+                                      ".#.velocity") );
+
+    rules.push_back( SubstitutionRule(".effort[#]",
+                                      ".name[#]",
+                                      ".#.effort") );
+
+    rules.push_back( SubstitutionRule(".transforms[#].transform",
+                                      ".transforms[#].header.frame_id",
+                                      ".transform.#") );
+
+    rules.push_back( SubstitutionRule(".transforms[#].header",
+                                      ".transforms[#].header.frame_id",
+                                      ".transform.#.header") );
     return rules;
 }
 
@@ -35,22 +76,17 @@ std::vector< std::pair<const char*, const char*> > Rules()
 void compare( const RosTypeMap& mapA, const RosTypeMap& mapB )
 {
     REQUIRE( mapA.size() == mapB.size() );
-
     for (auto itA = mapA.begin() ; itA != mapA.end(); itA++)
     {
         auto itB = mapB.find( itA->first );
-
         REQUIRE( itA->first == itB->first );
-
         REQUIRE( itA->second.full_name == itB->second.full_name );
 
         auto fieldsA = itA->second.fields;
         auto fieldsB = itB->second.fields;
-
         REQUIRE( fieldsA.size() == fieldsB.size() );
 
-        for (int i=0; i<fieldsA.size(); i++)
-        {
+        for (int i=0; i<fieldsA.size(); i++) {
             REQUIRE( fieldsA[i].type_name  == fieldsB[i].type_name );
             REQUIRE( fieldsA[i].field_name == fieldsB[i].field_name );
         }
@@ -64,8 +100,9 @@ void compare( const std::map< std::string, double>& flatA, const std::map< std::
     for (auto itA = flatA.begin() ; itA != flatA.end(); itA++)
     {
         auto itB = flatB.find( itA->first );
-
         std::cout <<  itA->first << " : " << itA->second << std::endl;
+
+        REQUIRE( itB != flatB.end() );
         REQUIRE( itA->first  == itB->first );
         REQUIRE( itA->second == itB->second );
     }
@@ -197,9 +234,6 @@ TEST_CASE( "Deserialize Pose", "RosType deserialization" )
 
     buildRosFlatType(type_map, "Pose", "Pose", &buffer_ptr,  &flat_container);
 
-    std::cout << "------------------------------"  << std::endl;
-    std::cout<< flat_container << std::endl;
-
     std::map< std::string, double > expected_result;
     expected_result["Pose.position.x"] = 1;
     expected_result["Pose.position.y"] = 2;
@@ -211,8 +245,18 @@ TEST_CASE( "Deserialize Pose", "RosType deserialization" )
 
     applyNameTransform( Rules() , &flat_container );
 
+    for(auto&it: flat_container.value_renamed) {
+        std::cout << it.first << " >> " << it.second << std::endl;
+    }
+
+    for(auto&it: expected_result) {
+        std::cout << it.first << " >>>>> " << it.second << std::endl;
+    }
+
     compare( flat_container.value,         expected_result );
     compare( flat_container.value_renamed, expected_result );
+
+
 }
 
 
@@ -255,17 +299,17 @@ TEST_CASE( "Deserialize JointState", "RosType deserialization" )
     expected_result["JointState.header.seq"] = 2016;
     expected_result["JointState.header.stamp"] = 1234.567;
 
-    expected_result["JointState.position.hola"] = 11;
-    expected_result["JointState.velocity.hola"] = 21;
-    expected_result["JointState.effort.hola"]   = 31;
+    expected_result["JointState.hola.position"] = 11;
+    expected_result["JointState.hola.velocity"] = 21;
+    expected_result["JointState.hola.effort"]   = 31;
 
-    expected_result["JointState.position.ciao"] = 12;
-    expected_result["JointState.velocity.ciao"] = 22;
-    expected_result["JointState.effort.ciao"]   = 32;
+    expected_result["JointState.ciao.position"] = 12;
+    expected_result["JointState.ciao.velocity"] = 22;
+    expected_result["JointState.ciao.effort"]   = 32;
 
-    expected_result["JointState.position.bye"] = 13;
-    expected_result["JointState.velocity.bye"] = 23;
-    expected_result["JointState.effort.bye"]   = 33;
+    expected_result["JointState.bye.position"] = 13;
+    expected_result["JointState.bye.velocity"] = 23;
+    expected_result["JointState.bye.effort"]   = 33;
 
     std::vector<uint8_t> buffer(64*1024);
     ros::serialization::OStream stream(buffer.data(), buffer.size());
@@ -277,14 +321,149 @@ TEST_CASE( "Deserialize JointState", "RosType deserialization" )
     buildRosFlatType(type_map, "JointState", "JointState", &buffer_ptr,  &flat_container);
     applyNameTransform( Rules(), &flat_container );
 
-    compare( flat_container.value_renamed,  expected_result );
+
+    for(auto&it: flat_container.value_renamed) {
+        std::cout << it.first << " >> " << it.second << std::endl;
+    }
+
+    for(auto&it: expected_result) {
+        std::cout << it.first << " >>>>> " << it.second << std::endl;
+    }
+
+    //---------------------------------------------------
+    {
+        auto& flatA =  flat_container.value_renamed;
+        auto& flatB = expected_result;
+        REQUIRE( flatA.size() == flatB.size() );
+
+        for (auto itA = flatA.begin() ; itA != flatA.end(); itA++)
+        {
+            auto itB = flatB.find( itA->first );
+            std::cout <<  itA->first << " : " << itA->second << std::endl;
+
+            REQUIRE( itB != flatB.end() );
+            REQUIRE( itA->first  == itB->first );
+            REQUIRE( itA->second == itB->second );
+        }
+    }
+    //---------------------------------------------------
 
     // repeat. Nothing should change
-
     buffer_ptr = buffer.data();
     buildRosFlatType(type_map, "JointState", "JointState", &buffer_ptr,  &flat_container);
     applyNameTransform( Rules() , &flat_container );
 
-    compare( flat_container.value_renamed, expected_result );
+
+    //---------------------------------------------------
+    {
+        auto& flatA =  flat_container.value_renamed;
+        auto& flatB = expected_result;
+        REQUIRE( flatA.size() == flatB.size() );
+
+        for (auto itA = flatA.begin() ; itA != flatA.end(); itA++)
+        {
+            auto itB = flatB.find( itA->first );
+            std::cout <<  itA->first << " : " << itA->second << std::endl;
+
+            REQUIRE( itB != flatB.end() );
+            REQUIRE( itA->first  == itB->first );
+            REQUIRE( itA->second == itB->second );
+        }
+    }
+    //---------------------------------------------------
 }
+
+
+TEST_CASE( "Deserialize Transform", "RosType deserialization" )
+//int func()
+{
+    RosTypeParser::RosTypeMap type_map;
+
+    parseRosTypeDescription(
+                DataType<tf::tfMessage >::value(),
+                Definition<tf::tfMessage>::value(),
+                &type_map );
+
+    std::cout << "------------------------------"  << std::endl;
+    printRosTypeMap( type_map );
+
+    tf::tfMessage tf_msg;
+
+    tf_msg.transforms.resize(1);
+
+    const char* suffix[3] = { "_A", "_B", "_C" };
+
+    std::map< std::string, double > expected_result;
+
+    for (int i=0; i< tf_msg.transforms.size() ; i++)
+    {
+        tf_msg.transforms[i].header.seq = 100+i;
+        tf_msg.transforms[i].header.stamp = {1234 + i, 0 };
+        tf_msg.transforms[i].header.frame_id = std::string("frame").append(suffix[i]);
+
+        tf_msg.transforms[i].child_frame_id = std::string("child").append(suffix[i]);
+
+        std::string prefix = std::string( "msgTransform.transform.frame" ).append(suffix[i]);
+
+        expected_result[ prefix + (".header.seq")   ] = tf_msg.transforms[i].header.seq;
+        expected_result[ prefix + (".header.stamp") ] = 1234 + i;
+
+        tf_msg.transforms[i].transform.translation.x = 10 +i;
+        tf_msg.transforms[i].transform.translation.y = 20 +i;
+        tf_msg.transforms[i].transform.translation.z = 30 +i;
+
+        tf_msg.transforms[i].transform.rotation.x = 40 +i;
+        tf_msg.transforms[i].transform.rotation.y = 50 +i;
+        tf_msg.transforms[i].transform.rotation.z = 60 +i;
+        tf_msg.transforms[i].transform.rotation.w = 70 +i;
+
+        expected_result[ prefix + (".translation.x") ] = tf_msg.transforms[i].transform.translation.x;
+        expected_result[ prefix + (".translation.y") ] = tf_msg.transforms[i].transform.translation.y;
+        expected_result[ prefix + (".translation.z") ] = tf_msg.transforms[i].transform.translation.z;
+
+        expected_result[ prefix + (".rotation.x") ] = tf_msg.transforms[i].transform.rotation.x;
+        expected_result[ prefix + (".rotation.y") ] = tf_msg.transforms[i].transform.rotation.y;
+        expected_result[ prefix + (".rotation.z") ] = tf_msg.transforms[i].transform.rotation.z;
+        expected_result[ prefix + (".rotation.w") ] = tf_msg.transforms[i].transform.rotation.w;
+
+    }
+
+    std::vector<uint8_t> buffer(64*1024);
+    ros::serialization::OStream stream(buffer.data(), buffer.size());
+    ros::serialization::Serializer<tf::tfMessage>::write(stream, tf_msg);
+
+    RosTypeFlat flat_container;
+    uint8_t* buffer_ptr = buffer.data();
+
+    buildRosFlatType(type_map, "tfMessage", "msgTransform", &buffer_ptr,  &flat_container);
+    applyNameTransform( Rules(), &flat_container );
+    /*
+    std::cout <<  "---------------------------" << std::endl;
+    for(auto&it: flat_container.value_renamed) {
+        std::cout << it.first << " >> " << it.second << std::endl;
+    }
+    std::cout <<  "---------------------------" << std::endl;
+    for(auto&it: expected_result) {
+        std::cout << it.first << " >>>>> " << it.second << std::endl;
+    }
+*/
+
+    { //---------------------------------------------------
+        auto& flatA =  flat_container.value_renamed;
+        auto& flatB = expected_result;
+        REQUIRE( flatA.size() == flatB.size() );
+
+        for (auto itA = flatA.begin() ; itA != flatA.end(); itA++)
+        {
+            auto itB = flatB.find( itA->first );
+            std::cout <<  itA->first << " : " << itA->second << std::endl;
+
+            REQUIRE( itB != flatB.end() );
+            REQUIRE( itA->first  == itB->first );
+            REQUIRE( itA->second == itB->second );
+        }
+    }//---------------------------------------------------
+
+}
+
 
