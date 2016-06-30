@@ -41,7 +41,7 @@ std::vector<SubstitutionRule> Rules()
 
 int main( int argc, char** argv)
 {
-    String test("Hello");
+ /*   String test("Hello");
 
     String longname("Hello0123456789_0123456789_0123456789");
     std::cout << longname << " is sso "<< longname.isSso()<< std::endl;
@@ -66,22 +66,22 @@ int main( int argc, char** argv)
 
     test.resize(50);
     std::cout << test << " is sso "<< test.isSso()<< std::endl;
-
+*/
     RosTypeParser::RosTypeMap type_map;
 
-    parseRosTypeDescription(
+    buildRosTypeMapFromDefinition(
                 DataType<tf::tfMessage >::value(),
                 Definition<tf::tfMessage>::value(),
                 &type_map );
 
     std::cout << "------------------------------"  << std::endl;
-    printRosTypeMap( type_map );
+    std::cout << type_map << std::endl;
 
     tf::tfMessage tf_msg;
 
-    tf_msg.transforms.resize(3);
+    tf_msg.transforms.resize(6);
 
-    const char* suffix[3] = { "_A", "_B", "_C" };
+    const char* suffix[6] = { "_A", "_B", "_C", "_D" , "_E", "_F"};
 
     for (int i=0; i< tf_msg.transforms.size() ; i++)
     {
@@ -106,7 +106,7 @@ int main( int argc, char** argv)
 
     for (int i=0; i<100000;i++)
     {
-         RosTypeFlat flat_container;
+        RosTypeFlat flat_container;
 
         ros::serialization::OStream stream(buffer.data(), buffer.size());
         ros::serialization::Serializer<tf::tfMessage>::write(stream, tf_msg);

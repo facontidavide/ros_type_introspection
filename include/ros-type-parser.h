@@ -6,10 +6,18 @@
 #include <map>
 #include <boost/utility/string_ref.hpp>
 
+
 namespace RosTypeParser{
 
-typedef sso23::string String;
-
+// you might (will?) find annoying that we use a different String implementation.
+// but most of the time this class, which uses "small string optimization" for
+// string which have less than 62 character,
+// will perform faster when the string has less than 62 characters.
+#if 1
+typedef sso63::string String;
+#else
+typedef std::string String;
+#endif
 
 typedef struct
 {
@@ -18,61 +26,69 @@ typedef struct
 
 } RosTypeField;
 
-class RosType
+typedef struct RosType_
 {
-public:
-    std::string full_name;
+    String full_name;
     std::vector<RosTypeField> fields;
 
-    RosType() {}
-
-    RosType( std::string name):
-        full_name(name) { }
-};
+    RosType_(){}
+    RosType_( const String& name) { full_name = name; }
+}RosType;
 
 typedef std::map<String, RosType> RosTypeMap;
 
+
+
 typedef struct{
-    std::map<String, double> value_renamed;
-    std::map<String, double> value;
-    std::map<String, String> name_id;
+   std::map<String, double> value_renamed;
+   std::map<String, double> value;
+   std::map<String, String> name_id;
 
 }RosTypeFlat;
 
 //------------------------------
 std::ostream& operator<<(std::ostream& s, const RosTypeFlat& c);
 
-void parseRosTypeDescription(
+void buildRosTypeMapFromDefinition(
         const std::string & type_name,
         const std::string & msg_definition,
         RosTypeMap* type_map);
 
-void printRosTypeMap( const RosTypeMap& type_map );
-void printRosType(const RosTypeMap& type_map, const std::string& type_name, int indent = 0 );
+RosTypeMap buildRosTypeMapFromDefinition(
+        const std::string & type_name,
+        const std::string & msg_definition);
+
+std::ostream& operator<<(std::ostream& s, const RosTypeMap& c);
+
+void printRosType(const RosTypeMap& type_map, const String &type_name, int indent = 0 );
 
 void buildRosFlatType(const RosTypeMap& type_map,
-                       const String &type_name,
-                       String prefix,
-                       uint8_t **buffer_ptr,
-                       RosTypeFlat* flat_container);
+                      const String &type_name,
+                      String prefix,
+                      uint8_t **buffer_ptr,
+                      RosTypeFlat* flat_container);
 
 
 class SubstitutionRule{
 public:
-    SubstitutionRule(const char* pattern, const char* name_location, const char*substitution);
+    SubstitutionRule( std::string pattern, std::string name_location, std::string substitution);
 
-    boost::string_ref pattern_suf;
-    boost::string_ref pattern_pre;
+    std::string pattern_suf;
+    std::string pattern_pre;
 
-    boost::string_ref location_suf;
-    boost::string_ref location_pre;
+    std::string location_suf;
+    std::string location_pre;
 
-    boost::string_ref substitution_suf;
-    boost::string_ref substitution_pre;
+    std::string substitution_suf;
+    std::string substitution_pre;
+private:
+
 };
 
+typedef std::map<std::string, SubstitutionRule> SubstitutionRuleSet;
+
 void applyNameTransform(const std::vector<SubstitutionRule> &rules,
-                         RosTypeFlat* container);
+                        RosTypeFlat* container);
 
 }
 

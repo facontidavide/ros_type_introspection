@@ -39,7 +39,7 @@
 
 #include <iostream>
 
-namespace sso23 {
+namespace sso63 {
 
 namespace detail {
 
@@ -98,7 +98,7 @@ class basic_string {
 public:
     basic_string() noexcept
         : basic_string{"", static_cast<std::size_t>(0)} {
-    }
+    }   
 
     basic_string(CharT const* string, std::size_t size) {
         if(size <= sso_capacity) {
@@ -117,17 +117,21 @@ public:
         : basic_string{string, std::strlen(string)} {
     }
 
-    basic_string(const basic_string& string) {
-        if(string.sso()) {
-            m_data.sso = string.m_data.sso;
+    basic_string(const basic_string& other) {
+        if(other.sso()) {
+            m_data.sso = other.m_data.sso;
         } else {
-            new (this) basic_string{string.data(), string.size()};
+            new (this) basic_string{other.data(), other.size()};
         }
+    }  
+
+    basic_string(basic_string&& other) noexcept {
+        m_data = other.m_data;
+        other.set_moved_from();
     }
 
-    basic_string(basic_string&& string) noexcept {
-        m_data = string.m_data;
-        string.set_moved_from();
+    basic_string(const std::basic_string<CharT>& other){
+        basic_string( other.data(), other.size() );
     }
 
     basic_string& operator=(basic_string const& other) {
@@ -313,7 +317,7 @@ private:
 private:
     union Data {
         struct NonSSO {
-            CharT overhead[64 - sizeof( CharT*) - 2*sizeof(std::size_t) - sizeof(CharT) ];
+            CharT overhead[64 - sizeof( CharT*) - 2*sizeof(std::size_t) - sizeof(CharT) ]; //waster memory to keep the alignment
             CharT* ptr;
             std::size_t size;
             std::size_t capacity;

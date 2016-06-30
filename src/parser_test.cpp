@@ -40,7 +40,7 @@ std::vector<SubstitutionRule> Rules()
                                       ".transform.#.header") );
     return rules;
 }
-/*
+
 void compare( const RosTypeMap& mapA, const RosTypeMap& mapB )
 {
     REQUIRE( mapA.size() == mapB.size() );
@@ -77,12 +77,12 @@ void compare( const std::map< std::string, double>& flatA, const std::map< std::
 }
 
 
-TEST_CASE( "Test Pose parsing", "parseRosTypeDescription" )
+TEST_CASE( "Test Pose parsing", "buildRosTypeMapFromDefinition" )
 {
 
     RosTypeParser::RosTypeMap type_map;
 
-    parseRosTypeDescription(
+    buildRosTypeMapFromDefinition(
                 DataType<geometry_msgs::Pose >::value(),
                 Definition<geometry_msgs::Pose >::value(),
                 &type_map );
@@ -113,22 +113,22 @@ TEST_CASE( "Test Pose parsing", "parseRosTypeDescription" )
 }
 
 
-TEST_CASE( "Test JointState parsing", "parseRosTypeDescription" )
+TEST_CASE( "Test JointState parsing", "buildRosTypeMapFromDefinition" )
 //int func()
 {
     RosTypeParser::RosTypeMap type_map;
 
-    parseRosTypeDescription(
+    buildRosTypeMapFromDefinition(
                 DataType<std_msgs::Header >::value(),
                 Definition<std_msgs::Header >::value(),
                 &type_map );
 
-    parseRosTypeDescription(
+    buildRosTypeMapFromDefinition(
                 DataType<geometry_msgs::Pose >::value(),
                 Definition<geometry_msgs::Pose >::value(),
                 &type_map );
 
-    parseRosTypeDescription(
+    buildRosTypeMapFromDefinition(
                 DataType<sensor_msgs::JointState >::value(),
                 Definition<sensor_msgs::JointState >::value(),
                 &type_map );
@@ -178,7 +178,7 @@ TEST_CASE( "Deserialize Pose", "RosType deserialization" )
 {
     RosTypeParser::RosTypeMap type_map;
 
-    parseRosTypeDescription(
+    buildRosTypeMapFromDefinition(
                 DataType<geometry_msgs::Pose >::value(),
                 Definition<geometry_msgs::Pose >::value(),
                 &type_map );
@@ -246,7 +246,7 @@ TEST_CASE( "Deserialize JointState", "RosType deserialization" )
 {
     RosTypeParser::RosTypeMap type_map;
 
-    parseRosTypeDescription(
+    buildRosTypeMapFromDefinition(
                 DataType<sensor_msgs::JointState >::value(),
                 Definition<sensor_msgs::JointState >::value(),
                 &type_map );
@@ -351,20 +351,20 @@ TEST_CASE( "Deserialize JointState", "RosType deserialization" )
     } //---------------------------------------------------
 
 }
-*/
+
 
 TEST_CASE( "Deserialize Transform", "RosType deserialization" )
 //int func()
 {
     RosTypeParser::RosTypeMap type_map;
 
-    parseRosTypeDescription(
+    buildRosTypeMapFromDefinition(
                 DataType<tf::tfMessage >::value(),
                 Definition<tf::tfMessage>::value(),
                 &type_map );
 
     std::cout << "------------------------------"  << std::endl;
-    printRosTypeMap( type_map );
+    std::cout << type_map << std::endl;
 
     tf::tfMessage tf_msg;
 

@@ -47,8 +47,17 @@ inline String strippedTypeName(const boost::string_ref& line )
     return String( output.data(), output.length() );
 }
 
+RosTypeMap buildRosTypeMapFromDefinition(
+        const std::string & type_name,
+        const std::string & msg_definition)
+{
+    RosTypeMap output;
+    buildRosTypeMapFromDefinition( type_name, msg_definition, &output );
+    return output;
+}
 
-void parseRosTypeDescription(
+
+void buildRosTypeMapFromDefinition(
         const std::string & type_name,
         const std::string & msg_definition,
         RosTypeMap* type_map)
@@ -57,19 +66,18 @@ void parseRosTypeDescription(
 
     auto current_type_name = strippedTypeName(type_name);
 
-    (*type_map)[ current_type_name ] = RosType(type_name );
+    (*type_map)[ current_type_name ] = RosType(type_name ) ;
 
 
     for (std::string line; std::getline(messageDescriptor, line, '\n') ; )
     {
-        if( isCommentOrEmpty(line) )
-        {
+        if( isCommentOrEmpty(line) ) {
             continue;
         }
 
         if( isSeparator(line) ) // start to store a sub type
         {
-            if( std::getline(messageDescriptor, line, '\n') == 0) {
+            if( ! std::getline(messageDescriptor, line, '\n') ) {
                 break;
             }
 
@@ -80,7 +88,7 @@ void parseRosTypeDescription(
 
             current_type_name = strippedTypeName(line);
 
-            (*type_map)[ current_type_name ] = RosType(line );
+            (*type_map)[ current_type_name ] =  RosType(line );
         }
         else{
             RosTypeField field;
@@ -112,22 +120,23 @@ void parseRosTypeDescription(
 }
 
 
-void printRosTypeMap(const RosTypeMap& type_map)
+std::ostream& operator<<(std::ostream& ss, const RosTypeMap& type_map)
 {
     for (auto it = type_map.begin(); it != type_map.end(); it++)
     {
-        std::cout<< "\n" << it->first <<" : " << std::endl;
+        ss<< "\n" << it->first <<" : " << std::endl;
 
         auto& fields = it->second.fields;
         for (int i=0; i< fields.size(); i++ )
         {
-            std::cout<< "\t" << fields[i].field_name <<" : " << fields[i].type_name << std::endl;
+            ss<< "\t" << fields[i].field_name <<" : " << fields[i].type_name << std::endl;
         }
     }
+    return ss;
 }
 
 /*
-void printRosType(const RosTypeMap& type_map, const std::string& type_name, int indent  )
+void printRosType(const RosTypeMap& type_map, const String& type_name, int indent  )
 {
     for (int d=0; d<indent; d++) std::cout << "  ";
     std::cout  << type_name <<" : " << std::endl;
@@ -183,8 +192,15 @@ void buildRosFlatType(const RosTypeMap& type_map,
                       uint8_t** buffer_ptr,
                       RosTypeFlat* flat_container )
 {
-
     boost::string_ref type ( type_name.data(), type_name.size() );
+
+    {
+        int pos = type.find_last_of('/');
+        if( pos != type.npos ) {
+            type.remove_prefix( pos+1 );
+        }
+    }
+
     int32_t vect_size = 1;
 
     bool is_vector = false;
@@ -193,6 +209,7 @@ void buildRosFlatType(const RosTypeMap& type_map,
         vect_size = ReadFromBufferAndMoveForward<int32_t>( buffer_ptr );
         type.remove_suffix(2);
         is_vector = true;
+        if( vect_size > 64 ) return;
     }
 
     std::function<void(const String&)> deserializeAndStore;
@@ -200,15 +217,61 @@ void buildRosFlatType(const RosTypeMap& type_map,
     if( type.compare( "float64") == 0 )
     {
         deserializeAndStore = [&](const String& key){
-            double value = ReadFromBufferAndMoveForward<double>(buffer_ptr);
-            flat_container->value[key ] = value;
+            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<double>(buffer_ptr);
+        };
+    }
+    else if( type.compare( "float32") == 0 )
+    {
+        deserializeAndStore = [&](const String& key){
+            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<float>(buffer_ptr);
+        };
+    }
+    else if( type.compare( "uint64") == 0 )
+    {
+        deserializeAndStore = [&](const String& key){
+            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<uint64_t>(buffer_ptr);
+        };
+    }
+    else if( type.compare( "int64") == 0 )
+    {
+        deserializeAndStore = [&](const String& key){
+            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<int64_t>(buffer_ptr);
         };
     }
     else if( type.compare( "uint32") == 0 )
     {
         deserializeAndStore = [&](const String& key){
-            double value = (double)ReadFromBufferAndMoveForward<uint32_t>(buffer_ptr);
-            flat_container->value[key ] = value;
+            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<uint32_t>(buffer_ptr);
+        };
+    }
+    else if( type.compare( "int32") == 0 )
+    {
+        deserializeAndStore = [&](const String& key){
+            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<int32_t>(buffer_ptr);
+        };
+    }
+    else if( type.compare( "uint16") == 0 )
+    {
+        deserializeAndStore = [&](const String& key){
+            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<uint16_t>(buffer_ptr);
+        };
+    }
+    else if( type.compare( "int16") == 0 )
+    {
+        deserializeAndStore = [&](const String& key){
+            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<int16_t>(buffer_ptr);
+        };
+    }
+    else if( type.compare( "uint8") == 0 )
+    {
+        deserializeAndStore = [&](const String& key){
+            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<uint8_t>(buffer_ptr);
+        };
+    }
+    else if( type.compare( "int8") == 0 )
+    {
+        deserializeAndStore = [&](const String& key){
+            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<int8_t>(buffer_ptr);
         };
     }
     else if( type.compare("time") == 0 )
@@ -368,23 +431,28 @@ std::ostream& operator<<(std::ostream& ss, const RosTypeFlat& container)
     return ss;
 }
 
-SubstitutionRule::SubstitutionRule(const char *pattern, const char *name_location, const char *substitution):
-    pattern_pre(pattern),            pattern_suf(pattern),
-    location_pre(name_location),     location_suf(name_location),
-    substitution_pre(substitution),  substitution_suf(substitution)
+SubstitutionRule::SubstitutionRule( std::string pattern, std::string location, std::string substitution):
+    pattern_pre( pattern),
+    pattern_suf( pattern),
+
+    location_pre( location),
+    location_suf( location),
+
+    substitution_pre(substitution),
+    substitution_suf(substitution)
 {
     int pos;
     pos = pattern_pre.find_first_of('#');
-    pattern_pre.remove_suffix( pattern_pre.length() - pos );
-    pattern_suf.remove_prefix( pos+1 );
+    pattern_pre.erase( pos, pattern_pre.length() - pos );
+    pattern_suf.erase( 0, pos+1 );
 
     pos = location_pre.find_first_of('#');
-    location_pre.remove_suffix( location_pre.length() - pos );
-    location_suf.remove_prefix( pos+1 );
+    location_pre.erase(pos, location_pre.length() - pos );
+    location_suf.erase(0, pos+1 );
 
     pos = substitution_pre.find_first_of('#');
-    substitution_pre.remove_suffix( substitution_pre.length() - pos );
-    substitution_suf.remove_prefix( pos+1 );
+    substitution_pre.erase(pos, substitution_pre.length() - pos );
+    substitution_suf.erase(0, pos+1 );
 }
 
 }
