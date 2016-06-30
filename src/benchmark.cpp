@@ -106,14 +106,12 @@ int main( int argc, char** argv)
 
     for (int i=0; i<100000;i++)
     {
-        RosTypeFlat flat_container;
-
         ros::serialization::OStream stream(buffer.data(), buffer.size());
         ros::serialization::Serializer<tf::tfMessage>::write(stream, tf_msg);
 
         uint8_t* buffer_ptr = buffer.data();
 
-        buildRosFlatType(type_map, "tfMessage", "msgTransform", &buffer_ptr,  &flat_container);
+        RosTypeFlat flat_container = buildRosFlatType(type_map, "tfMessage", "msgTransform", &buffer_ptr);
         applyNameTransform( Rules(), &flat_container );
     }
 

@@ -200,7 +200,7 @@ TEST_CASE( "Deserialize Pose", "RosType deserialization" )
     RosTypeFlat flat_container;
     uint8_t* buffer_ptr = buffer.data();
 
-    buildRosFlatType(type_map, "Pose", "Pose", &buffer_ptr,  &flat_container);
+    flat_container = buildRosFlatType(type_map, "Pose", "Pose", &buffer_ptr);
 
     std::map< String, double > expected_result;
     expected_result["Pose.position.x"] = 1;
@@ -299,7 +299,7 @@ TEST_CASE( "Deserialize JointState", "RosType deserialization" )
     RosTypeFlat flat_container;
     uint8_t* buffer_ptr = buffer.data();
 
-    buildRosFlatType(type_map, "JointState", "JointState", &buffer_ptr,  &flat_container);
+    flat_container = buildRosFlatType(type_map, "JointState", "JointState", &buffer_ptr);
     applyNameTransform( Rules(), &flat_container );
 
 
@@ -330,7 +330,7 @@ TEST_CASE( "Deserialize JointState", "RosType deserialization" )
 
     // repeat. Nothing should change
     buffer_ptr = buffer.data();
-    buildRosFlatType(type_map, "JointState", "JointState", &buffer_ptr,  &flat_container);
+    flat_container = buildRosFlatType(type_map, "JointState", "JointState", &buffer_ptr);
     applyNameTransform( Rules() , &flat_container );
 
 
@@ -414,7 +414,7 @@ TEST_CASE( "Deserialize Transform", "RosType deserialization" )
     RosTypeFlat flat_container;
     uint8_t* buffer_ptr = buffer.data();
 
-    buildRosFlatType(type_map, "tfMessage", "msgTransform", &buffer_ptr,  &flat_container);
+    flat_container = buildRosFlatType(type_map, "tfMessage", "msgTransform", &buffer_ptr);
     applyNameTransform( Rules(), &flat_container );
 
     std::cout <<  "---------------------------" << std::endl;

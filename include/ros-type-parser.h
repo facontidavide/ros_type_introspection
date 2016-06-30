@@ -40,9 +40,9 @@ typedef std::map<String, RosType> RosTypeMap;
 
 
 typedef struct{
-   std::map<String, double> value_renamed;
-   std::map<String, double> value;
-   std::map<String, String> name_id;
+   std::vector< std::pair<String, double> > value_renamed;
+   std::vector< std::pair<String, double> > value;
+   std::vector< std::pair<String, String> > name_id;
 
 }RosTypeFlat;
 
@@ -62,11 +62,12 @@ std::ostream& operator<<(std::ostream& s, const RosTypeMap& c);
 
 void printRosType(const RosTypeMap& type_map, const String &type_name, int indent = 0 );
 
-void buildRosFlatType(const RosTypeMap& type_map,
-                      const String &type_name,
-                      String prefix,
-                      uint8_t **buffer_ptr,
-                      RosTypeFlat* flat_container);
+
+
+RosTypeFlat buildRosFlatType(const RosTypeMap& type_map,
+                      const String& type_name,
+                      const String& prefix,
+                      uint8_t **buffer_ptr);
 
 
 class SubstitutionRule{

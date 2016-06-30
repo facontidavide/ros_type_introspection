@@ -66,7 +66,10 @@ void buildRosTypeMapFromDefinition(
 
     auto current_type_name = strippedTypeName(type_name);
 
-    (*type_map)[ current_type_name ] = RosType(type_name ) ;
+     RosType type_item;
+     type_item.full_name = type_name;
+
+    (*type_map)[ current_type_name ] = type_item ;
 
 
     for (std::string line; std::getline(messageDescriptor, line, '\n') ; )
@@ -186,7 +189,7 @@ template <typename T> T ReadFromBufferAndMoveForward( uint8_t** buffer)
 }
 
 
-void buildRosFlatType(const RosTypeMap& type_map,
+void buildRosFlatTypeImpl(const RosTypeMap& type_map,
                       const String &type_name,
                       String prefix,
                       uint8_t** buffer_ptr,
@@ -217,69 +220,69 @@ void buildRosFlatType(const RosTypeMap& type_map,
     if( type.compare( "float64") == 0 )
     {
         deserializeAndStore = [&](const String& key){
-            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<double>(buffer_ptr);
+            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<double>(buffer_ptr) ) );
         };
     }
     else if( type.compare( "float32") == 0 )
     {
         deserializeAndStore = [&](const String& key){
-            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<float>(buffer_ptr);
+            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<float>(buffer_ptr) ) );
         };
     }
     else if( type.compare( "uint64") == 0 )
     {
         deserializeAndStore = [&](const String& key){
-            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<uint64_t>(buffer_ptr);
+            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<uint64_t>(buffer_ptr) ) );
         };
     }
     else if( type.compare( "int64") == 0 )
     {
         deserializeAndStore = [&](const String& key){
-            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<int64_t>(buffer_ptr);
+            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<int64_t>(buffer_ptr) ) );
         };
     }
     else if( type.compare( "uint32") == 0 )
     {
         deserializeAndStore = [&](const String& key){
-            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<uint32_t>(buffer_ptr);
+            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<uint32_t>(buffer_ptr) ) );
         };
     }
     else if( type.compare( "int32") == 0 )
     {
         deserializeAndStore = [&](const String& key){
-            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<int32_t>(buffer_ptr);
+            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<int32_t>(buffer_ptr) ) );
         };
     }
     else if( type.compare( "uint16") == 0 )
     {
         deserializeAndStore = [&](const String& key){
-            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<uint16_t>(buffer_ptr);
+            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<uint16_t>(buffer_ptr) ) );
         };
     }
     else if( type.compare( "int16") == 0 )
     {
         deserializeAndStore = [&](const String& key){
-            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<int16_t>(buffer_ptr);
+            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<int16_t>(buffer_ptr) ) );
         };
     }
     else if( type.compare( "uint8") == 0 )
     {
         deserializeAndStore = [&](const String& key){
-            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<uint8_t>(buffer_ptr);
+            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<uint8_t>(buffer_ptr) ) );
         };
     }
     else if( type.compare( "int8") == 0 )
     {
         deserializeAndStore = [&](const String& key){
-            flat_container->value[key ] = (double) ReadFromBufferAndMoveForward<int8_t>(buffer_ptr);
+            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<int8_t>(buffer_ptr) ) );
         };
     }
     else if( type.compare("time") == 0 )
     {
         deserializeAndStore = [&](const String& key){
-            ros::Time time = ReadFromBufferAndMoveForward<ros::Time>(buffer_ptr);
+            ros::Time time = ReadFromBufferAndMoveForward<ros::Time>(buffer_ptr) ;
             double value = time.toSec();
-            flat_container->value[ key ] = value;
+            flat_container->value.push_back( std::make_pair( key,  value) );
         };
     }
     else if( type.compare("string") == 0 )
@@ -288,7 +291,7 @@ void buildRosFlatType(const RosTypeMap& type_map,
             int32_t string_size = ReadFromBufferAndMoveForward<int32_t>( buffer_ptr );
             String id( (const char*)(*buffer_ptr), string_size );
             (*buffer_ptr) += string_size;
-            flat_container->name_id[ key ] = id;
+            flat_container->name_id.push_back( std::make_pair( key, id ) );
         };
     }
     else {
@@ -304,9 +307,10 @@ void buildRosFlatType(const RosTypeMap& type_map,
                     new_prefix.append( SEPARATOR );
                     new_prefix.append( fields[i].field_name.data(), fields[i].field_name.size())  ;
 
-                    buildRosFlatType(type_map, (fields[i].type_name),
+                    buildRosFlatTypeImpl(type_map, (fields[i].type_name),
                                      new_prefix,
-                                     buffer_ptr, flat_container );
+                                     buffer_ptr,
+                                     flat_container);
                 }
             }
             else {
@@ -327,6 +331,26 @@ void buildRosFlatType(const RosTypeMap& type_map,
         }
         deserializeAndStore(key);
     }
+}
+
+
+RosTypeFlat buildRosFlatType(const RosTypeMap& type_map,
+                      const String &type_name,
+                      const String & prefix,
+                      uint8_t** buffer_ptr)
+{
+    RosTypeFlat flat_container;
+    buildRosFlatTypeImpl( type_map, type_name, prefix, buffer_ptr,  &flat_container );
+
+    std::sort( flat_container.name_id.begin(),  flat_container.name_id.end(),
+               []( const std::pair<String,String> & left,
+                   const std::pair<String,String> & right)
+                {
+                    return left.first < right.first;
+                }
+    );
+
+    return flat_container;
 }
 
 
@@ -375,7 +399,14 @@ void applyNameTransform( const std::vector< SubstitutionRule >&  rules,
             for (const char c: rule.location_suf )  key[buffer_index++] = c;
             key[buffer_index] = '\0';
 
-            auto substitutor = container->name_id.find( key ) ;
+            auto substitutor = std::lower_bound( container->name_id.begin(),
+                                                 container->name_id.end(),
+                                                 String(key),
+                                                 []( const std::pair<String,String> item, const String& key )  { return item.first < key; }
+            );
+
+
+
             if( substitutor != container->name_id.end())
             {
                 auto& index_replacement = substitutor->second;
@@ -392,7 +423,7 @@ void applyNameTransform( const std::vector< SubstitutionRule >&  rules,
                 for (const char c: name_suffix           )  new_name[name_index++] = c;
                 new_name[name_index] = '\0';
 
-                container->value_renamed[new_name] = value;
+                container->value_renamed.push_back( std::make_pair(new_name, value) );
 
                 /*std::cout << "---------------" << std::endl;
                 std::cout << "index        " << index << std::endl;
@@ -410,7 +441,7 @@ void applyNameTransform( const std::vector< SubstitutionRule >&  rules,
         if( !substitution_done)
         {
             //just move it without changes
-            container->value_renamed[ it->first ] = value;
+            container->value_renamed.push_back( std::make_pair( it->first , value ) );
         }
     }
 
