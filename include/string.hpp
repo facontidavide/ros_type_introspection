@@ -131,7 +131,7 @@ public:
     }
 
     basic_string(const std::basic_string<CharT>& other){
-        basic_string( other.data(), other.size() );
+        *this = basic_string( other.data(), other.size() );
     }
 
     basic_string& operator=(basic_string const& other) {
@@ -144,6 +144,11 @@ public:
         this->~basic_string();
         m_data = other.m_data;
         other.set_moved_from();
+        return *this;
+    }
+
+    basic_string& operator=(const std::basic_string<CharT>& other) {
+        *this = basic_string( other.data(), other.size() );
         return *this;
     }
 
