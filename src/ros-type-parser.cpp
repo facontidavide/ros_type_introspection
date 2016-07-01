@@ -357,6 +357,10 @@ RosTypeFlat buildRosFlatType(const RosTypeMap& type_map,
 void applyNameTransform( const std::vector< SubstitutionRule >&  rules,
                          RosTypeFlat* container)
 {
+    int vect_index = 0;
+
+    container->value_renamed.resize( container->value.size() );
+
     for (auto it = container->value.begin(); it != container->value.end(); it++)
     {
         boost::string_ref name ( it->first.data(),  it->first.size());
@@ -405,8 +409,6 @@ void applyNameTransform( const std::vector< SubstitutionRule >&  rules,
                                                  []( const std::pair<String,String> item, const String& key )  { return item.first < key; }
             );
 
-
-
             if( substitutor != container->name_id.end())
             {
                 auto& index_replacement = substitutor->second;
@@ -423,7 +425,9 @@ void applyNameTransform( const std::vector< SubstitutionRule >&  rules,
                 for (const char c: name_suffix           )  new_name[name_index++] = c;
                 new_name[name_index] = '\0';
 
-                container->value_renamed.push_back( std::make_pair(new_name, value) );
+                container->value_renamed[vect_index].first  = String(new_name);
+                container->value_renamed[vect_index].second = value;
+                vect_index++;
 
                 /*std::cout << "---------------" << std::endl;
                 std::cout << "index        " << index << std::endl;
@@ -441,7 +445,10 @@ void applyNameTransform( const std::vector< SubstitutionRule >&  rules,
         if( !substitution_done)
         {
             //just move it without changes
-            container->value_renamed.push_back( std::make_pair( it->first , value ) );
+          //  container->value_renamed[vect_index++] = ( std::make_pair( it->first , value ) );
+            container->value_renamed[vect_index].first  = it->first;
+            container->value_renamed[vect_index].second = value;
+            vect_index++;
         }
     }
 

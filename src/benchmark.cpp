@@ -104,7 +104,7 @@ int main( int argc, char** argv)
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    for (int i=0; i<100000;i++)
+    for (int i=0; i<50000;i++)
     {
         ros::serialization::OStream stream(buffer.data(), buffer.size());
         ros::serialization::Serializer<tf::tfMessage>::write(stream, tf_msg);
