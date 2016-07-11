@@ -1,4 +1,4 @@
-#include "ros-type-parser.h"
+#include <ros_type_introspection/ros_type_introspection.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/utility/string_ref.hpp>
 #include <boost/lexical_cast.hpp>

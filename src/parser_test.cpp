@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
-#include "catch.h"
+#include <catch.h>
 
-#include "topic_tools/shape_shifter.h"
+#include <topic_tools/shape_shifter.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/utility/string_ref.hpp>
@@ -11,7 +11,7 @@
 #include <sstream>
 #include <iostream>
 #include <chrono>
-#include "ros-type-parser.h"
+#include <ros_type_introspection/ros_type_introspection.h>
 
 using namespace ros::message_traits;
 using namespace RosTypeParser;

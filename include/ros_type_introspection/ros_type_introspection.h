@@ -2,10 +2,9 @@
 #define ROSTYPEPARSER_H
 
 #include <vector>
-#include <string.hpp>
 #include <map>
 #include <boost/utility/string_ref.hpp>
-
+#include <ros_type_introspection/string.hpp>
 
 namespace RosTypeParser{
 
