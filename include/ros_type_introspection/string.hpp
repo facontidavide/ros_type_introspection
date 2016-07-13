@@ -39,7 +39,7 @@
 
 #include <iostream>
 
-namespace sso63 {
+namespace ssoX {
 
 namespace detail {
 
@@ -91,7 +91,7 @@ void set_msb(unsigned char& byte, bool bit) {
 
 }
 
-template <typename CharT,
+template <typename MAX_SIZE, typename CharT,
           typename Traits = std::char_traits<CharT>>
 class basic_string {
     typedef typename std::make_unsigned<CharT>::type UCharT;
@@ -101,6 +101,9 @@ public:
     }   
 
     basic_string(CharT const* string, std::size_t size) {
+
+        static_assert( MAX_SIZE >= 29 && MAX_SIZE <= 63, "Size must be >=29 && <= 63" );
+
         if(size <= sso_capacity) {
             Traits::move(m_data.sso.string, string, size);
             Traits::assign(m_data.sso.string[size], static_cast<CharT>(0));
@@ -322,7 +325,7 @@ private:
 private:
     union Data {
         struct NonSSO {
-            CharT overhead[64 - sizeof( CharT*) - 2*sizeof(std::size_t) - sizeof(CharT) ]; //waster memory to keep the alignment
+            CharT overhead[MAX_SIZE+1 - sizeof( CharT*) - 2*sizeof(std::size_t) - sizeof(CharT) ]; //waster memory to keep the alignment
             CharT* ptr;
             std::size_t size;
             std::size_t capacity;

@@ -9,7 +9,7 @@
 #include <sstream>
 #include <iostream>
 #include <chrono>
-#include <ros_type_introspection/ros_type_introspection.h>
+#include <ros_type_introspection/ros_type_introspection.hpp>
 
 using namespace ros::message_traits;
 using namespace RosTypeParser;
