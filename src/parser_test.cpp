@@ -130,7 +130,53 @@ TEST_CASE("constant_uint8", "ROSMessageFields")
   REQUIRE( std::string("uint8") == msg.fields[0].type().baseName() );
   REQUIRE(msg.fields[0].isConstant() == true);
   REQUIRE( std::string("66") == msg.fields[0].value());
+}
 
+TEST_CASE("constant_example_navstatus", "ROSMessageFields")
+{
+    ROSMessage msg( Definition<sensor_msgs::NavSatStatus >::value() );
+
+    REQUIRE( msg.fields.size() == 10);
+
+    REQUIRE( msg.fields[0].name() == std::string("STATUS_NO_FIX") );
+    REQUIRE( msg.fields[0].type().baseName() == std::string("int8"));
+    REQUIRE( msg.fields[0].value()  == std::string("-1"));
+
+    REQUIRE( msg.fields[1].name() == std::string("STATUS_FIX") );
+    REQUIRE( msg.fields[1].type().baseName() == std::string("int8"));
+    REQUIRE( msg.fields[1].value()  == std::string("0"));
+
+    REQUIRE( msg.fields[2].name() == std::string("STATUS_SBAS_FIX") );
+    REQUIRE( msg.fields[2].type().baseName() == std::string("int8"));
+    REQUIRE( msg.fields[2].value()  == std::string("1"));
+
+    REQUIRE( msg.fields[3].name() == std::string("STATUS_GBAS_FIX") );
+    REQUIRE( msg.fields[3].type().baseName() == std::string("int8"));
+    REQUIRE( msg.fields[3].value()  == std::string("2"));
+
+    REQUIRE( msg.fields[4].name() == std::string("status") );
+    REQUIRE( msg.fields[4].type().baseName() == std::string("int8"));
+    REQUIRE( msg.fields[4].isConstant()  == false);
+
+    REQUIRE( msg.fields[5].name() == std::string("SERVICE_GPS") );
+    REQUIRE( msg.fields[5].type().baseName() == std::string("uint16"));
+    REQUIRE( msg.fields[5].value()  == std::string("1"));
+
+    REQUIRE( msg.fields[6].name() == std::string("SERVICE_GLONASS") );
+    REQUIRE( msg.fields[6].type().baseName() == std::string("uint16"));
+    REQUIRE( msg.fields[6].value()  == std::string("2"));
+
+    REQUIRE( msg.fields[7].name() == std::string("SERVICE_COMPASS") );
+    REQUIRE( msg.fields[7].type().baseName() == std::string("uint16"));
+    REQUIRE( msg.fields[7].value()  == std::string("4"));
+
+    REQUIRE( msg.fields[8].name() == std::string("SERVICE_GALILEO") );
+    REQUIRE( msg.fields[8].type().baseName() == std::string("uint16"));
+    REQUIRE( msg.fields[8].value()  == std::string("8"));
+
+    REQUIRE( msg.fields[9].name() == std::string("service") );
+    REQUIRE( msg.fields[9].type().baseName() == std::string("uint16"));
+    REQUIRE( msg.fields[9].isConstant()  == false);
 }
 
 
@@ -162,7 +208,6 @@ TEST_CASE("constant_comments", "ROSMessageFields")
 
 TEST_CASE( "Test Pose parsing", "buildROSTypeMapFromDefinition" )
 {
-
     ROSTypeParser::ROSTypeMap rmap;
 
     rmap = buildROSTypeMapFromDefinition(
@@ -200,65 +245,72 @@ TEST_CASE( "Test Pose parsing", "buildROSTypeMapFromDefinition" )
     REQUIRE( std::string("w")        == msg.fields[3].name() );
 }
 
-/*
-TEST_CASE( "Test JointState parsing", "buildROSTypeMapFromDefinition" )
-//int func()
+TEST_CASE( "Test IMU parsing", "buildROSTypeMapFromDefinition" )
 {
-    ROSTypeParser::ROSTypeMap type_map;
+    ROSTypeParser::ROSTypeMap rmap;
 
-    buildROSTypeMapFromDefinition(
-                DataType<std_msgs::Header >::value(),
-                Definition<std_msgs::Header >::value(),
-                &type_map );
+    rmap = buildROSTypeMapFromDefinition(
+                DataType<sensor_msgs::Imu >::value(),
+                Definition<sensor_msgs::Imu >::value());
 
-    buildROSTypeMapFromDefinition(
-                DataType<geometry_msgs::Pose >::value(),
-                Definition<geometry_msgs::Pose >::value(),
-                &type_map );
+    ROSMessage& msg = rmap["Imu"];
+    REQUIRE( std::string("sensor_msgs/Imu") == msg.type.baseName() );
+    REQUIRE( msg.fields.size() == 7);
+    REQUIRE( std::string("std_msgs/Header" ) == msg.fields[0].type().baseName() );
+    REQUIRE( std::string("header" )          == msg.fields[0].name() );
 
-    buildROSTypeMapFromDefinition(
-                DataType<sensor_msgs::JointState >::value(),
-                Definition<sensor_msgs::JointState >::value(),
-                &type_map );
+    REQUIRE( std::string("geometry_msgs/Quaternion" ) == msg.fields[1].type().baseName() );
+    REQUIRE( std::string("orientation" )              == msg.fields[1].name() );
 
-    ROSTypeParser::ROSTypeMap expected_map;
+    REQUIRE( std::string("float64[9]" )              == msg.fields[2].type().baseName() );
+    REQUIRE( std::string("orientation_covariance" )  == msg.fields[2].name() );
+    REQUIRE( msg.fields[2].type().arraySize() == 9);
 
-    ROSTypeParser::ROSType type_pose("geometry_msgs/Pose");
-    type_pose.fields.push_back( { "Point", "position" } );
-    type_pose.fields.push_back( { "Quaternion", "orientation" } );
+    REQUIRE( std::string("geometry_msgs/Vector3" ) == msg.fields[3].type().baseName() );
+    REQUIRE( std::string("angular_velocity" )      == msg.fields[3].name() );
 
-    ROSTypeParser::ROSType type_point("geometry_msgs/Point");
-    type_point.fields.push_back( { ROSField( "x" } );
-    type_point.fields.push_back( { ROSField( "y" } );
-    type_point.fields.push_back( { ROSField( "z" } );
+    REQUIRE( std::string("float64[9]" )                  == msg.fields[4].type().baseName() );
+    REQUIRE( std::string("angular_velocity_covariance" ) == msg.fields[4].name() );
+    REQUIRE( msg.fields[4].type().arraySize() == 9);
 
-    ROSTypeParser::ROSType type_rot("geometry_msgs/Quaternion");
-    type_rot.fields.push_back( { ROSField( "x" } );
-    type_rot.fields.push_back( { ROSField( "y" } );
-    type_rot.fields.push_back( { ROSField( "z" } );
-    type_rot.fields.push_back( { ROSField( "w" } );
+    REQUIRE( std::string("geometry_msgs/Vector3" ) == msg.fields[5].type().baseName() );
+    REQUIRE( std::string("linear_acceleration" )   == msg.fields[5].name() );
 
-    ROSTypeParser::ROSType type_header("std_msgs/Header");
-    type_header.fields.push_back( { "uint32", "seq" } );
-    type_header.fields.push_back( { "time",   "stamp" } );
-    type_header.fields.push_back( { "string", "frame_id" } );
+    REQUIRE( std::string("float64[9]" )                     == msg.fields[6].type().baseName() );
+    REQUIRE( std::string("linear_acceleration_covariance" ) == msg.fields[6].name() );
+    REQUIRE( msg.fields[6].type().arraySize() == 9);
 
-    ROSTypeParser::ROSType type_joint("sensor_msgs/JointState");
-    type_joint.fields.push_back( { "Header",   "header" } );
-    type_joint.fields.push_back( { "string[]",  "name" } );
-    type_joint.fields.push_back( { "float64[]", "position" } );
-    type_joint.fields.push_back( { "float64[]", "velocity" } );
-    type_joint.fields.push_back( { "float64[]", "effort" } );
+    //---------------------------------
+    msg = rmap["Header"];
+    REQUIRE( std::string("std_msgs/Header") == msg.type.baseName() );
+    REQUIRE( msg.fields.size() == 3);
+    REQUIRE( std::string("uint32" )  == msg.fields[0].type().baseName() );
+    REQUIRE( std::string("seq" )     == msg.fields[0].name() );
+    REQUIRE( std::string("time" )    == msg.fields[1].type().baseName() );
+    REQUIRE( std::string("stamp" )   == msg.fields[1].name() );
+    REQUIRE( std::string("string")   == msg.fields[2].type().baseName() );
+    REQUIRE( std::string("frame_id") == msg.fields[2].name() );
 
-    expected_map[ "Pose" ]        = type_pose;
-    expected_map[ "Point" ]       = type_point;
-    expected_map[ "Quaternion" ]  = type_rot;
-    expected_map[ "Header" ]      = type_header;
-    expected_map[ "JointState" ]  = type_joint;
+    msg = rmap["Quaternion"];
+    REQUIRE( std::string("geometry_msgs/Quaternion") == msg.type.baseName() );
+    REQUIRE( msg.fields.size() == 4);
+    REQUIRE( std::string("float64" ) == msg.fields[0].type().baseName() );
+    REQUIRE( std::string("x" )       == msg.fields[0].name() );
+    REQUIRE( std::string("float64" ) == msg.fields[1].type().baseName() );
+    REQUIRE( std::string("y")        == msg.fields[1].name() );
+    REQUIRE( std::string("float64" ) == msg.fields[2].type().baseName() );
+    REQUIRE( std::string("z")        == msg.fields[2].name() );
+    REQUIRE( std::string("float64" ) == msg.fields[3].type().baseName() );
+    REQUIRE( std::string("w")        == msg.fields[3].name() );
 
-    std::cout << "------------------------------"  << std::endl;
-    compare( type_map, expected_map );
+    msg = rmap["Vector3"];
+    REQUIRE( std::string("geometry_msgs/Vector3") == msg.type.baseName() );
+    REQUIRE( msg.fields.size() == 3);
+    REQUIRE( std::string("float64" ) == msg.fields[0].type().baseName() );
+    REQUIRE( std::string("x" )       == msg.fields[0].name() );
+    REQUIRE( std::string("float64" ) == msg.fields[1].type().baseName() );
+    REQUIRE( std::string("y")        == msg.fields[1].name() );
+    REQUIRE( std::string("float64" ) == msg.fields[2].type().baseName() );
+    REQUIRE( std::string("z")        == msg.fields[2].name() );
 }
-
-*/
 
