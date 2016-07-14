@@ -1,49 +1,14 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include <catch.h>
 
-#include <topic_tools/shape_shifter.h>
-#include <boost/algorithm/string.hpp>
-#include <boost/serialization/serialization.hpp>
-#include <boost/utility/string_ref.hpp>
-
 #include <geometry_msgs/Pose.h>
-#include <sensor_msgs/JointState.h>
-#include <tf/tfMessage.h>
 #include <sensor_msgs/NavSatStatus.h>
 #include <sensor_msgs/Imu.h>
 
-#include <sstream>
-#include <iostream>
-#include <chrono>
-#include <ros_type_introspection/ros_type_introspection.hpp>
+#include <ros_type_introspection/parser.hpp>
 
 using namespace ros::message_traits;
 using namespace ROSTypeParser;
-
-
-void compare( const ROSTypeMap& mapA, const ROSTypeMap& mapB )
-{
-    REQUIRE( mapA.size() == mapB.size() );
-    for (auto itA = mapA.begin() ; itA != mapA.end(); itA++)
-    {
-        auto itB = mapB.find( itA->first );
-        REQUIRE( itA->first == itB->first );
-
-        const ROSMessage& msgA = itA->second;
-        const ROSMessage& msgB = itB->second;
-
-        REQUIRE( msgA.type.msgName() == msgB.type.msgName() );
-
-        auto fieldsA = msgA.fields;
-        auto fieldsB = msgB.fields;
-        REQUIRE( fieldsA.size() == fieldsB.size() );
-
-        for (int i=0; i<fieldsA.size(); i++) {
-            REQUIRE( fieldsA[i].type().msgName()  == fieldsB[i].type().msgName() );
-            REQUIRE( fieldsA[i].name() == fieldsB[i].name() );
-        }
-    }
-}
 
 TEST_CASE("builtin_int32", "ROSType")
 {
@@ -208,13 +173,13 @@ TEST_CASE("constant_comments", "ROSMessageFields")
 
 TEST_CASE( "Test Pose parsing", "buildROSTypeMapFromDefinition" )
 {
-    ROSTypeParser::ROSTypeMap rmap;
+    ROSTypeParser::ROSTypeList rmap;
 
     rmap = buildROSTypeMapFromDefinition(
                 DataType<geometry_msgs::Pose >::value(),
                 Definition<geometry_msgs::Pose >::value());
 
-    ROSMessage& msg = rmap["Pose"];
+    ROSMessage& msg = rmap.at(0);
     REQUIRE( std::string("geometry_msgs/Pose" ) == msg.type.baseName() );
     REQUIRE( msg.fields.size() == 2);
     REQUIRE( std::string("geometry_msgs/Point" )      == msg.fields[0].type().baseName() );
@@ -222,7 +187,7 @@ TEST_CASE( "Test Pose parsing", "buildROSTypeMapFromDefinition" )
     REQUIRE( std::string("geometry_msgs/Quaternion" ) == msg.fields[1].type().baseName() );
     REQUIRE( std::string("orientation")               == msg.fields[1].name() );
 
-    msg = rmap["Point"];
+    msg = rmap.at(1);
     REQUIRE( std::string("geometry_msgs/Point" ) == msg.type.baseName() );
     REQUIRE( msg.fields.size() == 3);
     REQUIRE( std::string("float64" ) == msg.fields[0].type().baseName() );
@@ -232,7 +197,7 @@ TEST_CASE( "Test Pose parsing", "buildROSTypeMapFromDefinition" )
     REQUIRE( std::string("float64" ) == msg.fields[2].type().baseName() );
     REQUIRE( std::string("z")        == msg.fields[2].name() );
 
-    msg = rmap["Quaternion"];
+    msg = rmap.at(2);
     REQUIRE( std::string("geometry_msgs/Quaternion" ) == msg.type.baseName() );
     REQUIRE( msg.fields.size() == 4);
     REQUIRE( std::string("float64" ) == msg.fields[0].type().baseName() );
@@ -247,13 +212,13 @@ TEST_CASE( "Test Pose parsing", "buildROSTypeMapFromDefinition" )
 
 TEST_CASE( "Test IMU parsing", "buildROSTypeMapFromDefinition" )
 {
-    ROSTypeParser::ROSTypeMap rmap;
+    ROSTypeParser::ROSTypeList rmap;
 
     rmap = buildROSTypeMapFromDefinition(
                 DataType<sensor_msgs::Imu >::value(),
                 Definition<sensor_msgs::Imu >::value());
 
-    ROSMessage& msg = rmap["Imu"];
+    ROSMessage& msg = rmap.at(0);
     REQUIRE( std::string("sensor_msgs/Imu") == msg.type.baseName() );
     REQUIRE( msg.fields.size() == 7);
     REQUIRE( std::string("std_msgs/Header" ) == msg.fields[0].type().baseName() );
@@ -281,7 +246,7 @@ TEST_CASE( "Test IMU parsing", "buildROSTypeMapFromDefinition" )
     REQUIRE( msg.fields[6].type().arraySize() == 9);
 
     //---------------------------------
-    msg = rmap["Header"];
+    msg = rmap.at(1);
     REQUIRE( std::string("std_msgs/Header") == msg.type.baseName() );
     REQUIRE( msg.fields.size() == 3);
     REQUIRE( std::string("uint32" )  == msg.fields[0].type().baseName() );
@@ -291,7 +256,7 @@ TEST_CASE( "Test IMU parsing", "buildROSTypeMapFromDefinition" )
     REQUIRE( std::string("string")   == msg.fields[2].type().baseName() );
     REQUIRE( std::string("frame_id") == msg.fields[2].name() );
 
-    msg = rmap["Quaternion"];
+    msg = rmap.at(2);
     REQUIRE( std::string("geometry_msgs/Quaternion") == msg.type.baseName() );
     REQUIRE( msg.fields.size() == 4);
     REQUIRE( std::string("float64" ) == msg.fields[0].type().baseName() );
@@ -303,7 +268,7 @@ TEST_CASE( "Test IMU parsing", "buildROSTypeMapFromDefinition" )
     REQUIRE( std::string("float64" ) == msg.fields[3].type().baseName() );
     REQUIRE( std::string("w")        == msg.fields[3].name() );
 
-    msg = rmap["Vector3"];
+    msg = rmap.at(3);
     REQUIRE( std::string("geometry_msgs/Vector3") == msg.type.baseName() );
     REQUIRE( msg.fields.size() == 3);
     REQUIRE( std::string("float64" ) == msg.fields[0].type().baseName() );

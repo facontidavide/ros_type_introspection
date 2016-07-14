@@ -1,4 +1,4 @@
-#include <ros_type_introspection/ros_type_introspection.hpp>
+#include <ros_type_introspection/parser.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/utility/string_ref.hpp>
 #include <boost/lexical_cast.hpp>
@@ -137,11 +137,11 @@ ROSType::ROSType(const std::string &name):
 }
 
 
-ROSTypeMap buildROSTypeMapFromDefinition(
+ROSTypeList buildROSTypeMapFromDefinition(
         const std::string & type_name,
         const std::string & msg_definition)
 {
-    ROSTypeMap map;
+    ROSTypeList type_list;
 
     std::vector<std::string> split;
     boost::split_regex(split, msg_definition, msg_separation_regex);
@@ -156,31 +156,29 @@ ROSTypeMap buildROSTypeMapFromDefinition(
             msg.type = ROSType(type_name);
         }
 
-        map[ msg.type.msgName() ] = msg;
+        type_list.push_back( msg );
         all_types.push_back( msg.type );
     }
 
-    for( auto& it: map )
+    for( ROSMessage& msg: type_list )
     {
-        ROSMessage& msg = it.second;
         msg.updateTypes( all_types );
     }
 
-    return map;
+    return type_list;
 }
 
 
-std::ostream& operator<<(std::ostream& ss, const ROSTypeMap& type_map)
+std::ostream& operator<<(std::ostream& ss, const ROSTypeList& type_list)
 {
-    for (auto it = type_map.begin(); it != type_map.end(); it++)
+    for (const ROSMessage& msg: type_list)
     {
-        ss<< "\n" << it->first <<" : " << std::endl;
+        ss<< "\n" << msg.type.baseName() <<" : " << std::endl;
 
-        const ROSMessage& message = it->second;
-        for (int i=0; i< message.fields.size(); i++ )
+        for (int i=0; i< msg.fields.size(); i++ )
         {
-            ss << "\t" << message.fields.at(i).name()
-               <<" : " << message.fields.at(i).type().msgName() << std::endl;
+            ss << "\t" << msg.fields.at(i).name()
+               <<" : " << msg.fields.at(i).type().baseName() << std::endl;
         }
     }
     return ss;
@@ -226,6 +224,11 @@ int ROSType::typeSize() const
                          8, 8,
                          -1, -1};
     return sizes[ _id ];
+}
+
+BuiltinType ROSType::typeID() const
+{
+    return this->_id;
 }
 
 ROSMessage::ROSMessage(const std::string &msg_def)
