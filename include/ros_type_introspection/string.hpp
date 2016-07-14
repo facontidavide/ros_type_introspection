@@ -91,7 +91,7 @@ void set_msb(unsigned char& byte, bool bit) {
 
 }
 
-template <typename MAX_SIZE, typename CharT,
+template <size_t MAX_SIZE, typename CharT,
           typename Traits = std::char_traits<CharT>>
 class basic_string {
     typedef typename std::make_unsigned<CharT>::type UCharT;
@@ -325,7 +325,7 @@ private:
 private:
     union Data {
         struct NonSSO {
-            CharT overhead[MAX_SIZE+1 - sizeof( CharT*) - 2*sizeof(std::size_t) - sizeof(CharT) ]; //waster memory to keep the alignment
+            CharT overhead[MAX_SIZE + 1 - sizeof( CharT*) - 2*sizeof(std::size_t) - sizeof(CharT) ]; //waster memory to keep the alignment
             CharT* ptr;
             std::size_t size;
             std::size_t capacity;
@@ -340,35 +340,36 @@ public:
     static std::size_t const sso_capacity =  sizeof(typename Data::NonSSO) / sizeof(CharT)  - 1;
 };
 
-template <typename CharT, typename Traits>
-bool operator==(const basic_string<CharT, Traits>& lhs, const CharT* rhs) noexcept {
+template <size_t MAX_SIZE, typename CharT, typename Traits>
+bool operator==(const basic_string<MAX_SIZE,CharT, Traits>& lhs, const CharT* rhs) noexcept {
     return !std::strcmp(lhs.data(), rhs);
 }
 
-template <typename CharT, typename Traits>
-bool operator==(const CharT* lhs, const basic_string<CharT, Traits>& rhs) noexcept {
+template <size_t MAX_SIZE, typename CharT, typename Traits>
+bool operator==(const CharT* lhs, const basic_string<MAX_SIZE,CharT, Traits>& rhs) noexcept {
     return rhs == lhs;
 }
 
-template <typename CharT, typename Traits>
-bool operator==(const basic_string<CharT, Traits>& lhs,
-                const basic_string<CharT, Traits>& rhs) noexcept {
+template <size_t MAX_SIZE_A, size_t MAX_SIZE_B,
+          typename CharT, typename Traits>
+bool operator==(const basic_string<MAX_SIZE_A, CharT, Traits>& lhs,
+                const basic_string<MAX_SIZE_B, CharT, Traits>& rhs) noexcept {
     if(lhs.size() != rhs.size()) return false;
     return !std::strcmp(lhs.data(), rhs.data());
 }
 
-template <typename CharT, typename Traits>
-std::ostream& operator<<(std::ostream& stream, const basic_string<CharT, Traits>& string) {
+template <size_t MAX_SIZE,typename CharT, typename Traits>
+std::ostream& operator<<(std::ostream& stream, const basic_string<MAX_SIZE,CharT, Traits>& string) {
     return stream << string.data();
 }
 
-template <typename CharT, typename Traits>
-bool operator < (const basic_string<CharT, Traits>& lhs,
-                 const basic_string<CharT, Traits>& rhs) noexcept {
+template <size_t MAX_SIZE_A, size_t MAX_SIZE_B,
+          typename CharT, typename Traits>
+bool operator < (const basic_string<MAX_SIZE_A,CharT, Traits>& lhs,
+                 const basic_string<MAX_SIZE_B,CharT, Traits>& rhs) noexcept {
     return std::strcmp(lhs.data(), rhs.data()) < 0;
 }
 
-typedef basic_string<char> string;
 
 }
 

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(ros_type_introspection)
 
+find_package(Boost REQUIRED COMPONENTS regex)
 
 find_package(catkin REQUIRED COMPONENTS
   rosbag
@@ -46,23 +47,25 @@ include_directories(
    src/ros_type_introspection.cpp
  )
 
+target_link_libraries(ros_type_introspection ${catkin_LIBRARIES})
+
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 # add_dependencies(ros_type_introspection ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
- add_executable(ros_introspection_benchmark src/benchmark.cpp)
+# add_executable(ros_introspection_benchmark src/benchmark.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(ros_introspection_benchmark ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#add_dependencies(ros_introspection_benchmark ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 #  Specify libraries to link a library or executable target against
- target_link_libraries(ros_introspection_benchmark
-   ${catkin_LIBRARIES}
-   ros_type_introspection
-)
+# target_link_libraries(ros_introspection_benchmark
+#   ${catkin_LIBRARIES}
+#   ros_type_introspection
+#)
 
 #############
 ## Install ##
@@ -100,7 +103,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
  add_executable(ros_introspection_test src/parser_test.cpp)
 
  target_link_libraries(ros_introspection_test
-   ${catkin_LIBRARIES}
+   ${catkin_LIBRARIES} boost_regex
    ros_type_introspection
 )
 

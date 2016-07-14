@@ -6,24 +6,20 @@
 #include <iostream>
 #include <sstream>
 #include <functional>
+#include <boost/regex.hpp>
+#include <boost/algorithm/string/regex.hpp>
 
-namespace RosTypeParser{
-
-const std::string VECTOR_SYMBOL("[]");
-const String SEPARATOR(".");
+namespace ROSTypeParser{
 
 
-inline bool isCommentOrEmpty(const std::string& line)
-{
-    if(line.empty()) return true;
+static const  boost::regex type_regex("[a-zA-Z][a-zA-Z0-9_]*"
+                                      "(/[a-zA-Z][a-zA-Z0-9_]*){0,1}"
+                                      "(\\[[0-9]*\\]){0,1}");
 
-    int index = 0;
-    while( index < line.size()-1 && line[index] == ' '  )
-    {
-        index++;
-    }
-    return (line[index] == '#');
-}
+static const  boost::regex field_regex("[a-zA-Z][a-zA-Z0-9_]*");
+
+static const  boost::regex msg_separation_regex("^=+\\n+");
+
 
 inline bool isSeparator(const std::string& line)
 {
@@ -36,7 +32,7 @@ inline bool isSeparator(const std::string& line)
 }
 
 
-inline String strippedTypeName(const boost::string_ref& line )
+inline ShortString strippedTypeName(const boost::string_ref& line )
 {
     boost::string_ref output( line );
     int pos = line.find_last_of('/');
@@ -44,453 +40,307 @@ inline String strippedTypeName(const boost::string_ref& line )
     {
         output.remove_prefix( pos+1 );
     }
-    return String( output.data(), output.length() );
-}
-
-RosTypeMap buildRosTypeMapFromDefinition(
-        const std::string & type_name,
-        const std::string & msg_definition)
-{
-    RosTypeMap output;
-    buildRosTypeMapFromDefinition( type_name, msg_definition, &output );
-    return output;
+    return ShortString( output.data(), output.length() );
 }
 
 
-void buildRosTypeMapFromDefinition(
-        const std::string & type_name,
-        const std::string & msg_definition,
-        RosTypeMap* type_map)
+ROSType::ROSType(const std::string &name):
+    _base_name(name)
 {
-    std::istringstream messageDescriptor(msg_definition);
 
-    auto current_type_name = strippedTypeName(type_name);
+    std::vector<std::string> split;
+    std::string type_field;
+    boost::split(split, _base_name, boost::is_any_of("/"));
 
-     RosType type_item;
-     type_item.full_name = type_name;
-
-    (*type_map)[ current_type_name ] = type_item ;
-
-
-    for (std::string line; std::getline(messageDescriptor, line, '\n') ; )
+    if( split.size() == 1)
     {
-        if( isCommentOrEmpty(line) ) {
-            continue;
-        }
+        _pkg_name = "";
+        type_field = split[0];
+    }
+    else{
+        _pkg_name = split[0];
+        type_field = split[1];
+    }
+    //----------------------------
 
-        if( isSeparator(line) ) // start to store a sub type
-        {
-            if( ! std::getline(messageDescriptor, line, '\n') ) {
-                break;
-            }
+    static const boost::regex array_regex("(.+)(\\[([0-9]*)\\])");
 
-            if( line.compare(0, 5, "MSG: ") == 0)
-            {
-                line.erase(0,5);
-            }
+    boost::smatch what;
+    if (boost::regex_search(type_field, what, array_regex))
+    {
+      _msg_name = std::string(what[1].first, what[1].second);
+      if (what.size() == 3) {
+        _array_size = -1;
+      }
+      else if (what.size() == 4) {
+        std::string size(what[3].first, what[3].second);
+        _array_size = size.empty() ? -1 : atoi(size.c_str());
+      }
+      else {
+        throw std::runtime_error("Didn't catch bad type string: " + name);
+      }
+    } else {
+      _msg_name = type_field;
+      _array_size = 1;
+    }
+    //------------------------------
+    _id = ROSTypeParser::OTHER;
 
-            current_type_name = strippedTypeName(line);
-
-            (*type_map)[ current_type_name ] =  RosType(line );
-        }
-        else{
-            RosTypeField field;
-
-            std::string temp;
-            std::stringstream ss2(line);
-            ss2 >> temp;
-            field.type_name = strippedTypeName( temp.data());
-            ss2 >> temp;
-            field.field_name = String( temp.data(), temp.length());
-
-            auto& fields = type_map->find(current_type_name)->second.fields;
-
-            bool found = false;
-            for (int i=0; i<fields.size(); i++)
-            {
-                if( fields[i].field_name.compare( field.field_name) == 0 )
-                {
-                    found = true;
-                    break;
-                }
-            }
-            if( !found )
-            {
-                fields.push_back( field );
-            }
-        }
+    if( _msg_name.compare( "bool" ) == 0 ) {
+        _id = ROSTypeParser::BOOL;
+    }
+    else if(_msg_name.compare( "byte" ) == 0 ) {
+        _id = ROSTypeParser::BYTE;
+    }
+    else if(_msg_name.compare( "char" ) == 0 ) {
+        _id = ROSTypeParser::CHAR;
+    }
+    else if(_msg_name.compare( "uint8" ) == 0 ) {
+        _id = ROSTypeParser::UINT8;
+    }
+    else if(_msg_name.compare( "uint16" ) == 0 ) {
+        _id = ROSTypeParser::UINT16;
+    }
+    else if(_msg_name.compare( "uint32" ) == 0 ) {
+        _id = ROSTypeParser::UINT32;
+    }
+    else if(_msg_name.compare( "uint64" ) == 0 ) {
+        _id = ROSTypeParser::UINT64;
+    }
+    else if(_msg_name.compare( "int8" ) == 0 ) {
+        _id = ROSTypeParser::INT8;
+    }
+    else if(_msg_name.compare( "int16" ) == 0 ) {
+        _id = ROSTypeParser::INT16;
+    }
+    else if(_msg_name.compare( "int32" ) == 0 ) {
+        _id = ROSTypeParser::INT32;
+    }
+    else if(_msg_name.compare( "int64" ) == 0 ) {
+        _id = ROSTypeParser::INT64;
+    }
+    else if(_msg_name.compare( "float32" ) == 0 ) {
+        _id = ROSTypeParser::FLOAT32;
+    }
+    else if(_msg_name.compare( "float64" ) == 0 ) {
+        _id = ROSTypeParser::FLOAT64;
+    }
+    else if(_msg_name.compare( "time" ) == 0 ) {
+        _id = ROSTypeParser::TIME;
+    }
+    else if(_msg_name.compare( "duration" ) == 0 ) {
+        _id = ROSTypeParser::DURATION;
+    }
+    else if(_msg_name.compare( "string" ) == 0 ) {
+        _id = ROSTypeParser::STRING;
     }
 }
 
 
-std::ostream& operator<<(std::ostream& ss, const RosTypeMap& type_map)
+ROSTypeMap buildROSTypeMapFromDefinition(
+        const std::string & type_name,
+        const std::string & msg_definition)
+{
+    ROSTypeMap map;
+
+    std::vector<std::string> split;
+    boost::split_regex(split, msg_definition, msg_separation_regex);
+
+    std::vector<ROSType> all_types;
+
+    for (size_t i = 0; i < split.size(); ++i) {
+
+        ROSMessage msg( split[i] );
+        if( i == 0)
+        {
+            msg.type = ROSType(type_name);
+        }
+
+        map[ msg.type.msgName() ] = msg;
+        all_types.push_back( msg.type );
+    }
+
+    for( auto& it: map )
+    {
+        ROSMessage& msg = it.second;
+        msg.updateTypes( all_types );
+    }
+
+    return map;
+}
+
+
+std::ostream& operator<<(std::ostream& ss, const ROSTypeMap& type_map)
 {
     for (auto it = type_map.begin(); it != type_map.end(); it++)
     {
         ss<< "\n" << it->first <<" : " << std::endl;
 
-        auto& fields = it->second.fields;
-        for (int i=0; i< fields.size(); i++ )
+        const ROSMessage& message = it->second;
+        for (int i=0; i< message.fields.size(); i++ )
         {
-            ss<< "\t" << fields[i].field_name <<" : " << fields[i].type_name << std::endl;
+            ss << "\t" << message.fields.at(i).name()
+               <<" : " << message.fields.at(i).type().msgName() << std::endl;
         }
     }
     return ss;
 }
 
-/*
-void printRosType(const RosTypeMap& type_map, const String& type_name, int indent  )
+
+const std::string &ROSType::baseName() const
 {
-    for (int d=0; d<indent; d++) std::cout << "  ";
-    std::cout  << type_name <<" : " << std::endl;
-
-    boost::string_ref type ( type_name );
-    if( type.ends_with( VECTOR_SYMBOL))
-    {
-        type.remove_suffix(2);
-    }
-
-    auto it = type_map.find( String(type.data(), type.length()) );
-    if( it != type_map.end())
-    {
-        auto fields = it->second.fields;
-        for (int i=0; i< fields.size(); i++)
-        {
-            auto field_type ( fields[i].type_name );
-            if( field_type.ends_with( VECTOR_SYMBOL))
-            {
-                field_type.remove_suffix(2);
-            }
-
-            if( type_map.find( field_type ) == type_map.end()) // go deeper with recursion
-            {
-                for (int d=0; d<indent; d++) std::cout << "   ";
-                std::cout << "   " << fields[i].field_name <<" : " << fields[i].type_name << std::endl;
-            }
-            else{
-                printRosType( type_map, fields[i].type_name , indent+1 );
-            }
-        }
-    }
-    else{
-        std::cout << type << " not found " << std::endl;
-    }
-}*/
-
-template <typename T> T ReadFromBufferAndMoveForward( uint8_t** buffer)
-{
-    for (int i=0; i< sizeof(T); i++)
-    {
-        //     printf(" %02X ", (*buffer)[i] );
-    }
-    T destination =  (*( reinterpret_cast<T*>( *buffer ) ) );
-    *buffer +=  sizeof(T);
-    return destination;
+    return _base_name;
 }
 
-
-void buildRosFlatTypeImpl(const RosTypeMap& type_map,
-                      const String &type_name,
-                      String prefix,
-                      uint8_t** buffer_ptr,
-                      RosTypeFlat* flat_container )
+const ShortString &ROSType::msgName() const
 {
-    boost::string_ref type ( type_name.data(), type_name.size() );
+    return _msg_name;
+}
 
+const ShortString &ROSType::pkgName() const
+{
+    return _pkg_name;
+}
+
+bool ROSType::isArray() const
+{
+    return _array_size != 1;
+}
+
+bool ROSType::isBuiltin() const
+{
+    return _id != ROSTypeParser::OTHER;
+}
+
+int ROSType::arraySize() const
+{
+    return _array_size;
+}
+
+int ROSType::typeSize() const
+{
+    const int sizes[] = {1, 1, 1,
+                         1, 2, 4, 8,
+                         1, 2, 4, 8,
+                         4, 8,
+                         8, 8,
+                         -1, -1};
+    return sizes[ _id ];
+}
+
+ROSMessage::ROSMessage(const std::string &msg_def)
+{
+    std::istringstream messageDescriptor(msg_def);
+    boost::match_results<std::string::const_iterator> what;
+
+    for (std::string line; std::getline(messageDescriptor, line, '\n') ; )
     {
-        int pos = type.find_last_of('/');
-        if( pos != type.npos ) {
-            type.remove_prefix( pos+1 );
+        std::string::const_iterator begin = line.begin(), end = line.end();
+
+        // Skip empty line or one that is a comment
+        if (boost::regex_search( begin, end, what,
+                                 boost::regex("(^\\s*$|^\\s*#)")))
+        {
+            continue;
+        }
+
+        if( line.compare(0, 5, "MSG: ") == 0)
+        {
+            line.erase(0,5);
+            this->type = ROSType(line);
+            if( ! std::getline(messageDescriptor, line, '\n') ) { break; }
+        }
+        else{
+            fields.push_back( ROSField(line) );
         }
     }
+}
 
-    int32_t vect_size = 1;
+void ROSMessage::updateTypes(std::vector<ROSType> all_types)
+{
+    for (ROSField& field: fields)
+    {
+        if( field.type().pkgName().empty() )
+        {
+            for (ROSType& known_type: all_types)
+            {
+                if( field.type().msgName() == known_type.msgName() )
+                {
+                    field._type = known_type;
+                    break;
+                }
+            }
+        }
+    }
+}
 
-    bool is_vector = false;
-    if( type.ends_with( VECTOR_SYMBOL ) )
-    {
-        vect_size = ReadFromBufferAndMoveForward<int32_t>( buffer_ptr );
-        type.remove_suffix(2);
-        is_vector = true;
-        if( vect_size > 64 ) return;
-    }
+ROSField::ROSField(const std::string &definition)
+{
+    using boost::regex;
+    std::string::const_iterator begin = definition.begin();
+    std::string::const_iterator end   = definition.end();
+    boost::match_results<std::string::const_iterator> what;
 
-    std::function<void(const String&)> deserializeAndStore;
+    // Get type and field
+    std::string type, fieldname, value;
 
-    if( type.compare( "float64") == 0 )
-    {
-        deserializeAndStore = [&](const String& key){
-            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<double>(buffer_ptr) ) );
-        };
-    }
-    else if( type.compare( "float32") == 0 )
-    {
-        deserializeAndStore = [&](const String& key){
-            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<float>(buffer_ptr) ) );
-        };
-    }
-    else if( type.compare( "uint64") == 0 )
-    {
-        deserializeAndStore = [&](const String& key){
-            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<uint64_t>(buffer_ptr) ) );
-        };
-    }
-    else if( type.compare( "int64") == 0 )
-    {
-        deserializeAndStore = [&](const String& key){
-            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<int64_t>(buffer_ptr) ) );
-        };
-    }
-    else if( type.compare( "uint32") == 0 )
-    {
-        deserializeAndStore = [&](const String& key){
-            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<uint32_t>(buffer_ptr) ) );
-        };
-    }
-    else if( type.compare( "int32") == 0 )
-    {
-        deserializeAndStore = [&](const String& key){
-            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<int32_t>(buffer_ptr) ) );
-        };
-    }
-    else if( type.compare( "uint16") == 0 )
-    {
-        deserializeAndStore = [&](const String& key){
-            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<uint16_t>(buffer_ptr) ) );
-        };
-    }
-    else if( type.compare( "int16") == 0 )
-    {
-        deserializeAndStore = [&](const String& key){
-            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<int16_t>(buffer_ptr) ) );
-        };
-    }
-    else if( type.compare( "uint8") == 0 )
-    {
-        deserializeAndStore = [&](const String& key){
-            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<uint8_t>(buffer_ptr) ) );
-        };
-    }
-    else if( type.compare( "int8") == 0 )
-    {
-        deserializeAndStore = [&](const String& key){
-            flat_container->value.push_back( std::make_pair( key, (double) ReadFromBufferAndMoveForward<int8_t>(buffer_ptr) ) );
-        };
-    }
-    else if( type.compare("time") == 0 )
-    {
-        deserializeAndStore = [&](const String& key){
-            ros::Time time = ReadFromBufferAndMoveForward<ros::Time>(buffer_ptr) ;
-            double value = time.toSec();
-            flat_container->value.push_back( std::make_pair( key,  value) );
-        };
-    }
-    else if( type.compare("string") == 0 )
-    {
-        deserializeAndStore = [&](const String& key){
-            int32_t string_size = ReadFromBufferAndMoveForward<int32_t>( buffer_ptr );
-            String id( (const char*)(*buffer_ptr), string_size );
-            (*buffer_ptr) += string_size;
-            flat_container->name_id.push_back( std::make_pair( key, id ) );
-        };
+    if( regex_search(begin, end, what, type_regex)) {
+        type = what[0];
+        begin = what[0].second;
     }
     else {
-        deserializeAndStore = [&](const String& key)
+        throw std::runtime_error("Bad type when parsing message\n" + definition);
+    }
+
+    if (regex_search(begin, end, what, field_regex))
+    {
+        fieldname = what[0];
+        begin = what[0].second;
+    }
+    else {
+        throw std::runtime_error("Bad field when parsing message\n" + definition);
+    }
+
+    // Determine next character
+    // if '=' -> constant, if '#' -> done, if nothing -> done, otherwise error
+    if (regex_search(begin, end, what, boost::regex("\\S")))
+    {
+        if (what[0] == "=")
         {
-            auto it = type_map.find( String( type.data(), type.size() ) );
-            if( it != type_map.end())
-            {
-                auto& fields  = it->second.fields;
-
-                for (int i=0; i< fields.size(); i++ ) {
-                    String new_prefix( key );
-                    new_prefix.append( SEPARATOR );
-                    new_prefix.append( fields[i].field_name.data(), fields[i].field_name.size())  ;
-
-                    buildRosFlatTypeImpl(type_map, (fields[i].type_name),
-                                     new_prefix,
-                                     buffer_ptr,
-                                     flat_container);
-                }
+            begin = what[0].second;
+            // Copy constant
+            if (type == "string") {
+                value.assign(begin, end);
             }
             else {
-                std::cout << " type not recognized: " <<  type << std::endl;
-            }
-        };
-    }
-
-
-    for (int v=0; v<vect_size; v++)
-    {
-        String key (prefix);
-        if( is_vector )
-        {
-            char suffix[16];
-            sprintf(suffix,"[%d]", v);
-            key.append( suffix );
-        }
-        deserializeAndStore(key);
-    }
-}
-
-
-RosTypeFlat buildRosFlatType(const RosTypeMap& type_map,
-                      const String &type_name,
-                      const String & prefix,
-                      uint8_t** buffer_ptr)
-{
-    RosTypeFlat flat_container;
-    buildRosFlatTypeImpl( type_map, type_name, prefix, buffer_ptr,  &flat_container );
-
-    std::sort( flat_container.name_id.begin(),  flat_container.name_id.end(),
-               []( const std::pair<String,String> & left,
-                   const std::pair<String,String> & right)
+                if (regex_search(begin, end, what, boost::regex("\\s*#")))
                 {
-                    return left.first < right.first;
+                    value.assign(begin, what[0].first);
                 }
-    );
-
-    return flat_container;
-}
-
-
-void applyNameTransform( const std::vector< SubstitutionRule >&  rules,
-                         RosTypeFlat* container)
-{
-    int vect_index = 0;
-
-    container->value_renamed.resize( container->value.size() );
-
-    for (auto it = container->value.begin(); it != container->value.end(); it++)
-    {
-        boost::string_ref name ( it->first.data(),  it->first.size());
-        double value = it->second;
-
-        bool substitution_done = false;
-
-        for (int r=0; r < rules.size(); r++)
-        {
-            const auto& rule = rules[r];
-
-            int posA = name.find(rule.pattern_pre );
-            if( posA == name.npos) { continue; }
-
-            int posB = posA + rule.pattern_pre.length();
-            int posC = posB;
-
-            while( isdigit(  name.at(posC) ) && posC < name.npos)
-            {
-                posC++;
+                else {
+                    value.assign(begin, end);
+                }
+                // TODO: Raise error if string is not numeric
             }
-            if( posC == name.npos) continue;
 
-            boost::string_ref name_prefix = name.substr( 0, posA );
-            boost::string_ref index       = name.substr(posB, posC-posB );
-            boost::string_ref name_suffix = name.substr( posC, name.length() - posC );
-
-            int res = std::strncmp( name_suffix.data(), rule.pattern_suf.data(),  rule.pattern_suf.length() );
-            if( res != 0)
-            {
-                continue;
-            }
-            name_suffix.remove_prefix( rule.pattern_suf.length() );
-
-            char key[256];
-            int buffer_index = 0;
-            for (const char c: name_prefix       )  key[buffer_index++] = c;
-            for (const char c: rule.location_pre )  key[buffer_index++] = c;
-            for (const char c: index             )  key[buffer_index++] = c;
-            for (const char c: rule.location_suf )  key[buffer_index++] = c;
-            key[buffer_index] = '\0';
-
-            auto substitutor = std::lower_bound( container->name_id.begin(),
-                                                 container->name_id.end(),
-                                                 String(key),
-                                                 []( const std::pair<String,String> item, const String& key )  { return item.first < key; }
-            );
-
-            if( substitutor != container->name_id.end())
-            {
-                auto& index_replacement = substitutor->second;
-
-                char new_name[256];
-                int name_index = 0;
-                for (const char c: name_prefix           )  new_name[name_index++] = c;
-                for (const char c: rule.substitution_pre )  new_name[name_index++] = c;
-
-                for (int i=0; i< index_replacement.size(); i++ )
-                    new_name[name_index++] = index_replacement.at(i);
-
-                for (const char c: rule.substitution_suf )  new_name[name_index++] = c;
-                for (const char c: name_suffix           )  new_name[name_index++] = c;
-                new_name[name_index] = '\0';
-
-                container->value_renamed[vect_index].first  = String(new_name);
-                container->value_renamed[vect_index].second = value;
-                vect_index++;
-
-                /*std::cout << "---------------" << std::endl;
-                std::cout << "index        " << index << std::endl;
-                std::cout << "name_prefix  " << name_prefix << std::endl;
-                std::cout << "key  " << key << std::endl;
-                std::cout << "new_name   " << new_name << std::endl;
-                std::cout << "---------------" << std::endl;
-                */
-                // DON'T apply more than one rule
-                substitution_done = true;
-                break;
-            }
-        }
-
-        if( !substitution_done)
-        {
-            //just move it without changes
-          //  container->value_renamed[vect_index++] = ( std::make_pair( it->first , value ) );
-            container->value_renamed[vect_index].first  = it->first;
-            container->value_renamed[vect_index].second = value;
-            vect_index++;
+            boost::algorithm::trim(value);
+        } else if (what[0] == "#") {
+            // Ignore comment
+        } else {
+            // Error
+            throw std::runtime_error("Unexpected character after type and field '" +
+                                     definition);
         }
     }
-
+    _type  = ROSType( type );
+    _name  = fieldname;
+    _value = value;
 }
 
-std::ostream& operator<<(std::ostream& ss, const RosTypeFlat& container)
-{
 
-    for (auto it= container.name_id.begin(); it != container.name_id.end(); it++)
-    {
-        ss<< it->first << " = " << it->second << std::endl;
-    }
 
-    for (auto it= container.value.begin(); it != container.value.end(); it++)
-    {
-        ss << it->first << " = " << it->second << std::endl;
-    }
-    return ss;
-}
 
-SubstitutionRule::SubstitutionRule( std::string pattern, std::string location, std::string substitution):
-    pattern_pre( pattern),
-    pattern_suf( pattern),
 
-    location_pre( location),
-    location_suf( location),
+} // end namespace
 
-    substitution_pre(substitution),
-    substitution_suf(substitution)
-{
-    int pos;
-    pos = pattern_pre.find_first_of('#');
-    pattern_pre.erase( pos, pattern_pre.length() - pos );
-    pattern_suf.erase( 0, pos+1 );
 
-    pos = location_pre.find_first_of('#');
-    location_pre.erase(pos, location_pre.length() - pos );
-    location_suf.erase(0, pos+1 );
-
-    pos = substitution_pre.find_first_of('#');
-    substitution_pre.erase(pos, substitution_pre.length() - pos );
-    substitution_suf.erase(0, pos+1 );
-}
-
-}

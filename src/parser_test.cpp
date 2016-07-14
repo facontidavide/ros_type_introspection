@@ -5,157 +5,245 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/utility/string_ref.hpp>
+
 #include <geometry_msgs/Pose.h>
 #include <sensor_msgs/JointState.h>
 #include <tf/tfMessage.h>
+#include <sensor_msgs/NavSatStatus.h>
+#include <sensor_msgs/Imu.h>
+
 #include <sstream>
 #include <iostream>
 #include <chrono>
 #include <ros_type_introspection/ros_type_introspection.hpp>
 
 using namespace ros::message_traits;
-using namespace RosTypeParser;
+using namespace ROSTypeParser;
 
-std::vector<SubstitutionRule> Rules()
-{
-    std::vector<SubstitutionRule> rules;
-    rules.push_back( SubstitutionRule(".position[#]",
-                                      ".name[#]",
-                                      ".#.position") );
 
-    rules.push_back( SubstitutionRule(".velocity[#]",
-                                      ".name[#]",
-                                      ".#.velocity") );
-
-    rules.push_back( SubstitutionRule(".effort[#]",
-                                      ".name[#]",
-                                      ".#.effort") );
-
-    rules.push_back( SubstitutionRule(".transforms[#].transform",
-                                      ".transforms[#].header.frame_id",
-                                      ".transform.#") );
-
-    rules.push_back( SubstitutionRule(".transforms[#].header",
-                                      ".transforms[#].header.frame_id",
-                                      ".transform.#.header") );
-    return rules;
-}
-
-void compare( const RosTypeMap& mapA, const RosTypeMap& mapB )
+void compare( const ROSTypeMap& mapA, const ROSTypeMap& mapB )
 {
     REQUIRE( mapA.size() == mapB.size() );
     for (auto itA = mapA.begin() ; itA != mapA.end(); itA++)
     {
         auto itB = mapB.find( itA->first );
         REQUIRE( itA->first == itB->first );
-        REQUIRE( itA->second.full_name == itB->second.full_name );
 
-        auto fieldsA = itA->second.fields;
-        auto fieldsB = itB->second.fields;
+        const ROSMessage& msgA = itA->second;
+        const ROSMessage& msgB = itB->second;
+
+        REQUIRE( msgA.type.msgName() == msgB.type.msgName() );
+
+        auto fieldsA = msgA.fields;
+        auto fieldsB = msgB.fields;
         REQUIRE( fieldsA.size() == fieldsB.size() );
 
         for (int i=0; i<fieldsA.size(); i++) {
-            REQUIRE( fieldsA[i].type_name  == fieldsB[i].type_name );
-            REQUIRE( fieldsA[i].field_name == fieldsB[i].field_name );
+            REQUIRE( fieldsA[i].type().msgName()  == fieldsB[i].type().msgName() );
+            REQUIRE( fieldsA[i].name() == fieldsB[i].name() );
         }
     }
 }
 
-void compare( const std::map< std::string, double>& flatA, const std::map< std::string, double>& flatB )
+TEST_CASE("builtin_int32", "ROSType")
 {
-    REQUIRE( flatA.size() == flatB.size() );
+    ROSType f("int32");
 
-    for (auto itA = flatA.begin() ; itA != flatA.end(); itA++)
-    {
-        auto itB = flatB.find( itA->first );
-        std::cout <<  itA->first << " : " << itA->second << std::endl;
+    REQUIRE(std::string("int32") == f.baseName());
+    REQUIRE(std::string("int32") == f.msgName());
+    REQUIRE(std::string("") == f.pkgName());
+    REQUIRE(f.isArray() == false);
+    REQUIRE(f.isBuiltin() == true);
+    REQUIRE(f.arraySize() == 1);
+    REQUIRE(f.typeSize() == 4);
+}
 
-        REQUIRE( itB != flatB.end() );
-        REQUIRE( itA->first  == itB->first );
-        REQUIRE( itA->second == itB->second );
-    }
+TEST_CASE( "builtin_string", "ROSType")
+{
+    ROSType f("string");
+    REQUIRE(std::string("string") == f.baseName());
+    REQUIRE(std::string("string") == f.msgName());
+    REQUIRE(std::string("") == f.pkgName());
+    REQUIRE(f.isArray() == false);
+    REQUIRE(f.isBuiltin() == true);
+    REQUIRE(f.arraySize() == 1);
+    REQUIRE(f.typeSize() == -1);
 }
 
 
-TEST_CASE( "Test Pose parsing", "buildRosTypeMapFromDefinition" )
+TEST_CASE("builtin_fixedlen_array", "ROSType")
+{
+    ROSType f("float64[32]");
+
+    REQUIRE(std::string("float64[32]") == f.baseName());
+    REQUIRE(std::string("float64") == f.msgName());
+    REQUIRE(std::string("") == f.pkgName());
+    REQUIRE(f.isArray() == true);
+    REQUIRE(f.isBuiltin() == true);
+    REQUIRE(f.arraySize() == 32);
+    REQUIRE(f.typeSize() == 8);
+}
+
+
+TEST_CASE("no_builtin_array", "ROSType")
+{
+    ROSType f("geometry_msgs/Pose[]");
+
+    REQUIRE(std::string("geometry_msgs/Pose[]") == f.baseName());
+    REQUIRE(std::string("Pose") == f.msgName());
+    REQUIRE(std::string("geometry_msgs") == f.pkgName());
+    REQUIRE(f.isArray() == true);
+    REQUIRE(f.isBuiltin() == false);
+    REQUIRE(f.arraySize() == -1);
+    REQUIRE(f.typeSize() == -1);
+}
+
+TEST_CASE("parse_comments", "ROSMessageFields") {
+
+  std::string
+    def("MSG: geometry_msgs/Quaternion\n"
+        "\n"
+        "#just a comment"
+        "          # I'm a comment after whitespace\n"
+        "float64 x # I'm an end of line comment float64 y\n"
+        "float64 z\n"
+        );
+  ROSMessage mt(def);
+  REQUIRE(std::string("geometry_msgs/Quaternion") == mt.type.baseName() );
+
+  REQUIRE( mt.fields.size() == 2);
+  REQUIRE(std::string("float64") ==  mt.fields[0].type().msgName());
+  REQUIRE(std::string("float64") ==  mt.fields[1].type().msgName());
+  REQUIRE(std::string("x") == mt.fields[0].name());
+  REQUIRE(std::string("z") == mt.fields[1].name());
+
+  REQUIRE( mt.fields[0].isConstant() == false);
+  REQUIRE( mt.fields[1].isConstant() == false);
+}
+
+TEST_CASE("constant_uint8", "ROSMessageFields")
+{
+  ROSMessage msg("uint8 a = 66\n");
+
+  REQUIRE(msg.fields.size() == 1);
+  REQUIRE( std::string("a") == msg.fields[0].name() );
+  REQUIRE( std::string("uint8") == msg.fields[0].type().baseName() );
+  REQUIRE(msg.fields[0].isConstant() == true);
+  REQUIRE( std::string("66") == msg.fields[0].value());
+
+}
+
+
+TEST_CASE("constant_comments", "ROSMessageFields")
+{
+  ROSMessage msg(
+    "string strA=  this string has a # comment in it  \n"
+    "string strB = this string has \"quotes\" and \\slashes\\ in it\n"
+    "float64 a=64.0 # numeric comment\n");
+
+
+  REQUIRE( msg.fields.size() == 3);
+  REQUIRE( std::string("strA")== msg.fields[0].name());
+  REQUIRE( std::string("string")== msg.fields[0].type().baseName() );
+  REQUIRE( msg.fields[0].isConstant() == true);
+  REQUIRE( std::string("this string has a # comment in it") == msg.fields[0].value());
+
+  REQUIRE( std::string("strB") == msg.fields[1].name());
+  REQUIRE( std::string("string")== msg.fields[1].type().baseName() );
+  REQUIRE( msg.fields[1].isConstant() == true);
+  REQUIRE( std::string("this string has \"quotes\" and \\slashes\\ in it") ==  msg.fields[1].value());
+
+  REQUIRE( std::string("a")== msg.fields[2].name());
+  REQUIRE( std::string("float64")== msg.fields[2].type().baseName() );
+  REQUIRE( msg.fields[2].isConstant() == true);
+  REQUIRE( std::string("64.0")== msg.fields[2].value());
+}
+
+
+TEST_CASE( "Test Pose parsing", "buildROSTypeMapFromDefinition" )
 {
 
-    RosTypeParser::RosTypeMap type_map;
+    ROSTypeParser::ROSTypeMap rmap;
 
-    buildRosTypeMapFromDefinition(
+    rmap = buildROSTypeMapFromDefinition(
                 DataType<geometry_msgs::Pose >::value(),
-                Definition<geometry_msgs::Pose >::value(),
-                &type_map );
+                Definition<geometry_msgs::Pose >::value());
 
-    RosTypeParser::RosTypeMap expected_map;
+    ROSMessage& msg = rmap["Pose"];
+    REQUIRE( std::string("geometry_msgs/Pose" ) == msg.type.baseName() );
+    REQUIRE( msg.fields.size() == 2);
+    REQUIRE( std::string("geometry_msgs/Point" )      == msg.fields[0].type().baseName() );
+    REQUIRE( std::string("position" )                 == msg.fields[0].name() );
+    REQUIRE( std::string("geometry_msgs/Quaternion" ) == msg.fields[1].type().baseName() );
+    REQUIRE( std::string("orientation")               == msg.fields[1].name() );
 
-    RosTypeParser::RosType type_pose("geometry_msgs/Pose");
-    type_pose.fields.push_back( { "Point", "position" } );
-    type_pose.fields.push_back( { "Quaternion", "orientation" } );
+    msg = rmap["Point"];
+    REQUIRE( std::string("geometry_msgs/Point" ) == msg.type.baseName() );
+    REQUIRE( msg.fields.size() == 3);
+    REQUIRE( std::string("float64" ) == msg.fields[0].type().baseName() );
+    REQUIRE( std::string("x" )       == msg.fields[0].name() );
+    REQUIRE( std::string("float64" ) == msg.fields[1].type().baseName() );
+    REQUIRE( std::string("y")        == msg.fields[1].name() );
+    REQUIRE( std::string("float64" ) == msg.fields[2].type().baseName() );
+    REQUIRE( std::string("z")        == msg.fields[2].name() );
 
-    RosTypeParser::RosType type_point("geometry_msgs/Point");
-    type_point.fields.push_back( { "float64", "x" } );
-    type_point.fields.push_back( { "float64", "y" } );
-    type_point.fields.push_back( { "float64", "z" } );
-
-    RosTypeParser::RosType type_rot("geometry_msgs/Quaternion");
-    type_rot.fields.push_back( { "float64", "x" } );
-    type_rot.fields.push_back( { "float64", "y" } );
-    type_rot.fields.push_back( { "float64", "z" } );
-    type_rot.fields.push_back( { "float64", "w" } );
-
-    expected_map[ "Pose" ]       = type_pose;
-    expected_map[ "Point" ]      = type_point;
-    expected_map[ "Quaternion" ] = type_rot;
-
-    std::cout << "------------------------------"  << std::endl;
-    compare( type_map, expected_map );
+    msg = rmap["Quaternion"];
+    REQUIRE( std::string("geometry_msgs/Quaternion" ) == msg.type.baseName() );
+    REQUIRE( msg.fields.size() == 4);
+    REQUIRE( std::string("float64" ) == msg.fields[0].type().baseName() );
+    REQUIRE( std::string("x" )       == msg.fields[0].name() );
+    REQUIRE( std::string("float64" ) == msg.fields[1].type().baseName() );
+    REQUIRE( std::string("y")        == msg.fields[1].name() );
+    REQUIRE( std::string("float64" ) == msg.fields[2].type().baseName() );
+    REQUIRE( std::string("z")        == msg.fields[2].name() );
+    REQUIRE( std::string("float64" ) == msg.fields[3].type().baseName() );
+    REQUIRE( std::string("w")        == msg.fields[3].name() );
 }
 
-
-TEST_CASE( "Test JointState parsing", "buildRosTypeMapFromDefinition" )
+/*
+TEST_CASE( "Test JointState parsing", "buildROSTypeMapFromDefinition" )
 //int func()
 {
-    RosTypeParser::RosTypeMap type_map;
+    ROSTypeParser::ROSTypeMap type_map;
 
-    buildRosTypeMapFromDefinition(
+    buildROSTypeMapFromDefinition(
                 DataType<std_msgs::Header >::value(),
                 Definition<std_msgs::Header >::value(),
                 &type_map );
 
-    buildRosTypeMapFromDefinition(
+    buildROSTypeMapFromDefinition(
                 DataType<geometry_msgs::Pose >::value(),
                 Definition<geometry_msgs::Pose >::value(),
                 &type_map );
 
-    buildRosTypeMapFromDefinition(
+    buildROSTypeMapFromDefinition(
                 DataType<sensor_msgs::JointState >::value(),
                 Definition<sensor_msgs::JointState >::value(),
                 &type_map );
 
-    RosTypeParser::RosTypeMap expected_map;
+    ROSTypeParser::ROSTypeMap expected_map;
 
-    RosTypeParser::RosType type_pose("geometry_msgs/Pose");
+    ROSTypeParser::ROSType type_pose("geometry_msgs/Pose");
     type_pose.fields.push_back( { "Point", "position" } );
     type_pose.fields.push_back( { "Quaternion", "orientation" } );
 
-    RosTypeParser::RosType type_point("geometry_msgs/Point");
-    type_point.fields.push_back( { "float64", "x" } );
-    type_point.fields.push_back( { "float64", "y" } );
-    type_point.fields.push_back( { "float64", "z" } );
+    ROSTypeParser::ROSType type_point("geometry_msgs/Point");
+    type_point.fields.push_back( { ROSField( "x" } );
+    type_point.fields.push_back( { ROSField( "y" } );
+    type_point.fields.push_back( { ROSField( "z" } );
 
-    RosTypeParser::RosType type_rot("geometry_msgs/Quaternion");
-    type_rot.fields.push_back( { "float64", "x" } );
-    type_rot.fields.push_back( { "float64", "y" } );
-    type_rot.fields.push_back( { "float64", "z" } );
-    type_rot.fields.push_back( { "float64", "w" } );
+    ROSTypeParser::ROSType type_rot("geometry_msgs/Quaternion");
+    type_rot.fields.push_back( { ROSField( "x" } );
+    type_rot.fields.push_back( { ROSField( "y" } );
+    type_rot.fields.push_back( { ROSField( "z" } );
+    type_rot.fields.push_back( { ROSField( "w" } );
 
-    RosTypeParser::RosType type_header("std_msgs/Header");
+    ROSTypeParser::ROSType type_header("std_msgs/Header");
     type_header.fields.push_back( { "uint32", "seq" } );
     type_header.fields.push_back( { "time",   "stamp" } );
     type_header.fields.push_back( { "string", "frame_id" } );
 
-    RosTypeParser::RosType type_joint("sensor_msgs/JointState");
+    ROSTypeParser::ROSType type_joint("sensor_msgs/JointState");
     type_joint.fields.push_back( { "Header",   "header" } );
     type_joint.fields.push_back( { "string[]",  "name" } );
     type_joint.fields.push_back( { "float64[]", "position" } );
@@ -172,276 +260,5 @@ TEST_CASE( "Test JointState parsing", "buildRosTypeMapFromDefinition" )
     compare( type_map, expected_map );
 }
 
-
-TEST_CASE( "Deserialize Pose", "RosType deserialization" )
-//int func()
-{
-    RosTypeParser::RosTypeMap type_map;
-
-    buildRosTypeMapFromDefinition(
-                DataType<geometry_msgs::Pose >::value(),
-                Definition<geometry_msgs::Pose >::value(),
-                &type_map );
-
-    geometry_msgs::Pose pose;
-
-    pose.position.x = 1;
-    pose.position.y = 2;
-    pose.position.z = 3;
-    pose.orientation.x = 4;
-    pose.orientation.y = 5;
-    pose.orientation.z = 6;
-    pose.orientation.w = 7;
-
-    std::vector<uint8_t> buffer(64*1024);
-    ros::serialization::OStream stream(buffer.data(), buffer.size());
-    ros::serialization::Serializer< geometry_msgs::Pose>::write(stream, pose);
-
-    RosTypeFlat flat_container;
-    uint8_t* buffer_ptr = buffer.data();
-
-    flat_container = buildRosFlatType(type_map, "Pose", "Pose", &buffer_ptr);
-
-    std::map< String, double > expected_result;
-    expected_result["Pose.position.x"] = 1;
-    expected_result["Pose.position.y"] = 2;
-    expected_result["Pose.position.z"] = 3;
-    expected_result["Pose.orientation.x"] = 4;
-    expected_result["Pose.orientation.y"] = 5;
-    expected_result["Pose.orientation.z"] = 6;
-    expected_result["Pose.orientation.w"] = 7;
-
-    applyNameTransform( Rules() , &flat_container );
-
-    for(auto&it: flat_container.value_renamed) {
-        std::cout << it.first << " >> " << it.second << std::endl;
-    }
-
-    for(auto&it: expected_result) {
-        std::cout << it.first << " >>>>> " << it.second << std::endl;
-    }
-
-    {//---------------------------------------------------
-        auto& flatA =  flat_container.value_renamed;
-        auto& flatB = expected_result;
-        REQUIRE( flatA.size() == flatB.size() );
-
-        for (auto itA = flatA.begin() ; itA != flatA.end(); itA++)
-        {
-            auto itB = flatB.find( itA->first );
-            std::cout <<  itA->first << " : " << itA->second << std::endl;
-
-            REQUIRE( itB != flatB.end() );
-            REQUIRE( itA->first  == itB->first );
-            REQUIRE( itA->second == itB->second );
-        }
-    }  //---------------------------------------------------
-
-
-}
-
-
-TEST_CASE( "Deserialize JointState", "RosType deserialization" )
-//int func()
-{
-    RosTypeParser::RosTypeMap type_map;
-
-    buildRosTypeMapFromDefinition(
-                DataType<sensor_msgs::JointState >::value(),
-                Definition<sensor_msgs::JointState >::value(),
-                &type_map );
-
-
-    sensor_msgs::JointState joint_state;
-
-    joint_state.header.seq = 2016;
-    joint_state.header.stamp = { 1234, 567*1000*1000 };
-    joint_state.header.frame_id = "pippo";
-
-    joint_state.name.resize( 3 );
-    joint_state.position.resize( 3 );
-    joint_state.velocity.resize( 3 );
-    joint_state.effort.resize( 3 );
-
-    std::string names[3];
-    names[0] = std::string("hola");
-    names[1] = std::string("ciao");
-    names[2] = std::string("bye");
-
-    for (int i=0; i<3; i++)
-    {
-        joint_state.name[i] = names[i];
-        joint_state.position[i]= 11+i;
-        joint_state.velocity[i]= 21+i;
-        joint_state.effort[i]= 31+i;
-    }
-
-    std::map< String, double > expected_result;
-    expected_result["JointState.header.seq"] = 2016;
-    expected_result["JointState.header.stamp"] = 1234.567;
-
-    expected_result["JointState.hola.position"] = 11;
-    expected_result["JointState.hola.velocity"] = 21;
-    expected_result["JointState.hola.effort"]   = 31;
-
-    expected_result["JointState.ciao.position"] = 12;
-    expected_result["JointState.ciao.velocity"] = 22;
-    expected_result["JointState.ciao.effort"]   = 32;
-
-    expected_result["JointState.bye.position"] = 13;
-    expected_result["JointState.bye.velocity"] = 23;
-    expected_result["JointState.bye.effort"]   = 33;
-
-    std::vector<uint8_t> buffer(64*1024);
-    ros::serialization::OStream stream(buffer.data(), buffer.size());
-    ros::serialization::Serializer<sensor_msgs::JointState>::write(stream, joint_state);
-
-    RosTypeFlat flat_container;
-    uint8_t* buffer_ptr = buffer.data();
-
-    flat_container = buildRosFlatType(type_map, "JointState", "JointState", &buffer_ptr);
-    applyNameTransform( Rules(), &flat_container );
-
-
-    for(auto&it: flat_container.value_renamed) {
-        std::cout << it.first << " >> " << it.second << std::endl;
-    }
-
-    for(auto&it: expected_result) {
-        std::cout << it.first << " >>>>> " << it.second << std::endl;
-    }
-
-
-    {//---------------------------------------------------
-        auto& flatA =  flat_container.value_renamed;
-        auto& flatB = expected_result;
-        REQUIRE( flatA.size() == flatB.size() );
-
-        for (auto itA = flatA.begin() ; itA != flatA.end(); itA++)
-        {
-            auto itB = flatB.find( itA->first );
-            std::cout <<  itA->first << " : " << itA->second << std::endl;
-
-            REQUIRE( itB != flatB.end() );
-            REQUIRE( itA->first  == itB->first );
-            REQUIRE( itA->second == itB->second );
-        }
-    }  //---------------------------------------------------
-
-    // repeat. Nothing should change
-    buffer_ptr = buffer.data();
-    flat_container = buildRosFlatType(type_map, "JointState", "JointState", &buffer_ptr);
-    applyNameTransform( Rules() , &flat_container );
-
-
-    { //---------------------------------------------------
-        auto& flatA =  flat_container.value_renamed;
-        auto& flatB = expected_result;
-        REQUIRE( flatA.size() == flatB.size() );
-
-        for (auto itA = flatA.begin() ; itA != flatA.end(); itA++)
-        {
-            auto itB = flatB.find( itA->first );
-            std::cout <<  itA->first << " : " << itA->second << std::endl;
-
-            REQUIRE( itB != flatB.end() );
-            REQUIRE( itA->first  == itB->first );
-            REQUIRE( itA->second == itB->second );
-        }
-    } //---------------------------------------------------
-
-}
-
-
-TEST_CASE( "Deserialize Transform", "RosType deserialization" )
-//int func()
-{
-    RosTypeParser::RosTypeMap type_map;
-
-    buildRosTypeMapFromDefinition(
-                DataType<tf::tfMessage >::value(),
-                Definition<tf::tfMessage>::value(),
-                &type_map );
-
-    std::cout << "------------------------------"  << std::endl;
-    std::cout << type_map << std::endl;
-
-    tf::tfMessage tf_msg;
-
-    tf_msg.transforms.resize(1);
-
-    const char* suffix[3] = { "_A", "_B", "_C" };
-
-    std::map< String, double > expected_result;
-
-    for (int i=0; i< tf_msg.transforms.size() ; i++)
-    {
-        tf_msg.transforms[i].header.seq = 100+i;
-        tf_msg.transforms[i].header.stamp = {1234 + i, 0 };
-        tf_msg.transforms[i].header.frame_id = std::string("frame").append(suffix[i]);
-
-        tf_msg.transforms[i].child_frame_id = std::string("child").append(suffix[i]);
-
-        String prefix = String( "msgTransform.transform.frame" ).append(suffix[i]);
-
-        expected_result[ prefix + String(".header.seq")   ] = tf_msg.transforms[i].header.seq;
-        expected_result[ prefix + String(".header.stamp") ] = 1234 + i;
-
-        tf_msg.transforms[i].transform.translation.x = 10 +i;
-        tf_msg.transforms[i].transform.translation.y = 20 +i;
-        tf_msg.transforms[i].transform.translation.z = 30 +i;
-
-        tf_msg.transforms[i].transform.rotation.x = 40 +i;
-        tf_msg.transforms[i].transform.rotation.y = 50 +i;
-        tf_msg.transforms[i].transform.rotation.z = 60 +i;
-        tf_msg.transforms[i].transform.rotation.w = 70 +i;
-
-        expected_result[ prefix + String(".translation.x") ] = tf_msg.transforms[i].transform.translation.x;
-        expected_result[ prefix + String(".translation.y") ] = tf_msg.transforms[i].transform.translation.y;
-        expected_result[ prefix + String(".translation.z") ] = tf_msg.transforms[i].transform.translation.z;
-
-        expected_result[ prefix + String(".rotation.x") ] = tf_msg.transforms[i].transform.rotation.x;
-        expected_result[ prefix + String(".rotation.y") ] = tf_msg.transforms[i].transform.rotation.y;
-        expected_result[ prefix + String(".rotation.z") ] = tf_msg.transforms[i].transform.rotation.z;
-        expected_result[ prefix + String(".rotation.w") ] = tf_msg.transforms[i].transform.rotation.w;
-
-    }
-
-    std::vector<uint8_t> buffer(64*1024);
-    ros::serialization::OStream stream(buffer.data(), buffer.size());
-    ros::serialization::Serializer<tf::tfMessage>::write(stream, tf_msg);
-
-    RosTypeFlat flat_container;
-    uint8_t* buffer_ptr = buffer.data();
-
-    flat_container = buildRosFlatType(type_map, "tfMessage", "msgTransform", &buffer_ptr);
-    applyNameTransform( Rules(), &flat_container );
-
-    std::cout <<  "---------------------------" << std::endl;
-    for(auto&it: flat_container.value_renamed) {
-        std::cout << it.first << " >> " << it.second << std::endl;
-    }
-    std::cout <<  "---------------------------" << std::endl;
-    for(auto&it: expected_result) {
-        std::cout << it.first << " >>>>> " << it.second << std::endl;
-    }
-
-    { //---------------------------------------------------
-        auto& flatA =  flat_container.value_renamed;
-        auto& flatB = expected_result;
-        REQUIRE( flatA.size() == flatB.size() );
-
-        for (auto itA = flatA.begin() ; itA != flatA.end(); itA++)
-        {
-            auto itB = flatB.find( itA->first );
-            std::cout <<  itA->first << " : " << itA->second << std::endl;
-
-            REQUIRE( itB != flatB.end() );
-            REQUIRE( itA->first  == itB->first );
-            REQUIRE( itA->second == itB->second );
-        }
-    }//---------------------------------------------------
-
-}
-
+*/
 
