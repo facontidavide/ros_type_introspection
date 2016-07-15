@@ -8,7 +8,7 @@
 
 
 using namespace ros::message_traits;
-using namespace ROSTypeParser;
+using namespace ROSIntrospection;
 
 TEST_CASE("Deserialize JointState", "Deserialize")
 //int func()
@@ -30,9 +30,9 @@ TEST_CASE("Deserialize JointState", "Deserialize")
     joint_state.effort.resize( 3 );
 
     std::string names[3];
-    names[0] = std::string("hola");
-    names[1] = std::string("ciao");
-    names[2] = std::string("bye");
+    names[0] = ("hola");
+    names[1] = ("ciao");
+    names[2] = ("bye");
 
     for (int i=0; i<3; i++)
     {
@@ -48,8 +48,10 @@ TEST_CASE("Deserialize JointState", "Deserialize")
 
     uint8_t* buffer_ptr = buffer.data();
 
-    RosTypeFlat flat_container = buildRosFlatType(type_map,
-                                                  DataType<sensor_msgs::JointState >::value(),
+    ROSType main_type( DataType<sensor_msgs::JointState >::value() );
+
+    ROSTypeFlat flat_container = buildRosFlatType(type_map,
+                                                  main_type,
                                                   "JointState",
                                                   &buffer_ptr);
     for(auto&it: flat_container.value) {
@@ -60,41 +62,41 @@ TEST_CASE("Deserialize JointState", "Deserialize")
         std::cout << it.first << " >> " << it.second << std::endl;
     }
 
-    REQUIRE( flat_container.value[0].first  == std::string("JointState.header.seq"));
+    REQUIRE( flat_container.value[0].first  == LongString("JointState.header.seq"));
     REQUIRE( flat_container.value[0].second == 2016 );
-    REQUIRE( flat_container.value[1].first  == std::string("JointState.header.stamp"));
+    REQUIRE( flat_container.value[1].first  == LongString("JointState.header.stamp"));
     REQUIRE( flat_container.value[1].second == 1234.567 );
 
-    REQUIRE( flat_container.value[2].first  == std::string("JointState.position[0]"));
+    REQUIRE( flat_container.value[2].first  == LongString("JointState.position[0]"));
     REQUIRE( flat_container.value[2].second == 11 );
-    REQUIRE( flat_container.value[3].first  == std::string("JointState.position[1]"));
+    REQUIRE( flat_container.value[3].first  == LongString("JointState.position[1]"));
     REQUIRE( flat_container.value[3].second == 12 );
-    REQUIRE( flat_container.value[4].first  == std::string("JointState.position[2]"));
+    REQUIRE( flat_container.value[4].first  == LongString("JointState.position[2]"));
     REQUIRE( flat_container.value[4].second == 13 );
 
-    REQUIRE( flat_container.value[5].first  == std::string("JointState.velocity[0]"));
+    REQUIRE( flat_container.value[5].first  == LongString("JointState.velocity[0]"));
     REQUIRE( flat_container.value[5].second == 21 );
-    REQUIRE( flat_container.value[6].first  == std::string("JointState.velocity[1]"));
+    REQUIRE( flat_container.value[6].first  == LongString("JointState.velocity[1]"));
     REQUIRE( flat_container.value[6].second == 22 );
-    REQUIRE( flat_container.value[7].first  == std::string("JointState.velocity[2]"));
+    REQUIRE( flat_container.value[7].first  == LongString("JointState.velocity[2]"));
     REQUIRE( flat_container.value[7].second == 23 );
 
-    REQUIRE( flat_container.value[8].first  == std::string("JointState.effort[0]"));
+    REQUIRE( flat_container.value[8].first  == LongString("JointState.effort[0]"));
     REQUIRE( flat_container.value[8].second == 31 );
-    REQUIRE( flat_container.value[9].first  == std::string("JointState.effort[1]"));
+    REQUIRE( flat_container.value[9].first  == LongString("JointState.effort[1]"));
     REQUIRE( flat_container.value[9].second == 32 );
-    REQUIRE( flat_container.value[10].first  == std::string("JointState.effort[2]"));
+    REQUIRE( flat_container.value[10].first  == LongString("JointState.effort[2]"));
     REQUIRE( flat_container.value[10].second == 33 );
 
-    REQUIRE( flat_container.name_id[0].first  == std::string("JointState.header.frame_id"));
-    REQUIRE( flat_container.name_id[0].second == std::string("pippo") );
+    REQUIRE( flat_container.name_id[0].first  == LongString("JointState.header.frame_id"));
+    REQUIRE( flat_container.name_id[0].second == LongString("pippo") );
 
-    REQUIRE( flat_container.name_id[1].first  == std::string("JointState.name[0]"));
-    REQUIRE( flat_container.name_id[1].second == std::string("hola") );
-    REQUIRE( flat_container.name_id[2].first  == std::string("JointState.name[1]"));
-    REQUIRE( flat_container.name_id[2].second == std::string("ciao") );
-    REQUIRE( flat_container.name_id[3].first  == std::string("JointState.name[2]"));
-    REQUIRE( flat_container.name_id[3].second == std::string("bye") );
+    REQUIRE( flat_container.name_id[1].first  == LongString("JointState.name[0]"));
+    REQUIRE( flat_container.name_id[1].second == LongString("hola") );
+    REQUIRE( flat_container.name_id[2].first  == LongString("JointState.name[1]"));
+    REQUIRE( flat_container.name_id[2].second == LongString("ciao") );
+    REQUIRE( flat_container.name_id[3].first  == LongString("JointState.name[2]"));
+    REQUIRE( flat_container.name_id[3].second == LongString("bye") );
 }
 
 TEST_CASE("Deserialize NavSatStatus", "Deserialize")
@@ -117,8 +119,10 @@ TEST_CASE("Deserialize NavSatStatus", "Deserialize")
 
     uint8_t* buffer_ptr = buffer.data();
 
-    RosTypeFlat flat_container = buildRosFlatType(type_map,
-                                                  DataType<sensor_msgs::NavSatStatus >::value(),
+    ROSType main_type( DataType<sensor_msgs::NavSatStatus >::value() );
+
+    ROSTypeFlat flat_container = buildRosFlatType(type_map,
+                                                  main_type,
                                                   "nav_stat",
                                                   &buffer_ptr);
 
@@ -128,9 +132,9 @@ TEST_CASE("Deserialize NavSatStatus", "Deserialize")
         std::cout << it.first << " >> " << it.second << std::endl;
     }
 
-    REQUIRE( flat_container.value[0].first  == std::string("nav_stat.status"));
+    REQUIRE( flat_container.value[0].first  == LongString("nav_stat.status"));
     REQUIRE( flat_container.value[0].second == nav_stat.STATUS_GBAS_FIX );
-    REQUIRE( flat_container.value[1].first  == std::string("nav_stat.service"));
+    REQUIRE( flat_container.value[1].first  == LongString("nav_stat.service"));
     REQUIRE( flat_container.value[1].second == nav_stat.SERVICE_COMPASS );
 }
 
@@ -176,8 +180,10 @@ TEST_CASE("Deserialize IMU", "Deserialize")
 
     uint8_t* buffer_ptr = buffer.data();
 
-    RosTypeFlat flat_container = buildRosFlatType(type_map,
-                                                  DataType<sensor_msgs::Imu >::value(),
+    ROSType main_type( DataType<sensor_msgs::Imu >::value() );
+
+    ROSTypeFlat flat_container = buildRosFlatType(type_map,
+                                                  main_type,
                                                   "imu",
                                                   &buffer_ptr);
 
@@ -188,22 +194,22 @@ TEST_CASE("Deserialize IMU", "Deserialize")
 
     int index = 0;
 
-    REQUIRE( flat_container.value[index].first  == std::string("imu.header.seq"));
+    REQUIRE( flat_container.value[index].first  == LongString("imu.header.seq"));
     REQUIRE( flat_container.value[index].second == 2016 );
     index++;
-    REQUIRE( flat_container.value[index].first  == std::string("imu.header.stamp"));
+    REQUIRE( flat_container.value[index].first  == LongString("imu.header.stamp"));
     REQUIRE( flat_container.value[index].second == 1234.567 );
     index++;
-    REQUIRE( flat_container.value[index].first  == std::string("imu.orientation.x"));
+    REQUIRE( flat_container.value[index].first  == LongString("imu.orientation.x"));
     REQUIRE( flat_container.value[index].second == 11 );
     index++;
-    REQUIRE( flat_container.value[index].first  == std::string("imu.orientation.y"));
+    REQUIRE( flat_container.value[index].first  == LongString("imu.orientation.y"));
     REQUIRE( flat_container.value[index].second == 12 );
     index++;
-    REQUIRE( flat_container.value[index].first  == std::string("imu.orientation.z"));
+    REQUIRE( flat_container.value[index].first  == LongString("imu.orientation.z"));
     REQUIRE( flat_container.value[index].second == 13 );
     index++;
-    REQUIRE( flat_container.value[index].first  == std::string("imu.orientation.w"));
+    REQUIRE( flat_container.value[index].first  == LongString("imu.orientation.w"));
     REQUIRE( flat_container.value[index].second == 14 );
     index++;
 
@@ -211,18 +217,18 @@ TEST_CASE("Deserialize IMU", "Deserialize")
     {
         char str[64];
         sprintf(str, "imu.orientation_covariance[%d]",i);
-        REQUIRE( flat_container.value[index].first  == std::string(str) );
+        REQUIRE( flat_container.value[index].first  == LongString(str) );
         REQUIRE( flat_container.value[index].second == 40+i );
         index++;
     }
 
-    REQUIRE( flat_container.value[index].first  == std::string("imu.angular_velocity.x"));
+    REQUIRE( flat_container.value[index].first  == LongString("imu.angular_velocity.x"));
     REQUIRE( flat_container.value[index].second == 21 );
     index++;
-    REQUIRE( flat_container.value[index].first  == std::string("imu.angular_velocity.y"));
+    REQUIRE( flat_container.value[index].first  == LongString("imu.angular_velocity.y"));
     REQUIRE( flat_container.value[index].second == 22 );
     index++;
-    REQUIRE( flat_container.value[index].first  == std::string("imu.angular_velocity.z"));
+    REQUIRE( flat_container.value[index].first  == LongString("imu.angular_velocity.z"));
     REQUIRE( flat_container.value[index].second == 23 );
     index++;
 
@@ -230,18 +236,18 @@ TEST_CASE("Deserialize IMU", "Deserialize")
     {
         char str[64];
         sprintf(str, "imu.angular_velocity_covariance[%d]",i);
-        REQUIRE( flat_container.value[index].first  == std::string(str) );
+        REQUIRE( flat_container.value[index].first  == LongString(str) );
         REQUIRE( flat_container.value[index].second == 50+i );
         index++;
     }
 
-    REQUIRE( flat_container.value[index].first  == std::string("imu.linear_acceleration.x"));
+    REQUIRE( flat_container.value[index].first  == LongString("imu.linear_acceleration.x"));
     REQUIRE( flat_container.value[index].second == 31 );
     index++;
-    REQUIRE( flat_container.value[index].first  == std::string("imu.linear_acceleration.y"));
+    REQUIRE( flat_container.value[index].first  == LongString("imu.linear_acceleration.y"));
     REQUIRE( flat_container.value[index].second == 32 );
     index++;
-    REQUIRE( flat_container.value[index].first  == std::string("imu.linear_acceleration.z"));
+    REQUIRE( flat_container.value[index].first  == LongString("imu.linear_acceleration.z"));
     REQUIRE( flat_container.value[index].second == 33 );
     index++;
 
@@ -249,7 +255,7 @@ TEST_CASE("Deserialize IMU", "Deserialize")
     {
         char str[64];
         sprintf(str, "imu.linear_acceleration_covariance[%d]",i);
-        REQUIRE( flat_container.value[index].first  == std::string(str) );
+        REQUIRE( flat_container.value[index].first  == LongString(str) );
         REQUIRE( flat_container.value[index].second == 60+i );
         index++;
     }

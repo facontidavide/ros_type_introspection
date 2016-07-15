@@ -9,7 +9,7 @@
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/regex.hpp>
 
-namespace ROSTypeParser{
+namespace ROSIntrospection{
 
 
 static const  boost::regex type_regex("[a-zA-Z][a-zA-Z0-9_]*"
@@ -54,7 +54,6 @@ ROSType::ROSType(const std::string &name):
 
     if( split.size() == 1)
     {
-        _pkg_name = "";
         type_field = split[0];
     }
     else{
@@ -84,55 +83,55 @@ ROSType::ROSType(const std::string &name):
       _array_size = 1;
     }
     //------------------------------
-    _id = ROSTypeParser::OTHER;
+    _id = ROSIntrospection::OTHER;
 
     if( _msg_name.compare( "bool" ) == 0 ) {
-        _id = ROSTypeParser::BOOL;
+        _id = ROSIntrospection::BOOL;
     }
     else if(_msg_name.compare( "byte" ) == 0 ) {
-        _id = ROSTypeParser::BYTE;
+        _id = ROSIntrospection::BYTE;
     }
     else if(_msg_name.compare( "char" ) == 0 ) {
-        _id = ROSTypeParser::CHAR;
+        _id = ROSIntrospection::CHAR;
     }
     else if(_msg_name.compare( "uint8" ) == 0 ) {
-        _id = ROSTypeParser::UINT8;
+        _id = ROSIntrospection::UINT8;
     }
     else if(_msg_name.compare( "uint16" ) == 0 ) {
-        _id = ROSTypeParser::UINT16;
+        _id = ROSIntrospection::UINT16;
     }
     else if(_msg_name.compare( "uint32" ) == 0 ) {
-        _id = ROSTypeParser::UINT32;
+        _id = ROSIntrospection::UINT32;
     }
     else if(_msg_name.compare( "uint64" ) == 0 ) {
-        _id = ROSTypeParser::UINT64;
+        _id = ROSIntrospection::UINT64;
     }
     else if(_msg_name.compare( "int8" ) == 0 ) {
-        _id = ROSTypeParser::INT8;
+        _id = ROSIntrospection::INT8;
     }
     else if(_msg_name.compare( "int16" ) == 0 ) {
-        _id = ROSTypeParser::INT16;
+        _id = ROSIntrospection::INT16;
     }
     else if(_msg_name.compare( "int32" ) == 0 ) {
-        _id = ROSTypeParser::INT32;
+        _id = ROSIntrospection::INT32;
     }
     else if(_msg_name.compare( "int64" ) == 0 ) {
-        _id = ROSTypeParser::INT64;
+        _id = ROSIntrospection::INT64;
     }
     else if(_msg_name.compare( "float32" ) == 0 ) {
-        _id = ROSTypeParser::FLOAT32;
+        _id = ROSIntrospection::FLOAT32;
     }
     else if(_msg_name.compare( "float64" ) == 0 ) {
-        _id = ROSTypeParser::FLOAT64;
+        _id = ROSIntrospection::FLOAT64;
     }
     else if(_msg_name.compare( "time" ) == 0 ) {
-        _id = ROSTypeParser::TIME;
+        _id = ROSIntrospection::TIME;
     }
     else if(_msg_name.compare( "duration" ) == 0 ) {
-        _id = ROSTypeParser::DURATION;
+        _id = ROSIntrospection::DURATION;
     }
     else if(_msg_name.compare( "string" ) == 0 ) {
-        _id = ROSTypeParser::STRING;
+        _id = ROSIntrospection::STRING;
     }
 }
 
@@ -207,7 +206,7 @@ bool ROSType::isArray() const
 
 bool ROSType::isBuiltin() const
 {
-    return _id != ROSTypeParser::OTHER;
+    return _id != ROSIntrospection::OTHER;
 }
 
 int ROSType::arraySize() const
@@ -263,7 +262,7 @@ void ROSMessage::updateTypes(std::vector<ROSType> all_types)
 {
     for (ROSField& field: fields)
     {
-        if( field.type().pkgName().empty() )
+        if( field.type().pkgName().size() == 0 )
         {
             for (ROSType& known_type: all_types)
             {

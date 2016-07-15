@@ -9,10 +9,10 @@
 #include <sstream>
 #include <iostream>
 #include <chrono>
-#include <ros_type_introspection/ros_type_introspection.hpp>
+#include <ros_type_introspection/renamer.hpp>
 
 using namespace ros::message_traits;
-using namespace RosTypeParser;
+using namespace ROSIntrospection;
 
 std::vector<SubstitutionRule> Rules()
 {
@@ -41,38 +41,10 @@ std::vector<SubstitutionRule> Rules()
 
 int main( int argc, char** argv)
 {
- /*   String test("Hello");
 
-    String longname("Hello0123456789_0123456789_0123456789");
-    std::cout << longname << " is sso "<< longname.isSso()<< std::endl;
-
-    std::cout << test << " is sso "<< test.isSso()<< std::endl;
-
-    test.append("0123456789", 10);
-    std::cout << test << " is sso "<< test.isSso()<< std::endl;
-
-    test.append("0123456789", 10);
-    std::cout << test << " is sso "<< test.isSso()<< std::endl;
-
-
-    test.append("0123456789", 10);
-    std::cout << test << " is sso "<< test.isSso()<< std::endl;
-
-    test.resize(25);
-    std::cout << test << " is sso "<< test.isSso()<< std::endl;
-
-    test.resize(20);
-    std::cout << test << " is sso "<< test.isSso()<< std::endl;
-
-    test.resize(50);
-    std::cout << test << " is sso "<< test.isSso()<< std::endl;
-*/
-    RosTypeParser::RosTypeMap type_map;
-
-    buildRosTypeMapFromDefinition(
+    ROSTypeList type_map =  buildROSTypeMapFromDefinition(
                 DataType<tf::tfMessage >::value(),
-                Definition<tf::tfMessage>::value(),
-                &type_map );
+                Definition<tf::tfMessage>::value() );
 
     std::cout << "------------------------------"  << std::endl;
     std::cout << type_map << std::endl;
@@ -86,7 +58,7 @@ int main( int argc, char** argv)
     for (int i=0; i< tf_msg.transforms.size() ; i++)
     {
         tf_msg.transforms[i].header.seq = 100+i;
-        tf_msg.transforms[i].header.stamp = {1234 + i, 0 };
+        tf_msg.transforms[i].header.stamp.sec = 1234;
         tf_msg.transforms[i].header.frame_id = std::string("frame").append(suffix[i]);
 
         tf_msg.transforms[i].child_frame_id = std::string("child").append(suffix[i]);
@@ -111,7 +83,9 @@ int main( int argc, char** argv)
 
         uint8_t* buffer_ptr = buffer.data();
 
-        RosTypeFlat flat_container = buildRosFlatType(type_map, "tfMessage", "msgTransform", &buffer_ptr);
+        ROSType main_type (DataType<tf::tfMessage >::value());
+
+        ROSTypeFlat flat_container = buildRosFlatType(type_map,main_type, "msgTransform", &buffer_ptr);
         applyNameTransform( Rules(), &flat_container );
     }
 

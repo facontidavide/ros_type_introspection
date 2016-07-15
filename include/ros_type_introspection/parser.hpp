@@ -6,10 +6,10 @@
 #include <boost/utility/string_ref.hpp>
 #include <ros_type_introspection/string.hpp>
 
-namespace ROSTypeParser{
+namespace ROSIntrospection{
 
 
-#if 0
+#if 1
 typedef ssoX::basic_string<31,char> ShortString;
 typedef ssoX::basic_string<63,char> LongString;
 #else

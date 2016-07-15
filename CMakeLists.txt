@@ -46,10 +46,12 @@ include_directories(
  add_library(ros_type_introspection
    src/parser.cpp
    src/deserializer.cpp
+   src/renamer.cpp
 
    include/ros_type_introspection/parser.hpp
    include/ros_type_introspection/deserializer.hpp
    include/ros_type_introspection/string.hpp
+   include/ros_type_introspection/renamer.hpp
  )
 
 target_link_libraries(ros_type_introspection ${catkin_LIBRARIES})
@@ -60,17 +62,14 @@ target_link_libraries(ros_type_introspection ${catkin_LIBRARIES})
 # add_dependencies(ros_type_introspection ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-# add_executable(ros_introspection_benchmark src/benchmark.cpp)
+add_executable(ros_introspection_benchmark src/benchmark.cpp)
 
-## Add cmake target dependencies of the executable
-## same as for the library above
-#add_dependencies(ros_introspection_benchmark ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(ros_introspection_benchmark ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
-#  Specify libraries to link a library or executable target against
-# target_link_libraries(ros_introspection_benchmark
-#   ${catkin_LIBRARIES}
-#   ros_type_introspection
-#)
+target_link_libraries(ros_introspection_benchmark
+  ${catkin_LIBRARIES}
+  ros_type_introspection
+)
 
 #############
 ## Install ##
@@ -108,6 +107,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
  add_executable(ros_introspection_test
      src/parser_test.cpp
      src/deserializer_test.cpp
+     src/renamer_test.cpp
      )
 
  target_link_libraries(ros_introspection_test

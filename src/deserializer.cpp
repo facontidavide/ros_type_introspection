@@ -1,7 +1,7 @@
 #include <ros_type_introspection/deserializer.hpp>
 #include <functional>
 
-namespace ROSTypeParser{
+namespace ROSIntrospection{
 
 
 template <typename T> T ReadFromBuffer( uint8_t** buffer)
@@ -20,7 +20,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                           const ROSType &type,
                           LongString prefix,
                           uint8_t** buffer_ptr,
-                          RosTypeFlat* flat_container )
+                          ROSTypeFlat* flat_container )
 {
     int array_size = type.arraySize();
     if( array_size == -1)
@@ -116,7 +116,8 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                 bool done = false;
                 for(const ROSMessage& msg: type_list) // find in the list
                 {
-                    if( msg.type == type )
+                    if( msg.type.msgName() == type.msgName() &&
+                        msg.type.pkgName() == type.pkgName()  )
                     {
                         for (const ROSField& field: msg.fields )
                         {
@@ -126,7 +127,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                             }
                             LongString new_prefix( key );
                             new_prefix.append( "." );
-                            new_prefix.append( field.name() )  ;
+                            new_prefix.append( field.name().data(), field.name().size() )  ;
 
                             buildRosFlatTypeImpl(type_list, field.type(),
                                                  new_prefix,
@@ -160,13 +161,15 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
 }
 
 
-RosTypeFlat buildRosFlatType(const ROSTypeList& type_map,
-                             const LongString &type_name,
+ROSTypeFlat buildRosFlatType(const ROSTypeList& type_map,
+                             ROSType type,
                              const LongString & prefix,
                              uint8_t** buffer_ptr)
 {
-    RosTypeFlat flat_container;
-    buildRosFlatTypeImpl( type_map, type_name, prefix, buffer_ptr,  &flat_container );
+    ROSTypeFlat flat_container;
+
+
+    buildRosFlatTypeImpl( type_map, type, prefix, buffer_ptr,  &flat_container );
 
     std::sort( flat_container.name_id.begin(),  flat_container.name_id.end(),
                []( const std::pair<LongString,LongString> & left,
