@@ -5,10 +5,10 @@
 #include <sensor_msgs/JointState.h>
 #include <sensor_msgs/NavSatStatus.h>
 #include <sensor_msgs/Imu.h>
-
+#include <std_msgs/Int16MultiArray.h>
 
 using namespace ros::message_traits;
-using namespace ROSIntrospection;
+using namespace RosIntrospection;
 
 TEST_CASE("Deserialize JointState", "Deserialize")
 //int func()
@@ -259,5 +259,47 @@ TEST_CASE("Deserialize IMU", "Deserialize")
         REQUIRE( flat_container.value[index].second == 60+i );
         index++;
     }
+}
+
+
+
+TEST_CASE("Deserialize Int16MultiArray", "Deserialize")
+//int func()
+{
+    ROSTypeList type_map = buildROSTypeMapFromDefinition(
+                DataType<std_msgs::Int16MultiArray >::value(),
+                Definition<std_msgs::Int16MultiArray >::value() );
+
+    std_msgs::Int16MultiArray multi_array;
+
+    const unsigned N = 6;
+    multi_array.layout.data_offset = 42;
+    multi_array.data.resize(N);
+
+    for (unsigned i=0; i<N; i++){
+      multi_array.data[i] = i;
+    }
+
+
+    std::vector<uint8_t> buffer(64*1024);
+    ros::serialization::OStream stream(buffer.data(), buffer.size());
+    ros::serialization::Serializer<std_msgs::Int16MultiArray>::write(stream, multi_array);
+
+    uint8_t* buffer_ptr = buffer.data();
+
+    ROSType main_type( DataType<std_msgs::Int16MultiArray>::value() );
+
+    ROSTypeFlat flat_container = buildRosFlatType(type_map,
+                                                  main_type,
+                                                  "multi_array",
+                                                  &buffer_ptr);
+
+    std::cout << " -------------------- " << std::endl;
+
+    for(auto&it: flat_container.value) {
+        std::cout << it.first << " >> " << it.second << std::endl;
+    }
 
 }
+
+

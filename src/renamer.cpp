@@ -1,6 +1,6 @@
 #include <ros_type_introspection/renamer.hpp>
 
-namespace ROSIntrospection{
+namespace RosIntrospection{
 
 
 SubstitutionRule::SubstitutionRule( std::string pattern, std::string location, std::string substitution):

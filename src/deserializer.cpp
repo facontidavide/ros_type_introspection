@@ -1,7 +1,7 @@
 #include <ros_type_introspection/deserializer.hpp>
 #include <functional>
 
-namespace ROSIntrospection{
+namespace RosIntrospection{
 
 
 template <typename T> T ReadFromBuffer( uint8_t** buffer)

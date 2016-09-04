@@ -9,7 +9,7 @@
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/regex.hpp>
 
-namespace ROSIntrospection{
+namespace RosIntrospection{
 
 
 static const  boost::regex type_regex("[a-zA-Z][a-zA-Z0-9_]*"
@@ -68,6 +68,7 @@ ROSType::ROSType(const std::string &name):
     if (boost::regex_search(type_field, what, array_regex))
     {
       _msg_name = std::string(what[1].first, what[1].second);
+
       if (what.size() == 3) {
         _array_size = -1;
       }
@@ -83,55 +84,55 @@ ROSType::ROSType(const std::string &name):
       _array_size = 1;
     }
     //------------------------------
-    _id = ROSIntrospection::OTHER;
+    _id = RosIntrospection::OTHER;
 
     if( _msg_name.compare( "bool" ) == 0 ) {
-        _id = ROSIntrospection::BOOL;
+        _id = RosIntrospection::BOOL;
     }
     else if(_msg_name.compare( "byte" ) == 0 ) {
-        _id = ROSIntrospection::BYTE;
+        _id = RosIntrospection::BYTE;
     }
     else if(_msg_name.compare( "char" ) == 0 ) {
-        _id = ROSIntrospection::CHAR;
+        _id = RosIntrospection::CHAR;
     }
     else if(_msg_name.compare( "uint8" ) == 0 ) {
-        _id = ROSIntrospection::UINT8;
+        _id = RosIntrospection::UINT8;
     }
     else if(_msg_name.compare( "uint16" ) == 0 ) {
-        _id = ROSIntrospection::UINT16;
+        _id = RosIntrospection::UINT16;
     }
     else if(_msg_name.compare( "uint32" ) == 0 ) {
-        _id = ROSIntrospection::UINT32;
+        _id = RosIntrospection::UINT32;
     }
     else if(_msg_name.compare( "uint64" ) == 0 ) {
-        _id = ROSIntrospection::UINT64;
+        _id = RosIntrospection::UINT64;
     }
     else if(_msg_name.compare( "int8" ) == 0 ) {
-        _id = ROSIntrospection::INT8;
+        _id = RosIntrospection::INT8;
     }
     else if(_msg_name.compare( "int16" ) == 0 ) {
-        _id = ROSIntrospection::INT16;
+        _id = RosIntrospection::INT16;
     }
     else if(_msg_name.compare( "int32" ) == 0 ) {
-        _id = ROSIntrospection::INT32;
+        _id = RosIntrospection::INT32;
     }
     else if(_msg_name.compare( "int64" ) == 0 ) {
-        _id = ROSIntrospection::INT64;
+        _id = RosIntrospection::INT64;
     }
     else if(_msg_name.compare( "float32" ) == 0 ) {
-        _id = ROSIntrospection::FLOAT32;
+        _id = RosIntrospection::FLOAT32;
     }
     else if(_msg_name.compare( "float64" ) == 0 ) {
-        _id = ROSIntrospection::FLOAT64;
+        _id = RosIntrospection::FLOAT64;
     }
     else if(_msg_name.compare( "time" ) == 0 ) {
-        _id = ROSIntrospection::TIME;
+        _id = RosIntrospection::TIME;
     }
     else if(_msg_name.compare( "duration" ) == 0 ) {
-        _id = ROSIntrospection::DURATION;
+        _id = RosIntrospection::DURATION;
     }
     else if(_msg_name.compare( "string" ) == 0 ) {
-        _id = ROSIntrospection::STRING;
+        _id = RosIntrospection::STRING;
     }
 }
 
@@ -199,6 +200,14 @@ const ShortString &ROSType::pkgName() const
     return _pkg_name;
 }
 
+void ROSType::setPkgName(const ShortString &new_pkg)
+{
+    assert(_pkg_name.size() == 0);
+    _pkg_name = new_pkg;
+    std::string pkg( new_pkg.data(), new_pkg.size() );
+    _base_name = pkg + std::string("/") + _base_name;
+}
+
 bool ROSType::isArray() const
 {
     return _array_size != 1;
@@ -206,7 +215,7 @@ bool ROSType::isArray() const
 
 bool ROSType::isBuiltin() const
 {
-    return _id != ROSIntrospection::OTHER;
+    return _id != RosIntrospection::OTHER;
 }
 
 int ROSType::arraySize() const
@@ -262,13 +271,14 @@ void ROSMessage::updateTypes(std::vector<ROSType> all_types)
 {
     for (ROSField& field: fields)
     {
+        // if package name is missing, try to find msgName in the list of known_type
         if( field.type().pkgName().size() == 0 )
         {
             for (ROSType& known_type: all_types)
             {
                 if( field.type().msgName() == known_type.msgName() )
                 {
-                    field._type = known_type;
+                    field._type.setPkgName( known_type.pkgName() );
                     break;
                 }
             }

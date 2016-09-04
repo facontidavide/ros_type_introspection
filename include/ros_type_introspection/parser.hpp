@@ -6,7 +6,7 @@
 #include <boost/utility/string_ref.hpp>
 #include <ros_type_introspection/string.hpp>
 
-namespace ROSIntrospection{
+namespace RosIntrospection{
 
 
 #if 1
@@ -38,7 +38,7 @@ public:
     ROSType(const std::string& name);
 
     /// Concatenation of msg_name and pkg_name.
-    /// ex.: geometry_msgs/Pose[40] -> "geometry_msgs/Pose"
+    /// ex.: geometry_msgs/Pose[40]"
     const std::string& baseName() const;
 
     /// ex.: geometry_msgs/Pose[40] -> "Pose"
@@ -46,6 +46,8 @@ public:
 
     /// ex.: geometry_msgs/Pose[40] -> "geometry_msgs"
     const ShortString& pkgName()  const;
+
+    void setPkgName(const ShortString& new_pkg);
 
     /// True if the type is an array
     bool isArray() const;

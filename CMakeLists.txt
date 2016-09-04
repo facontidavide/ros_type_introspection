@@ -3,11 +3,13 @@ project(ros_type_introspection)
 
 find_package(Boost REQUIRED COMPONENTS regex)
 
-find_package(catkin REQUIRED COMPONENTS
-  rosbag
-  rosbag_storage
-  roscpp
-  roscpp_serialization
+find_package(catkin REQUIRED COMPONENTS 
+   roscpp 
+   rostime 
+   topic_tools 
+   rosbag 
+   rosbag_storage 
+   roscpp_serialization
 )
 
 # Build flags
@@ -26,7 +28,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ")
 catkin_package(
    INCLUDE_DIRS include
    LIBRARIES ros_type_introspection
-   CATKIN_DEPENDS roscpp rostime topic_tools rosbag rosbag_storage roscpp_serialization
+   CATKIN_DEPENDS 
+   roscpp 
+   rostime 
+   topic_tools 
+   rosbag 
+   rosbag_storage 
+   roscpp_serialization
    DEPENDS system_lib
 )
 
@@ -85,6 +93,10 @@ install(TARGETS ros_type_introspection
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
+
+install(TARGETS ros_type_introspection
+        LIBRARY DESTINATION /usr/local/lib/
+        RUNTIME DESTINATION /usr/local/lib )
 
 ## Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/

@@ -12,7 +12,7 @@
 #include <ros_type_introspection/renamer.hpp>
 
 using namespace ros::message_traits;
-using namespace ROSIntrospection;
+using namespace RosIntrospection;
 
 std::vector<SubstitutionRule> Rules()
 {

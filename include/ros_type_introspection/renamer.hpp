@@ -3,7 +3,7 @@
 
 #include <ros_type_introspection/deserializer.hpp>
 
-namespace ROSIntrospection{
+namespace RosIntrospection{
 
 class SubstitutionRule{
 public:

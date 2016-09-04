@@ -3,7 +3,7 @@
 
 #include <ros_type_introspection/parser.hpp>
 
-namespace ROSIntrospection{
+namespace RosIntrospection{
 
 typedef struct{
     std::vector< std::pair<LongString, double> > value;

@@ -4,11 +4,11 @@
 #include <geometry_msgs/Pose.h>
 #include <sensor_msgs/NavSatStatus.h>
 #include <sensor_msgs/Imu.h>
-
+#include <std_msgs/Int16MultiArray.h>
 #include <ros_type_introspection/parser.hpp>
 
 using namespace ros::message_traits;
-using namespace ROSIntrospection;
+using namespace RosIntrospection;
 
 TEST_CASE("builtin_int32", "ROSType")
 {
@@ -173,7 +173,7 @@ TEST_CASE("constant_comments", "ROSMessageFields")
 
 TEST_CASE( "Test Pose parsing", "buildROSTypeMapFromDefinition" )
 {
-    ROSIntrospection::ROSTypeList rmap;
+    RosIntrospection::ROSTypeList rmap;
 
     rmap = buildROSTypeMapFromDefinition(
                 DataType<geometry_msgs::Pose >::value(),
@@ -212,7 +212,7 @@ TEST_CASE( "Test Pose parsing", "buildROSTypeMapFromDefinition" )
 
 TEST_CASE( "Test IMU parsing", "buildROSTypeMapFromDefinition" )
 {
-    ROSIntrospection::ROSTypeList rmap;
+    RosIntrospection::ROSTypeList rmap;
 
     rmap = buildROSTypeMapFromDefinition(
                 DataType<sensor_msgs::Imu >::value(),
@@ -277,5 +277,69 @@ TEST_CASE( "Test IMU parsing", "buildROSTypeMapFromDefinition" )
     REQUIRE( msg.fields[1].name() == "y" );
     REQUIRE( msg.fields[2].type().baseName() == "float64" );
     REQUIRE( msg.fields[2].name() == "z" );
+}
+
+TEST_CASE( "Test Int16MultiArray parsing", "buildROSTypeMapFromDefinition" )
+{
+    // this test case was added because it previously failed to detect nested
+    // arrays of custom types. In this case:
+    //    std_msgs/MultiArrayDimension[]
+
+    RosIntrospection::ROSTypeList rmap;
+
+    rmap = buildROSTypeMapFromDefinition(
+                DataType<std_msgs::Int16MultiArray >::value(),
+                Definition<std_msgs::Int16MultiArray >::value());
+
+    //std::cout << rmap << std::endl;
+
+    /*
+    std_msgs/Int16MultiArray :
+        layout : std_msgs/MultiArrayLayout
+        data : int16[]
+
+    std_msgs/MultiArrayLayout :
+        dim : std_msgs/MultiArrayDimension[]
+        data_offset : uint32
+
+    std_msgs/MultiArrayDimension :
+        size : uint32
+        stride : uint32*/
+
+    ROSMessage& msg = rmap.at(0);
+
+    REQUIRE( ("std_msgs/Int16MultiArray") == msg.type.baseName() );
+    REQUIRE( msg.fields.size() == 2);
+    REQUIRE( ("std_msgs/MultiArrayLayout" ) == msg.fields[0].type().baseName() );
+    REQUIRE( ("layout" )                    == msg.fields[0].name() );
+    REQUIRE( false == msg.fields[0].type().isArray() );
+
+    REQUIRE( ("int16[]" ) == msg.fields[1].type().baseName() );
+    REQUIRE( ("data" )  == msg.fields[1].name() );
+    REQUIRE( true == msg.fields[1].type().isArray() );
+
+    msg = rmap.at(1);
+    REQUIRE( ("std_msgs/MultiArrayLayout") == msg.type.baseName() );
+    REQUIRE( msg.fields.size() == 2);
+    REQUIRE( ("std_msgs/MultiArrayDimension[]" ) == msg.fields[0].type().baseName() );
+    REQUIRE( ("dim" )                            == msg.fields[0].name() );
+    REQUIRE( true == msg.fields[0].type().isArray() );
+
+    REQUIRE( ("uint32" )       == msg.fields[1].type().baseName() );
+    REQUIRE( ("data_offset" )  == msg.fields[1].name() );
+    REQUIRE( false == msg.fields[1].type().isArray() );
+
+
+    msg = rmap.at(2);
+    REQUIRE( ("std_msgs/MultiArrayDimension") == msg.type.baseName() );
+    REQUIRE( msg.fields.size() == 2);
+    REQUIRE( ("uint32" ) == msg.fields[0].type().baseName() );
+    REQUIRE( ("size" )   == msg.fields[0].name() );
+    REQUIRE( false == msg.fields[0].type().isArray() );
+
+    REQUIRE( ("uint32" )  == msg.fields[1].type().baseName() );
+    REQUIRE( ("stride" )  == msg.fields[1].name() );
+    REQUIRE( false == msg.fields[1].type().isArray() );
+
 }
 

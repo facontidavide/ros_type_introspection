@@ -4,7 +4,7 @@
 #include <ros_type_introspection/renamer.hpp>
 
 using namespace ros::message_traits;
-using namespace ROSIntrospection;
+using namespace RosIntrospection;
 
 
 TEST_CASE("Deserialize JointState and rename", "Deserialize")
