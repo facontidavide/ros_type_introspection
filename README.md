@@ -218,7 +218,7 @@ void DataStreamROS::topicCallback(const topic_tools::ShapeShifter::ConstPtr& msg
 										datatype_name,
 										msg->getMessageDefinition() );
     }
-    uint8_t buffer[1024*64]; // "64 KB ought to be enough for anybody"
+    std::vector<uint8_t> buffer( msg->size() ); 
 
     ROSTypeFlat& flat_container;
 
@@ -246,9 +246,7 @@ void DataStreamROS::topicCallback(const topic_tools::ShapeShifter::ConstPtr& msg
 
 ```
 
-Once again this is a pretty simple example that made the assumption that a
-single message will not be larger than 64 KB.
-the exepected output is:
+The exepected output is:
 
 ```
 JointState.header.seq >> 2016
