@@ -1,8 +1,8 @@
 #ifndef STRINGTREE_H
 #define STRINGTREE_H
 
-
 #include <vector>
+#include <deque>
 #include <iostream>
 #include <boost/container/stable_vector.hpp>
 #include <ros_type_introspection/string.hpp>
@@ -15,23 +15,25 @@ namespace details{
 template <typename T> class TreeElement{
 
 public:
+    //typedef boost::container::stable_vector<TreeElement> ChildrenVector;
+    typedef std::vector<TreeElement> ChildrenVector; // dangerous
 
     TreeElement(TreeElement<T> *parent, const T& value );
 
-    const TreeElement* parent() const               { return _parent; }
-    const T& value() const                          { return _value; }
-    T& value()                                      { return _value; }
-    const std::vector<TreeElement>& children()const { return _children; }
-    std::vector<TreeElement>& children()            { return _children; }
+    const TreeElement* parent() const       { return _parent; }
+    const T& value() const                  { return _value; }
+    T& value()                              { return _value; }
+    const ChildrenVector& children()const   { return _children; }
+    ChildrenVector& children()              { return _children; }
 
-    TreeElement& addChild(const T& child );
+    void addChild(const T& child );
 
     std::string toStr() const;
 
 private:
-    TreeElement*             _parent;
-    T                        _value;
-    boost::container::stable_vector<TreeElement> _children;
+    TreeElement*   _parent;
+    T              _value;
+    ChildrenVector _children;
 };
 
 
@@ -44,7 +46,7 @@ public:
      * Add the elements to the tree and return the pointer to the leaf.
      * The leaf correspnds to the last element of concatenated_values in the Tree.
      */
-    template<typename Vect> const TreeElement<T>* append(const Vect& concatenated_values);
+    template<typename Vect> void append(const Vect& concatenated_values);
 
     /**
      * Find a set of elements in the tree and return the pointer to the leaf.
@@ -120,15 +122,14 @@ std::string TreeElement<T>::toStr() const
 }
 
 template <typename T> inline
-TreeElement<T>& TreeElement<T>::addChild(const T& value)
+void TreeElement<T>::addChild(const T& value)
 {
     _children.push_back( TreeElement<T>(this, value));
-    return _children.back();
 }
 
 
 template <typename T> template<typename Vect> inline
-const TreeElement<T>* Tree<T>::append(const Vect &concatenated_values)
+void Tree<T>::append(const Vect &concatenated_values)
 {
     TreeElement<T>* node = &_root;
 
@@ -148,7 +149,6 @@ const TreeElement<T>* Tree<T>::append(const Vect &concatenated_values)
             node = &( node->addChild( value ) );
         }
     }
-    return node;
 }
 
 template <typename T> template<typename Vect> inline

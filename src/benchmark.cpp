@@ -76,21 +76,26 @@ int main( int argc, char** argv)
 
     auto start = std::chrono::high_resolution_clock::now();
 
+    ros::serialization::OStream stream(buffer.data(), buffer.size());
+    ros::serialization::Serializer<tf::tfMessage>::write(stream, tf_msg);
+
+    ROSType main_type (DataType<tf::tfMessage >::value());
+
+    ROSTypeFlat flat_container;
     for (long i=0; i<100000;i++)
     {
-        ros::serialization::OStream stream(buffer.data(), buffer.size());
-        ros::serialization::Serializer<tf::tfMessage>::write(stream, tf_msg);
-
         uint8_t* buffer_ptr = buffer.data();
 
-        ROSType main_type (DataType<tf::tfMessage >::value());
-
-        ROSTypeFlat flat_container = buildRosFlatType(type_map,main_type, "msgTransform", &buffer_ptr);
+        flat_container = buildRosFlatType(type_map,main_type, "msgTransform", &buffer_ptr);
        // applyNameTransform( Rules(), &flat_container );
     }
 
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = end - start;
+
+    for(auto&it: flat_container.value) {
+        std::cout << it.first->toStr() << " >> " << it.second << std::endl;
+    }
 
     std::cout << "time elapsed: " << std::chrono::duration_cast< std::chrono::milliseconds>( elapsed ).count()  <<   std::endl;
 

@@ -130,15 +130,19 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                     if( msg.type.msgName() == type.msgName() &&
                             msg.type.pkgName() == type.pkgName()  )
                     {
+                        node->children().reserve( msg.fields.size() );
                         for (const ROSField& field: msg.fields )
                         {
                             if(field.isConstant() == false) {
 
                                 ShortString node_name( field.name().data(), field.name().size() )  ;
-                                StringElement& new_node = node->addChild( node_name );
+                                node->addChild( node_name );
+
+                                // note: this is not invalidated only because we reserved space in the vector
+                                StringElement* new_node = &node->children().back();
 
                                 buildRosFlatTypeImpl(type_list, field.type(),
-                                                     &new_node,
+                                                     new_node,
                                                      buffer_ptr,
                                                      flat_container,
                                                      max_array_size);
@@ -161,6 +165,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
     {
         StringElement* new_node = node;
 
+        node->children().reserve( array_size );
         for (int v=0; v<array_size; v++)
         {
             if( type.isArray() )
@@ -168,7 +173,10 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                 char suffix[16];
                 sprintf(suffix,"[%d]", v);
                 ShortString node_name( suffix );
-                new_node = &(node->addChild( node_name ));
+                node->addChild( node_name );
+
+                // note: this is not invalidated only because we reserved space in the vector
+                new_node = &node->children().back();
             }
             deserializeAndStore( new_node );
         }
