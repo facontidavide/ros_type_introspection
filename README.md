@@ -218,8 +218,6 @@ void DataStreamROS::topicCallback(const topic_tools::ShapeShifter::ConstPtr& msg
 										datatype_name,
 										msg->getMessageDefinition() );
     }
-
-    //------------------------------------
     uint8_t buffer[1024*64]; // "64 KB ought to be enough for anybody"
 
     ROSTypeFlat& flat_container;
@@ -238,6 +236,10 @@ void DataStreamROS::topicCallback(const topic_tools::ShapeShifter::ConstPtr& msg
                                        &buffer_ptr);
                                        
     for(auto&it: flat_container.value) {
+        std::cout << it.first << " >> " << it.second << std::endl;
+    }
+    std::cout << "----" << std::endl;
+    for(auto&it: flat_container.name_id) {
         std::cout << it.first << " >> " << it.second << std::endl;
     }
 }
@@ -260,6 +262,7 @@ JointState.velocity[2] >> 23
 JointState.effort[0] >> 31
 JointState.effort[1] >> 32
 JointState.effort[2] >> 33
+----
 JointState.header.frame_id >> pippo
 JointState.name[0] >> hola
 JointState.name[1] >> ciao
