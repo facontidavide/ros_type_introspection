@@ -13,7 +13,7 @@
 
 using namespace ros::message_traits;
 using namespace RosIntrospection;
-
+/*
 std::vector<SubstitutionRule> Rules()
 {
     std::vector<SubstitutionRule> rules;
@@ -37,7 +37,7 @@ std::vector<SubstitutionRule> Rules()
                                       ".transforms[#].header.frame_id",
                                       ".transform.#.header") );
     return rules;
-}
+}*/
 
 int main( int argc, char** argv)
 {
@@ -76,7 +76,7 @@ int main( int argc, char** argv)
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    for (int i=0; i<50000;i++)
+    for (long i=0; i<100000;i++)
     {
         ros::serialization::OStream stream(buffer.data(), buffer.size());
         ros::serialization::Serializer<tf::tfMessage>::write(stream, tf_msg);
@@ -86,7 +86,7 @@ int main( int argc, char** argv)
         ROSType main_type (DataType<tf::tfMessage >::value());
 
         ROSTypeFlat flat_container = buildRosFlatType(type_map,main_type, "msgTransform", &buffer_ptr);
-        applyNameTransform( Rules(), &flat_container );
+       // applyNameTransform( Rules(), &flat_container );
     }
 
     auto end = std::chrono::high_resolution_clock::now();

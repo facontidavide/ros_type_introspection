@@ -10,11 +10,9 @@ namespace RosIntrospection{
 
 
 #if 1
-typedef ssoX::basic_string<31,char> ShortString;
-typedef ssoX::basic_string<63,char> LongString;
+typedef ssoX::basic_string<char> ShortString;
 #else
-typedef std::string ShortString;
-typedef std::string LongString;
+//typedef std::string ShortString;
 #endif
 
 

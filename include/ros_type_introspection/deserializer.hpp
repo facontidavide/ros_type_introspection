@@ -2,17 +2,19 @@
 #define ROS_INTRO_DESERIALIZE_H
 
 #include <ros_type_introspection/parser.hpp>
+#include <ros_type_introspection/stringtree.h>
 
 namespace RosIntrospection{
 
 typedef struct{
-    std::vector< std::pair<LongString, double> > value;
-    std::vector< std::pair<LongString, LongString> > name_id;
+    StringTree tree;
+    std::vector< std::pair<StringElement*, double> > value;
+    std::vector< std::pair<StringElement*, ShortString> > name_id;
 }ROSTypeFlat;
 
 ROSTypeFlat buildRosFlatType(const ROSTypeList& type_map,
                              ROSType type,
-                             const LongString& prefix,
+                             const ShortString& prefix,
                              uint8_t **buffer_ptr,
                              uint8_t max_array_size = 32);
 

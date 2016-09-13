@@ -1,32 +1,33 @@
 #Ros message introspection
-###... If you don't know why you need it, probably you don't need it.
+### Or... "If you don't know why you need it, probably you don't need it".
 
 This simple library extracts information from a ROS message/type
 unknown at compilation time. 
 
 Have you ever wanted to build an app that can subscribe to __any__ 
-`topic` and extract its content, or can read from __any__ `rosbag`? 
+`topic` and extract its content, or can read data from __any__ `rosbag`? 
 What if the topic and/or the bag contains user defined ROS types ignored at compilation time?
 
 The common solution in the ROS ecosystem is to use Python, that provides
-the needed introspection. Tools, for instance, like __rqt_plot__ and __rqt_bag__ take this approach.
+the needed introspection. Tools, for instance, like __rqt_plot__ and __rqt_bag__ took this approach.
 This library implements a __C++ alternative__.
 
-Introspections is achieved parsing the schema stored in `ros::message_traits::Definition< ... >::value()`
+Introspections is achieved parsing the schema stored in `ros::message_traits::Definition`
 
 Once this schema is parsed and understood, it can be used to deserialize a raw message.
 
 It also offer an easy way to remap/rename the data using a simple set of 
 rules.
 
-##Background
-
+#Background
+### Or... "Repeating something you know already"
 The ROS Message Types (I will refer to them as "ROS types" further) can be described as 
 a [Interface Describtion Language](https://en.wikipedia.org/wiki/Interface_description_language).
 This approach is very well known and commonly used on the web and in distributed systems in general.
 
-A [rosmsg](http://wiki.ros.org/rosmsg) is defined by the user; an "IDL compiler" 
-read this schema and generates an header file that contains the code that shall be included
+A [rosmsg](http://wiki.ros.org/rosmsg) is defined by the user; an "IDL compiler", i.e. 
+[gencpp](http://wiki.ros.org/gencpp), 
+reads this schema and generates an header file that contains the code that shall be included
 in the applications, both on the publisher *and* subscriber sides.
 
 This approach creates strong and type-safe contracts between the producer and the consumer 
@@ -36,8 +37,8 @@ serialization / deserialization mechanism.
 The only "limitation", at least in C++, is the fact that the generated header files 
 must be included in the source code.
 
-##The parser
-
+#The parser
+### Or..."Thank you gencpp for storing everything I need to build introspection"
 In most cases we have access to the Ros Message Type Definition.
 Luckily for us this string contains __all__ the information we need to know how to deserialize 
 the ROS message.
@@ -52,7 +53,7 @@ This can be simply done calling the function:
 ```
 ###Example 1
 
-Let's take a look to a simple example. Further we try to parse the type(s) contained in
+Further we try to parse the type(s) contained in
 [geometry_msgs::Pose](http://docs.ros.org/kinetic/api/geometry_msgs/html/msg/Pose.html)
 
 ```c++
@@ -94,8 +95,8 @@ are parsed as well, specifically `geometry_msgs/Point` and `geometry_msgs/Quater
 
 ###Example 2
 
-In the next example we parse all the types found in a single ROS bag.
-We will __not__ need to `#include` any of those ROS Types. 
+In the next example we will parse all the types found in a single ROS bag.
+We will __not__ need to __`#include`__ any of those ROS Types. 
 
 To understand this chunk of code you must
 be familiar with the [rosbag::Bag API](http://wiki.ros.org/rosbag/Code%20API)
@@ -122,6 +123,7 @@ be familiar with the [rosbag::Bag API](http://wiki.ros.org/rosbag/Code%20API)
 ```
 
 # The deserializer
+### Or... "Reverse engineering of boost::serialization + inefficient data structures"
 
 The next thing to understand is the 
 [deserializer](ros-type-introspection/blob/master/include/ros_type_introspection/deserializer.hpp).
@@ -164,7 +166,6 @@ Let's suppose that a publisher sends this instance of __sensor_msgs::JointState_
 (the code related to ROS and publishing is ignored here):
 
 ```c++
-  
     sensor_msgs::JointState joint_state;
 
     joint_state.header.seq = 2016;
@@ -191,7 +192,6 @@ Let's suppose that a publisher sends this instance of __sensor_msgs::JointState_
     }
   
   //publish this on a ros topic...
-  
 ```
 
 On the receiver side we want to read this data but we don't know at compilation
@@ -200,36 +200,34 @@ To solve this problem we need the support of an usefull but not well know class:
 [topic_tools::ShapeShifter](http://docs.ros.org/diamondback/api/topic_tools/html/classtopic__tools_1_1ShapeShifter.html)
 
 ```c++
-
 //callback subscribed to the topic
 void DataStreamROS::topicCallback(const topic_tools::ShapeShifter::ConstPtr& msg)
 {
     using namespace RosIntrospection;
 
-	// reuse type already parsed.
+	// reuse if already parsed.
     static std::map<std::string, ROSTypeList> registered_types;
 
     auto& datatype_name = msg->getDataType();
 
-	// new type. Need to be parsed and stored.
+	// If not stored, parse it and store it.
     if( registered_types.find( datatype_name ) == registered_types.end() )
     {
         registered_type[datatype_name] = buildROSTypeMapFromDefinition(
 										datatype_name,
 										msg->getMessageDefinition() );
     }
+    // allocate a buffer and copy the raw message.
     std::vector<uint8_t> buffer( msg->size() ); 
-
-    ROSTypeFlat& flat_container;
-
     ros::serialization::OStream stream(buffer, sizeof(buffer));
     msg->write(stream);
 
-    // Important: use a copy of the pointer.
+    // Important: use a COPY of the pointer.
     uint8_t* buffer_ptr = buffer;
     
     LongString topicname( topic_name.data(), topic_name.length() );
 
+    ROSTypeFlat flat_container;
     flat_container = buildRosFlatType( registered_type[datatype_name], 
                                        ROSType(datatype_name), 
                                        topicname, 
@@ -243,7 +241,6 @@ void DataStreamROS::topicCallback(const topic_tools::ShapeShifter::ConstPtr& msg
         std::cout << it.first << " >> " << it.second << std::endl;
     }
 }
-
 ```
 
 The exepected output is:

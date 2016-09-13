@@ -54,12 +54,13 @@ include_directories(
  add_library(ros_type_introspection
    src/parser.cpp
    src/deserializer.cpp
-   src/renamer.cpp
+   #src/renamer.cpp
 
    include/ros_type_introspection/parser.hpp
    include/ros_type_introspection/deserializer.hpp
    include/ros_type_introspection/string.hpp
-   include/ros_type_introspection/renamer.hpp
+   #include/ros_type_introspection/renamer.hpp
+   include/ros_type_introspection/stringtree.h
  )
 
 target_link_libraries(ros_type_introspection ${catkin_LIBRARIES})
@@ -119,7 +120,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
  add_executable(ros_introspection_test
      src/parser_test.cpp
      src/deserializer_test.cpp
-     src/renamer_test.cpp
+    ## src/renamer_test.cpp
      )
 
  target_link_libraries(ros_introspection_test
