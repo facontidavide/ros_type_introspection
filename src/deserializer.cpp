@@ -6,13 +6,23 @@ namespace RosIntrospection{
 
 template <typename T> T ReadFromBuffer( uint8_t** buffer)
 {
-    for (int i=0; i< sizeof(T); i++)
-    {
-        //     printf(" %02X ", (*buffer)[i] );
-    }
     T destination =  (*( reinterpret_cast<T*>( *buffer ) ) );
     *buffer +=  sizeof(T);
     return destination;
+}
+
+inline void SkipBytesInBuffer( uint8_t** buffer, int vector_size, const BuiltinType& type )
+{
+    if( type == STRING)
+    {
+        for (int i=0; i<vector_size; i++){
+            int32_t string_size = ReadFromBuffer<int32_t>( buffer );
+            *buffer += string_size;
+        }
+    }
+    else{
+        *buffer += vector_size * BuiltinTypeSize[ static_cast<int>(type) ];
+    }
 }
 
 
@@ -20,7 +30,8 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                           const ROSType &type,
                           LongString prefix,
                           uint8_t** buffer_ptr,
-                          ROSTypeFlat* flat_container )
+                          ROSTypeFlat* flat_container,
+                          uint8_t max_array_size )
 {
     int array_size = type.arraySize();
     if( array_size == -1)
@@ -117,12 +128,12 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                 for(const ROSMessage& msg: type_list) // find in the list
                 {
                     if( msg.type.msgName() == type.msgName() &&
-                        msg.type.pkgName() == type.pkgName()  )
+                            msg.type.pkgName() == type.pkgName()  )
                     {
                         for (const ROSField& field: msg.fields )
                         {
                             if(field.isConstant() ) {
-                             // SKIP
+                                // SKIP
                                 continue;
                             }
                             LongString new_prefix( key );
@@ -132,7 +143,8 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                             buildRosFlatTypeImpl(type_list, field.type(),
                                                  new_prefix,
                                                  buffer_ptr,
-                                                 flat_container);
+                                                 flat_container,
+                                                 max_array_size);
                         }
                         done = true;
                         break;
@@ -147,16 +159,22 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
         default: throw std::runtime_error( "can't deserialize this stuff"); break;
     }
 
-    for (int v=0; v<array_size; v++)
+    if( array_size < max_array_size )
     {
-        LongString key (prefix);
-        if( type.isArray() )
+        for (int v=0; v<array_size; v++)
         {
-            char suffix[16];
-            sprintf(suffix,"[%d]", v);
-            key.append( suffix );
+            LongString key (prefix);
+            if( type.isArray() )
+            {
+                char suffix[16];
+                sprintf(suffix,"[%d]", v);
+                key.append( suffix );
+            }
+            deserializeAndStore(key);
         }
-        deserializeAndStore(key);
+    }
+    else{
+        SkipBytesInBuffer( buffer_ptr, array_size, type.typeID() );
     }
 }
 
@@ -164,12 +182,13 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
 ROSTypeFlat buildRosFlatType(const ROSTypeList& type_map,
                              ROSType type,
                              const LongString & prefix,
-                             uint8_t** buffer_ptr)
+                             uint8_t** buffer_ptr,
+                             uint8_t max_array_size)
 {
     ROSTypeFlat flat_container;
 
 
-    buildRosFlatTypeImpl( type_map, type, prefix, buffer_ptr,  &flat_container );
+    buildRosFlatTypeImpl( type_map, type, prefix, buffer_ptr,  &flat_container, max_array_size );
 
     std::sort( flat_container.name_id.begin(),  flat_container.name_id.end(),
                []( const std::pair<LongString,LongString> & left,

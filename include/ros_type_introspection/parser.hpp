@@ -27,6 +27,14 @@ enum BuiltinType {
     STRING, OTHER
 };
 
+const int BuiltinTypeSize[OTHER] = {
+    1, 1, 1,
+    1, 2, 4, 8,
+    1, 2, 4, 8,
+    4, 8,
+    8, 8,
+    -1
+};
 
 
 

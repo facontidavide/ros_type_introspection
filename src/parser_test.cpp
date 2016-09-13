@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() - only do this in one cpp file
 #include <catch.h>
 
-#include <geometry_msgs/Pose.h>
+    #include <geometry_msgs/Pose.h>
 #include <sensor_msgs/NavSatStatus.h>
 #include <sensor_msgs/Imu.h>
 #include <std_msgs/Int16MultiArray.h>
@@ -179,6 +179,8 @@ TEST_CASE( "Test Pose parsing", "buildROSTypeMapFromDefinition" )
                 DataType<geometry_msgs::Pose >::value(),
                 Definition<geometry_msgs::Pose >::value());
 
+    std::cout << rmap << std::endl;
+
     ROSMessage& msg = rmap.at(0);
     REQUIRE( msg.type.baseName() == "geometry_msgs/Pose" );
     REQUIRE( msg.fields.size() == 2);
@@ -218,6 +220,8 @@ TEST_CASE( "Test IMU parsing", "buildROSTypeMapFromDefinition" )
                 DataType<sensor_msgs::Imu >::value(),
                 Definition<sensor_msgs::Imu >::value());
 
+    std::cout << rmap << std::endl;
+
     ROSMessage& msg = rmap.at(0);
     REQUIRE( ("sensor_msgs/Imu") == msg.type.baseName() );
     REQUIRE( msg.fields.size() == 7);
@@ -244,6 +248,7 @@ TEST_CASE( "Test IMU parsing", "buildROSTypeMapFromDefinition" )
     REQUIRE( ("float64[9]" )                     == msg.fields[6].type().baseName() );
     REQUIRE( ("linear_acceleration_covariance" ) == msg.fields[6].name() );
     REQUIRE( msg.fields[6].type().arraySize() == 9);
+
 
     //---------------------------------
     msg = rmap.at(1);

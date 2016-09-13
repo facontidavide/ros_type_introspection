@@ -13,9 +13,8 @@ typedef struct{
 ROSTypeFlat buildRosFlatType(const ROSTypeList& type_map,
                              ROSType type,
                              const LongString& prefix,
-                             uint8_t **buffer_ptr);
-
-
+                             uint8_t **buffer_ptr,
+                             uint8_t max_array_size = 32);
 
 } //end namespace
 
