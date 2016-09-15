@@ -141,7 +141,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                             to_add = true;
                         }
 
-                      //  size_t index = 0;
+                        size_t index = 0;
                         for (const ROSField& field: msg.fields )
                         {
                             if(field.isConstant() == false) {
@@ -151,7 +151,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                                     leaf.element_ptr->addChild( node_name );
                                 }
                                 auto new_leaf = leaf;
-                                new_leaf.element_ptr = &children_nodes.back();
+                                new_leaf.element_ptr = &children_nodes[index++];
 
                                 // note: this is not invalidated only because we reserved space in the vector
                               //  leaf.element_ptr = &children_nodes[index++];
