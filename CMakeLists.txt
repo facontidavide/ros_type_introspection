@@ -54,12 +54,12 @@ include_directories(
  add_library(ros_type_introspection
    src/parser.cpp
    src/deserializer.cpp
-   #src/renamer.cpp
+   src/renamer.cpp
 
    include/ros_type_introspection/parser.hpp
    include/ros_type_introspection/deserializer.hpp
    include/ros_type_introspection/string.hpp
-   #include/ros_type_introspection/renamer.hpp
+   include/ros_type_introspection/renamer.hpp
    include/ros_type_introspection/stringtree.h
  )
 
@@ -76,6 +76,16 @@ add_executable(ros_introspection_benchmark src/benchmark.cpp)
 add_dependencies(ros_introspection_benchmark ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(ros_introspection_benchmark
+  ${catkin_LIBRARIES}
+  ros_type_introspection
+)
+
+
+add_executable(stringtree_test src/stringtree_test.cpp)
+
+add_dependencies(stringtree_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+target_link_libraries(stringtree_test
   ${catkin_LIBRARIES}
   ros_type_introspection
 )
@@ -120,7 +130,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
  add_executable(ros_introspection_test
      src/parser_test.cpp
      src/deserializer_test.cpp
-    ## src/renamer_test.cpp
+    # src/renamer_test.cpp
      )
 
  target_link_libraries(ros_introspection_test
@@ -128,7 +138,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
    ros_type_introspection
 )
 
-## Add gtest based cpp test target and link libraries
+# Add gtest based cpp test target and link libraries
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_ros_type_introspection.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})

@@ -55,7 +55,7 @@ int main( int argc, char** argv)
 
     const char* suffix[6] = { "_A", "_B", "_C", "_D" , "_E", "_F"};
 
-    for (int i=0; i< tf_msg.transforms.size() ; i++)
+    for (size_t i=0; i< tf_msg.transforms.size() ; i++)
     {
         tf_msg.transforms[i].header.seq = 100+i;
         tf_msg.transforms[i].header.stamp.sec = 1234;
@@ -82,7 +82,7 @@ int main( int argc, char** argv)
     ROSType main_type (DataType<tf::tfMessage >::value());
 
     ROSTypeFlat flat_container;
-    for (long i=0; i<100000;i++)
+    for (long i=0; i<100*1000;i++)
     {
         uint8_t* buffer_ptr = buffer.data();
 
@@ -90,11 +90,13 @@ int main( int argc, char** argv)
        // applyNameTransform( Rules(), &flat_container );
     }
 
+    std::cout << flat_container.tree << std::endl;
+
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed = end - start;
 
     for(auto&it: flat_container.value) {
-        std::cout << it.first->toStr() << " >> " << it.second << std::endl;
+        std::cout << it.first << " >> " << it.second << std::endl;
     }
 
     std::cout << "time elapsed: " << std::chrono::duration_cast< std::chrono::milliseconds>( elapsed ).count()  <<   std::endl;

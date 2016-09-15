@@ -5,16 +5,19 @@
 #include <map>
 #include <boost/utility/string_ref.hpp>
 #include <ros_type_introspection/string.hpp>
+#include <ros_type_introspection/stringtree.h>
 
 namespace RosIntrospection{
 
 
-#if 1
+#if 0
 typedef ssoX::basic_string<char> ShortString;
 #else
-//typedef std::string ShortString;
+typedef std::string ShortString;
 #endif
 
+typedef details::TreeElement<ShortString> StringElement;
+typedef details::Tree<ShortString> StringTree;
 
 enum BuiltinType {
     BOOL , BYTE, CHAR,

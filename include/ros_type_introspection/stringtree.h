@@ -15,8 +15,8 @@ namespace details{
 template <typename T> class TreeElement{
 
 public:
-    //typedef boost::container::stable_vector<TreeElement> ChildrenVector;
-    typedef std::vector<TreeElement> ChildrenVector; // dangerous
+   //  typedef boost::container::stable_vector<TreeElement> ChildrenVector;
+   typedef std::vector<TreeElement> ChildrenVector; // dangerous
 
     TreeElement(TreeElement<T> *parent, const T& value );
 
@@ -46,7 +46,7 @@ public:
      * Add the elements to the tree and return the pointer to the leaf.
      * The leaf correspnds to the last element of concatenated_values in the Tree.
      */
-    template<typename Vect> void append(const Vect& concatenated_values);
+    template<typename Vect> void insert(const Vect& concatenated_values);
 
     /**
      * Find a set of elements in the tree and return the pointer to the leaf.
@@ -55,36 +55,62 @@ public:
      */
     template<typename Vect> const TreeElement<T>* find( const Vect& concatenated_values, bool partial_allowed = false);
 
+    const TreeElement<T>* croot() const { return &_root; }
     TreeElement<T>* root() { return &_root; }
 
 private:
 
     friend std::ostream& operator<<(std::ostream& os, const Tree& _this)
     {
-        _this.print_impl(os, &(_this._root.children()), 0);
+        _this.print_impl(os, (_this._root.children()), 0);
         return os;
     }
 
 
-    void print_impl(std::ostream& os, const std::vector<TreeElement<T>> *children, int indent ) const;
+    void print_impl(std::ostream& os, const typename TreeElement<T>::ChildrenVector& children, int indent ) const;
 
     TreeElement<T> _root;
 };
 
 //-----------------------------------------
 
+template <typename T> inline
+std::ostream& operator<<(std::ostream &os, const std::pair<const TreeElement<T>*, const TreeElement<T>* >& tail_head )
+{
+    const TreeElement<T>* tail = tail_head.first;
+    const TreeElement<T>* head = tail_head.second;
+
+    if( !head ) return os;
+
+    const TreeElement<T>* array[64];
+    int index = 0;
+    array[index++] = head;
+
+    while( !head || head != tail)
+    {
+        head = head->parent();
+        array[index++] = head;
+    };
+    array[index] = nullptr;
+    index--;
+
+    while ( index >=0)
+    {
+        if( array[index] ) os << array[index]->value();
+        if( index >0 )  os << ".";
+        index--;
+    }
+    return os;
+}
 
 template <typename T> inline
-void Tree<T>::print_impl(std::ostream &os, const std::vector<TreeElement<T>> *children, int indent) const
+void Tree<T>::print_impl(std::ostream &os, const typename TreeElement<T>::ChildrenVector& children, int indent) const
 {
-    for (const auto& child: (*children))
+    for (const auto& child: children)
     {
-        for (int i=0; i<indent; i++)
-        {
-            os << " ";
-        }
+        for (int i=0; i<indent; i++) os << " ";
         os << child.value() << std::endl;
-        print_impl(os, &(child.children()), indent+3);
+        print_impl(os, child.children(), indent+3);
     }
 }
 
@@ -94,7 +120,7 @@ TreeElement<T>::TreeElement(TreeElement<T> *parent, const T& value):
 {
 
 }
-
+/*
 template <typename T> inline
 std::string TreeElement<T>::toStr() const
 {
@@ -119,7 +145,7 @@ std::string TreeElement<T>::toStr() const
         }
     }
     return out;
-}
+}*/
 
 template <typename T> inline
 void TreeElement<T>::addChild(const T& value)
@@ -129,7 +155,7 @@ void TreeElement<T>::addChild(const T& value)
 
 
 template <typename T> template<typename Vect> inline
-void Tree<T>::append(const Vect &concatenated_values)
+void Tree<T>::insert(const Vect &concatenated_values)
 {
     TreeElement<T>* node = &_root;
 
@@ -146,7 +172,8 @@ void Tree<T>::append(const Vect &concatenated_values)
             }
         }
         if(!found){
-            node = &( node->addChild( value ) );
+            node->addChild( value );
+            node = &(node->children().back());
         }
     }
 }
@@ -180,8 +207,6 @@ const TreeElement<T> *Tree<T>::find(const Vect& concatenated_values, bool partia
 
 }
 
-typedef details::TreeElement<ssoX::basic_string<char>> StringElement;
-typedef details::Tree<ssoX::basic_string<char>> StringTree;
 
 
 #endif // STRINGTREE_H

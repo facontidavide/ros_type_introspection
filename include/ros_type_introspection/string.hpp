@@ -364,6 +364,22 @@ bool operator==(const basic_string<CharT, Traits>& lhs,
 }
 
 template <typename CharT, typename Traits>
+bool operator!=(const basic_string<CharT, Traits>& lhs, const CharT* rhs) noexcept {
+    return std::strcmp(lhs.data(), rhs) != 0;
+}
+
+template <typename CharT, typename Traits>
+bool operator!=(const CharT* lhs, const basic_string<CharT, Traits>& rhs) noexcept {
+    return rhs != lhs;
+}
+
+template <typename CharT, typename Traits>
+bool operator!=(const basic_string<CharT, Traits>& lhs,
+                const basic_string<CharT, Traits>& rhs) noexcept {
+    return std::strcmp(lhs.data(), rhs.data()) != 0;
+}
+
+template <typename CharT, typename Traits>
 std::ostream& operator<<(std::ostream& stream, const basic_string<CharT, Traits>& string) {
     return stream << string.data();
 }
