@@ -49,7 +49,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
             deserializeAndStore = [&](StringTreeLeaf leaf)
             {
                 size_t string_size = (size_t) ReadFromBuffer<int32_t>( buffer_ptr );
-                ShortString id( (const char*)(*buffer_ptr), string_size );
+                SString id( (const char*)(*buffer_ptr), string_size );
                 (*buffer_ptr) += string_size;
                 flat_container->name_id.push_back( std::make_pair( leaf, id ) );
             };
@@ -147,7 +147,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                             if(field.isConstant() == false) {
 
                                 if( to_add){
-                                    ShortString node_name( field.name().data(), field.name().size() )  ;
+                                    SString node_name( field.name().data(), field.name().size() )  ;
                                     leaf.element_ptr->addChild( node_name );
                                 }
                                 auto new_leaf = leaf;
@@ -206,7 +206,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
 
 ROSTypeFlat buildRosFlatType(const ROSTypeList& type_map,
                              ROSType type,
-                             const ShortString& prefix,
+                             const SString& prefix,
                              uint8_t** buffer_ptr,
                              uint8_t max_array_size)
 {
@@ -226,8 +226,8 @@ ROSTypeFlat buildRosFlatType(const ROSTypeList& type_map,
                           max_array_size );
 
   /*  std::sort( flat_container.name_id.begin(),  flat_container.name_id.end(),
-               []( const std::pair<ShortString,ShortString> & left,
-               const std::pair<ShortString,ShortString> & right)
+               []( const std::pair<SString,SString> & left,
+               const std::pair<SString,SString> & right)
     {
         return left.first < right.first;
     }
@@ -236,6 +236,42 @@ ROSTypeFlat buildRosFlatType(const ROSTypeList& type_map,
    // std::cout << flat_container.tree << std::endl;
 
     return flat_container;
+}
+
+std::ostream &operator<<(std::ostream &os, const StringTreeLeaf &leaf)
+{
+    const StringElement* head = leaf.element_ptr;
+
+    if( !head ) return os;
+
+    const StringElement* array[64];
+    int index = 0;
+    array[index++] = head;
+
+    while(head && head->parent())
+    {
+        head = head->parent();
+        array[index++] = head;
+    };
+    array[index] = nullptr;
+    index--;
+
+    int array_count = 0;
+
+    while ( index >=0)
+    {
+        const auto& value =  array[index]->value();
+        if( value.size()== 1 && value.at(0) == '#' )
+        {
+            os << leaf.index_array[ array_count++ ];
+        }
+        else{
+            if( array[index] ) os << array[index]->value();
+        }
+        if( index > 0 )  os << ".";
+        index--;
+    }
+    return os;
 }
 
 

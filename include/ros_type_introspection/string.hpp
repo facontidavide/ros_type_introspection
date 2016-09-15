@@ -264,7 +264,7 @@ public:
         return sso();
     }
 
-    int compare(const basic_string& other)
+    int compare(const basic_string& other) const
     {
         return strcmp( data(), other.data() );
     }

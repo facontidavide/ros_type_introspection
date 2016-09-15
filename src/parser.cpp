@@ -32,7 +32,7 @@ inline bool isSeparator(const std::string& line)
 }
 
 
-inline ShortString strippedTypeName(const boost::string_ref& line )
+inline SString strippedTypeName(const boost::string_ref& line )
 {
     boost::string_ref output( line );
     int pos = line.find_last_of('/');
@@ -40,7 +40,7 @@ inline ShortString strippedTypeName(const boost::string_ref& line )
     {
         output.remove_prefix( pos+1 );
     }
-    return ShortString( output.data(), output.length() );
+    return SString( output.data(), output.length() );
 }
 
 
@@ -190,17 +190,17 @@ const std::string &ROSType::baseName() const
     return _base_name;
 }
 
-const ShortString &ROSType::msgName() const
+const SString &ROSType::msgName() const
 {
     return _msg_name;
 }
 
-const ShortString &ROSType::pkgName() const
+const SString &ROSType::pkgName() const
 {
     return _pkg_name;
 }
 
-void ROSType::setPkgName(const ShortString &new_pkg)
+void ROSType::setPkgName(const SString &new_pkg)
 {
     assert(_pkg_name.size() == 0);
     _pkg_name = new_pkg;

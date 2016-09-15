@@ -9,14 +9,19 @@
 
 namespace details{
 
+#define STATIC_TREE true
+
 /**
  * @brief Element of the tree. it has a single parent and N >= 0 children.
  */
 template <typename T> class TreeElement{
 
 public:
-   //  typedef boost::container::stable_vector<TreeElement> ChildrenVector;
-   typedef std::vector<TreeElement> ChildrenVector; // dangerous
+#if !STATIC_TREE
+    typedef boost::container::stable_vector<TreeElement> ChildrenVector;
+#else
+    typedef std::vector<TreeElement> ChildrenVector; // dangerous
+#endif
 
     TreeElement(TreeElement<T> *parent, const T& value );
 
@@ -46,8 +51,9 @@ public:
      * Add the elements to the tree and return the pointer to the leaf.
      * The leaf correspnds to the last element of concatenated_values in the Tree.
      */
+#if !STATIC_TREE // this operation is illegal in a static tree
     template<typename Vect> void insert(const Vect& concatenated_values);
-
+#endif
     /**
      * Find a set of elements in the tree and return the pointer to the leaf.
      * The first element of the concatenated_values should be a root of the Tree.
@@ -153,7 +159,7 @@ void TreeElement<T>::addChild(const T& value)
     _children.push_back( TreeElement<T>(this, value));
 }
 
-
+#if !STATIC_TREE
 template <typename T> template<typename Vect> inline
 void Tree<T>::insert(const Vect &concatenated_values)
 {
@@ -177,6 +183,7 @@ void Tree<T>::insert(const Vect &concatenated_values)
         }
     }
 }
+#endif
 
 template <typename T> template<typename Vect> inline
 const TreeElement<T> *Tree<T>::find(const Vect& concatenated_values, bool partial_allowed )

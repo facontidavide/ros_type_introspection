@@ -10,14 +10,14 @@
 namespace RosIntrospection{
 
 
-#if 0
-typedef ssoX::basic_string<char> ShortString;
+#if 1
+typedef ssoX::basic_string<char> SString;
 #else
-typedef std::string ShortString;
+typedef std::string SString;
 #endif
 
-typedef details::TreeElement<ShortString> StringElement;
-typedef details::Tree<ShortString> StringTree;
+typedef details::TreeElement<SString> StringElement;
+typedef details::Tree<SString> StringTree;
 
 enum BuiltinType {
     BOOL , BYTE, CHAR,
@@ -51,12 +51,12 @@ public:
     const std::string& baseName() const;
 
     /// ex.: geometry_msgs/Pose[40] -> "Pose"
-    const ShortString& msgName()  const;
+    const SString& msgName()  const;
 
     /// ex.: geometry_msgs/Pose[40] -> "geometry_msgs"
-    const ShortString& pkgName()  const;
+    const SString& pkgName()  const;
 
-    void setPkgName(const ShortString& new_pkg);
+    void setPkgName(const SString& new_pkg);
 
     /// True if the type is an array
     bool isArray() const;
@@ -87,8 +87,8 @@ protected:
     BuiltinType _id;
     int         _array_size;
     std::string _base_name;
-    ShortString _msg_name;
-    ShortString _pkg_name;
+    SString _msg_name;
+    SString _pkg_name;
 
 };
 
@@ -99,7 +99,7 @@ public:
 
     ROSField(const std::string& definition );
 
-    const ShortString&  name() const { return _name; }
+    const SString&  name() const { return _name; }
 
     const ROSType&      type() const { return _type; }
 
@@ -109,14 +109,14 @@ public:
     }
 
     /// If constant, value of field, else undefined
-    const ShortString& value() const   { return _value; }
+    const SString& value() const   { return _value; }
 
     friend class ROSMessage;
 
 protected:
-    ShortString _name;
+    SString _name;
     ROSType     _type;
-    ShortString _value;
+    SString _value;
 };
 
 class ROSMessage{

@@ -5,27 +5,26 @@ int main( int argc, char** argv)
     using namespace RosIntrospection;
 
     StringTree tree;
+    std::vector<SString> vect;
 
-    std::vector<ShortString> vect =  {"A", "B", "1", "C", "D"};
+#if !STATIC_TREE
+    vect =  {"A", "B", "1", "C", "D"};
     tree.insert( vect );
-
     vect =  {"A", "B", "1", "E", "F"};
     tree.insert( vect );
-
     vect =  {"A", "B", "1", "E", "G"};
     tree.insert( vect );
-
     vect =  {"A", "B", "Y", "ONE"};
     tree.insert( vect );
-
     vect = {"A", "B", "1", "C", "B", "1"};
     tree.insert( vect );
-
     vect = {"A", "Y", "B", "1", "C"};
     tree.insert( vect );
-
     vect = {"B", "1"};
     tree.insert( vect );
+#else
+
+#endif
 
 
    // bool ret = FindPatternHead(vect, 0, tree.croot(), head);

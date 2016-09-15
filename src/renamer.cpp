@@ -3,8 +3,8 @@
 namespace RosIntrospection{
 
 void SubstitutionRule::split_boost_ref(boost::string_ref& s,
-                                       std::vector<ShortString>& pre,
-                                       std::vector<ShortString>& post)
+                                       std::vector<SString>& pre,
+                                       std::vector<SString>& post)
 {
     size_t pos;
     bool is_previous = true;
@@ -37,7 +37,7 @@ SubstitutionRule::SubstitutionRule(boost::string_ref pattern, boost::string_ref 
 }
 
 
-const StringElement* FindPatternTail( const ShortString& value,
+const StringElement* FindPatternTail( const SString& value,
                                       const StringElement* tail)
 {
 
@@ -59,7 +59,7 @@ const StringElement* FindPatternTail( const ShortString& value,
 }
 
 
-bool FindPattern( const std::vector<ShortString>& pattern,  size_t index,
+bool FindPattern( const std::vector<SString>& pattern,  size_t index,
                   const StringElement* tail,
                   std::vector<const  StringElement*>& heads )
 {
