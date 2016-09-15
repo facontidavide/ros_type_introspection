@@ -28,7 +28,7 @@ inline void SkipBytesInBuffer( uint8_t** buffer, int vector_size, const BuiltinT
 
 void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                           const ROSType &type,
-                          LongString prefix,
+                          SString prefix,
                           uint8_t** buffer_ptr,
                           ROSTypeFlat* flat_container,
                           uint8_t max_array_size )
@@ -39,90 +39,90 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
         array_size = ReadFromBuffer<int32_t>( buffer_ptr );
     }
 
-    std::function<void(const LongString&)> deserializeAndStore;
+    std::function<void(SString&)> deserializeAndStore;
 
     switch( type.typeID())
     {
         case STRING: {
-            deserializeAndStore = [&](const LongString& key)
+            deserializeAndStore = [&](SString& key)
             {
                 int32_t string_size = ReadFromBuffer<int32_t>( buffer_ptr );
-                LongString id( (const char*)(*buffer_ptr), string_size );
+                SString id( (const char*)(*buffer_ptr), string_size );
                 (*buffer_ptr) += string_size;
-                flat_container->name_id.push_back( std::make_pair( key, id ) );
+                flat_container->name_id.push_back( std::make_pair( std::move(key), id ) );
             };
         }break;
 
         case FLOAT64: {
-            deserializeAndStore = [&](const LongString& key){
-                flat_container->value.push_back( std::make_pair( key, (double) ReadFromBuffer<double>(buffer_ptr) ) );
+            deserializeAndStore = [&](SString& key){
+                flat_container->value.push_back( std::make_pair( std::move(key), (double) ReadFromBuffer<double>(buffer_ptr) ) );
             };
         }break;
         case FLOAT32: {
-            deserializeAndStore = [&](const LongString& key){
-                flat_container->value.push_back( std::make_pair( key, (double) ReadFromBuffer<float>(buffer_ptr) ) );
+            deserializeAndStore = [&](SString& key){
+                flat_container->value.push_back( std::make_pair( std::move(key), (double) ReadFromBuffer<float>(buffer_ptr) ) );
             };
         }break;
         case TIME: {
-            deserializeAndStore = [&](const LongString& key){
+            deserializeAndStore = [&](SString& key){
                 double sec  = (double) ReadFromBuffer<uint32_t>(buffer_ptr);
                 double nsec = (double) ReadFromBuffer<uint32_t>(buffer_ptr);
-                flat_container->value.push_back( std::make_pair( key, (double)( sec + nsec/(1000*1000*1000) ) ) );
+                flat_container->value.push_back( std::make_pair( std::move(key), (double)( sec + nsec/(1000*1000*1000) ) ) );
             };
         }break;
         case UINT64: {
-            deserializeAndStore = [&](const LongString& key){
-                flat_container->value.push_back( std::make_pair( key, (double) ReadFromBuffer<uint64_t>(buffer_ptr) ) );
+            deserializeAndStore = [&](SString& key){
+                flat_container->value.push_back( std::make_pair( std::move(key), (double) ReadFromBuffer<uint64_t>(buffer_ptr) ) );
             };
         }break;
         case INT64: {
-            deserializeAndStore = [&](const LongString& key){
-                flat_container->value.push_back( std::make_pair( key, (double) ReadFromBuffer<int64_t>(buffer_ptr) ) );
+            deserializeAndStore = [&](SString& key){
+                flat_container->value.push_back( std::make_pair( std::move(key), (double) ReadFromBuffer<int64_t>(buffer_ptr) ) );
             };
         }break;
         case UINT32: {
-            deserializeAndStore = [&](const LongString& key){
-                flat_container->value.push_back( std::make_pair( key, (double) ReadFromBuffer<uint32_t>(buffer_ptr) ) );
+            deserializeAndStore = [&](SString& key){
+                flat_container->value.push_back( std::make_pair( std::move(key), (double) ReadFromBuffer<uint32_t>(buffer_ptr) ) );
             };
         }break;
         case INT32: {
-            deserializeAndStore = [&](const LongString& key){
-                flat_container->value.push_back( std::make_pair( key, (double) ReadFromBuffer<int32_t>(buffer_ptr) ) );
+            deserializeAndStore = [&](SString& key){
+                flat_container->value.push_back( std::make_pair( std::move(key), (double) ReadFromBuffer<int32_t>(buffer_ptr) ) );
             };
         }break;
         case UINT16: {
-            deserializeAndStore = [&](const LongString& key){
-                flat_container->value.push_back( std::make_pair( key, (double) ReadFromBuffer<uint16_t>(buffer_ptr) ) );
+            deserializeAndStore = [&](SString& key){
+                flat_container->value.push_back( std::make_pair( std::move(key), (double) ReadFromBuffer<uint16_t>(buffer_ptr) ) );
             };
         }break;
         case INT16: {
-            deserializeAndStore = [&](const LongString& key){
-                flat_container->value.push_back( std::make_pair( key, (double) ReadFromBuffer<int16_t>(buffer_ptr) ) );
+            deserializeAndStore = [&](SString& key){
+                flat_container->value.push_back( std::make_pair( std::move(key), (double) ReadFromBuffer<int16_t>(buffer_ptr) ) );
             };
         }break;
         case BOOL:
         case UINT8: {
-            deserializeAndStore = [&](const LongString& key){
-                flat_container->value.push_back( std::make_pair( key, (double) ReadFromBuffer<uint8_t>(buffer_ptr) ) );
+            deserializeAndStore = [&](SString& key){
+                flat_container->value.push_back( std::make_pair( std::move(key), (double) ReadFromBuffer<uint8_t>(buffer_ptr) ) );
             };
         }break;
         case BYTE:
         case INT8: {
-            deserializeAndStore = [&](const LongString& key){
-                flat_container->value.push_back( std::make_pair( key, (double) ReadFromBuffer<int8_t>(buffer_ptr) ) );
+            deserializeAndStore = [&](SString& key){
+                flat_container->value.push_back( std::make_pair( std::move(key), (double) ReadFromBuffer<int8_t>(buffer_ptr) ) );
             };
         }break;
 
         case DURATION: {
-            deserializeAndStore = [&](const LongString& key){
+            deserializeAndStore = [&](SString& key){
                 double sec  = (double) ReadFromBuffer<int32_t>(buffer_ptr);
                 double nsec = (double) ReadFromBuffer<int32_t>(buffer_ptr);
-                flat_container->value.push_back( std::make_pair( key, (double)( sec + nsec/(1000*1000*1000) ) ) );
+                flat_container->value.push_back( std::make_pair( std::move(key), (double)( sec + nsec/(1000*1000*1000) ) ) );
             };
         }break;
 
         case OTHER:{
-            deserializeAndStore = [&](const LongString& key)
+            deserializeAndStore = [&](SString& key)
             {
                 bool done = false;
                 for(const ROSMessage& msg: type_list) // find in the list
@@ -136,7 +136,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                                 // SKIP
                                 continue;
                             }
-                            LongString new_prefix( key );
+                            SString new_prefix( key );
                             new_prefix.append( "." );
                             new_prefix.append( field.name().data(), field.name().size() )  ;
 
@@ -163,7 +163,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
     {
         for (int v=0; v<array_size; v++)
         {
-            LongString key (prefix);
+            SString key (prefix);
             if( type.isArray() )
             {
                 char suffix[16];
@@ -181,7 +181,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
 
 ROSTypeFlat buildRosFlatType(const ROSTypeList& type_map,
                              ROSType type,
-                             const LongString & prefix,
+                             const SString & prefix,
                              uint8_t** buffer_ptr,
                              uint8_t max_array_size)
 {
@@ -191,8 +191,8 @@ ROSTypeFlat buildRosFlatType(const ROSTypeList& type_map,
     buildRosFlatTypeImpl( type_map, type, prefix, buffer_ptr,  &flat_container, max_array_size );
 
     std::sort( flat_container.name_id.begin(),  flat_container.name_id.end(),
-               []( const std::pair<LongString,LongString> & left,
-               const std::pair<LongString,LongString> & right)
+               []( const std::pair<SString,SString> & left,
+               const std::pair<SString,SString> & right)
     {
         return left.first < right.first;
     }

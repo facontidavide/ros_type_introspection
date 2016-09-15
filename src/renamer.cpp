@@ -76,8 +76,8 @@ void applyNameTransform( const std::vector< SubstitutionRule >&  rules,
 
             auto substitutor = std::lower_bound( container->name_id.begin(),
                                                  container->name_id.end(),
-                                                 LongString(key),
-                                                 []( const std::pair<LongString,LongString> item, const LongString& key )  { return item.first < key; }
+                                                 SString(key),
+                                                 []( const std::pair<SString,SString> item, const SString& key )  { return item.first < key; }
             );
 
             if( substitutor != container->name_id.end())
@@ -96,7 +96,7 @@ void applyNameTransform( const std::vector< SubstitutionRule >&  rules,
                 for (const char c: name_suffix           )  new_name[name_index++] = c;
                 new_name[name_index] = '\0';
 
-                value_name = LongString(new_name);
+                value_name = SString(new_name);
 
                 /*std::cout << "---------------" << std::endl;
                 std::cout << "index        " << index << std::endl;

@@ -76,17 +76,16 @@ int main( int argc, char** argv)
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    for (int i=0; i<50000;i++)
-    {
-        ros::serialization::OStream stream(buffer.data(), buffer.size());
-        ros::serialization::Serializer<tf::tfMessage>::write(stream, tf_msg);
+    ros::serialization::OStream stream(buffer.data(), buffer.size());
+    ros::serialization::Serializer<tf::tfMessage>::write(stream, tf_msg);
+    ROSType main_type (DataType<tf::tfMessage >::value());
 
+    for (int i=0; i<100000;i++)
+    {
         uint8_t* buffer_ptr = buffer.data();
 
-        ROSType main_type (DataType<tf::tfMessage >::value());
-
         ROSTypeFlat flat_container = buildRosFlatType(type_map,main_type, "msgTransform", &buffer_ptr);
-        applyNameTransform( Rules(), &flat_container );
+      //  applyNameTransform( Rules(), &flat_container );
     }
 
     auto end = std::chrono::high_resolution_clock::now();

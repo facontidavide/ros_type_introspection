@@ -6,13 +6,13 @@
 namespace RosIntrospection{
 
 typedef struct{
-    std::vector< std::pair<LongString, double> > value;
-    std::vector< std::pair<LongString, LongString> > name_id;
+    std::vector< std::pair<SString, double> > value;
+    std::vector< std::pair<SString, SString> > name_id;
 }ROSTypeFlat;
 
 ROSTypeFlat buildRosFlatType(const ROSTypeList& type_map,
                              ROSType type,
-                             const LongString& prefix,
+                             const SString& prefix,
                              uint8_t **buffer_ptr,
                              uint8_t max_array_size = 32);
 

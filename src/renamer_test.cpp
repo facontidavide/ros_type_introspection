@@ -68,29 +68,29 @@ TEST_CASE("Deserialize JointState and rename", "Deserialize")
         std::cout << it.first << " >> " << it.second << std::endl;
     }
 
-    REQUIRE( flat_container.value[0].first  == LongString("JointState.header.seq"));
+    REQUIRE( flat_container.value[0].first  == SString("JointState.header.seq"));
     REQUIRE( flat_container.value[0].second == 2016 );
-    REQUIRE( flat_container.value[1].first  == LongString("JointState.header.stamp"));
+    REQUIRE( flat_container.value[1].first  == SString("JointState.header.stamp"));
     REQUIRE( flat_container.value[1].second == 1234.567 );
 
-    REQUIRE( flat_container.value[2].first  == LongString("JointState.hola.position"));
+    REQUIRE( flat_container.value[2].first  == SString("JointState.hola.position"));
     REQUIRE( flat_container.value[2].second == 11 );
-    REQUIRE( flat_container.value[3].first  == LongString("JointState.ciao.position"));
+    REQUIRE( flat_container.value[3].first  == SString("JointState.ciao.position"));
     REQUIRE( flat_container.value[3].second == 12 );
-    REQUIRE( flat_container.value[4].first  == LongString("JointState.bye.position"));
+    REQUIRE( flat_container.value[4].first  == SString("JointState.bye.position"));
     REQUIRE( flat_container.value[4].second == 13 );
 
-    REQUIRE( flat_container.value[5].first  == LongString("JointState.hola.velocity"));
+    REQUIRE( flat_container.value[5].first  == SString("JointState.hola.velocity"));
     REQUIRE( flat_container.value[5].second == 21 );
-    REQUIRE( flat_container.value[6].first  == LongString("JointState.ciao.velocity"));
+    REQUIRE( flat_container.value[6].first  == SString("JointState.ciao.velocity"));
     REQUIRE( flat_container.value[6].second == 22 );
-    REQUIRE( flat_container.value[7].first  == LongString("JointState.bye.velocity"));
+    REQUIRE( flat_container.value[7].first  == SString("JointState.bye.velocity"));
     REQUIRE( flat_container.value[7].second == 23 );
 
-    REQUIRE( flat_container.value[8].first  == LongString("JointState.hola.effort"));
+    REQUIRE( flat_container.value[8].first  == SString("JointState.hola.effort"));
     REQUIRE( flat_container.value[8].second == 31 );
-    REQUIRE( flat_container.value[9].first  == LongString("JointState.ciao.effort"));
+    REQUIRE( flat_container.value[9].first  == SString("JointState.ciao.effort"));
     REQUIRE( flat_container.value[9].second == 32 );
-    REQUIRE( flat_container.value[10].first  == LongString("JointState.bye.effort"));
+    REQUIRE( flat_container.value[10].first  == SString("JointState.bye.effort"));
     REQUIRE( flat_container.value[10].second == 33 );
 }
