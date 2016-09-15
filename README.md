@@ -12,22 +12,22 @@ The common solution in the ROS ecosystem is to use Python, that provides
 the needed introspection. Tools, for instance, like __rqt_plot__ and __rqt_bag__ take this approach.
 This library implements a __C++ alternative__.
 
-Introspections is achieved parsing the schema stored in `ros::message_traits::Definition< ... >::value()`
+Introspections is achieved parsing the schema stored in `ros::message_traits::Definition< ... >`
 
 Once this schema is parsed and understood, it can be used to deserialize a raw message.
 
-It also offer an easy way to remap/rename the data using a simple set of 
+It also offers an easy way to remap/rename the data using a simple set of 
 rules.
 
-##Background
+#Background
 
-The ROS Message Types (I will refer to them as "ROS types" further) can be described as 
-a [Interface Describtion Language](https://en.wikipedia.org/wiki/Interface_description_language).
+The ROS Message Types can be described as 
+an [Interface Describtion Language](https://en.wikipedia.org/wiki/Interface_description_language).
 This approach is very well known and commonly used on the web and in distributed systems in general.
 
-A [rosmsg](http://wiki.ros.org/rosmsg) is defined by the user; an "IDL compiler" 
-read this schema and generates an header file that contains the code that shall be included
-in the applications, both on the publisher *and* subscriber sides.
+A [rosmsg](http://wiki.ros.org/rosmsg) is defined by the user; [gencpp](http://wiki.ros.org/gencpp)
+is an "IDL compiler" that reads the schema and generates a header file. The latter shall 
+be included in the applications, both on the publisher *and* the subscriber side.
 
 This approach creates strong and type-safe contracts between the producer and the consumer 
 of the message and, additionally, is needed to implements a fast 
@@ -36,15 +36,20 @@ serialization / deserialization mechanism.
 The only "limitation", at least in C++, is the fact that the generated header files 
 must be included in the source code.
 
+Using ros_type_introspection you can avoid using this generate headers files on the 
+consumer/subscriber side.
+
 ##The parser
 
 In most cases we have access to the Ros Message Type Definition.
-Luckily for us this string contains __all__ the information we need to know how to deserialize 
+This is true for both rosbags and topic subscribers.
+
+The definition contains __all__ the information we need to know how to deserialize 
 the ROS message.
 The goal of the [parser](ros-type-introspection/blob/master/include/ros_type_introspection/parser.hpp)
-is to extract the schema and made it available to the user and the deserializer.
+is to extract the schema and allow the user (and the deserializer) to introspect it.
 
-This can be simply done calling the function:
+You just need to invoke a single funtion:
 
 ```c++
   ROSTypeList buildROSTypeMapFromDefinition( const std::string& type_name,
@@ -58,7 +63,7 @@ Let's take a look to a simple example. Further we try to parse the type(s) conta
 ```c++
   #include <geometry_msgs/Pose.h>
   // NOTE: in this trivial example we need to include geometry_msgs/Pose
-  // even if the main goal of this library is to avoid that.
+  // even if the main goal of this library is to AVOID that.
   
   ///...
   
@@ -89,13 +94,14 @@ The expected output is:
 
 As expected each message type has a set of fields with a fieldname and a typename.
 
-What is noteworthy is that also all of the non-built-in type in the hierarchy 
-are parsed as well, specifically `geometry_msgs/Point` and `geometry_msgs/Quaternion`.
+Note as all of the non-built-in types in the hierarchy 
+are parsed as well *recursively*.
+In this case `geometry_msgs/Point` and `geometry_msgs/Quaternion`.
 
 ###Example 2
 
-In the next example we parse all the types found in a single ROS bag.
-We will __not__ need to `#include` any of those ROS Types. 
+In the next example we will parse all the types stored in a single ROS bag.
+We will __not__ need to __`#include`__ any of those ROS Types. 
 
 To understand this chunk of code you must
 be familiar with the [rosbag::Bag API](http://wiki.ros.org/rosbag/Code%20API)
@@ -161,10 +167,9 @@ Let's see how parser and deserializer work together with a slightly more complex
 [sensor_msgs::JointState](http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html). 
 
 Let's suppose that a publisher sends this instance of __sensor_msgs::JointState__ using a ROS topic
-(the code related to ROS and publishing is ignored here):
+(I am not including the ROS related code):
 
 ```c++
-  
     sensor_msgs::JointState joint_state;
 
     joint_state.header.seq = 2016;
@@ -182,25 +187,23 @@ Let's suppose that a publisher sends this instance of __sensor_msgs::JointState_
     names[1] = ("ciao");
     names[2] = ("bye");
 
-    for (int i=0; i<3; i++)
-    {
+    for (int i=0; i<3; i++){
         joint_state.name[i] = names[i];
         joint_state.position[i]= 11+i;
         joint_state.velocity[i]= 21+i;
         joint_state.effort[i]= 31+i;
     }
-  
   //publish this on a ros topic...
   
 ```
 
-On the receiver side we want to read this data but we don't know at compilation
-time that it is a `sensor_msgs::Imu`.
+On the receiver side we want to read this data but we don't know that it is a `sensor_msgs::Imu` at compilation
+time. Therefore we are not able to include '<sensor_msgs/JointState>`.
+
 To solve this problem we need the support of an usefull but not well know class:
 [topic_tools::ShapeShifter](http://docs.ros.org/diamondback/api/topic_tools/html/classtopic__tools_1_1ShapeShifter.html)
 
 ```c++
-
 //callback subscribed to the topic
 void DataStreamROS::topicCallback(const topic_tools::ShapeShifter::ConstPtr& msg)
 {
