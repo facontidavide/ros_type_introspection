@@ -99,17 +99,6 @@ int main( int argc, char** argv)
 
   ROSType main_type (DataType<tf::tfMessage >::value());
 
-  SString A("hi");
-  SString B,D;
-  B=A;
-  SString C( A );
-  D = SString("world");
-
-  std::cout << A << ": " << A.size() << std::endl;
-  std::cout << B << ": " << B.size() << std::endl;
-  std::cout << C << ": " << C.size() << std::endl;
-  std::cout << D << ": " << D.size() << std::endl;
-
   ROSTypeFlat flat_container;
 
   for (long i=0; i<100*1000;i++)

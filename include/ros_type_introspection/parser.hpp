@@ -37,8 +37,6 @@ const int BuiltinTypeSize[OTHER] = {
     -1
 };
 
-
-
 class ROSType {
 public:
 
