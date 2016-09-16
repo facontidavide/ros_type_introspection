@@ -33,9 +33,9 @@ std::vector<SubstitutionRule> Rules()
                                       ".transforms[#].header.frame_id",
                                       ".transform.#") );
 
-   /* rules.push_back( SubstitutionRule(".transforms[#].header",
+    rules.push_back( SubstitutionRule(".transforms[#].header",
                                       ".transforms[#].header.frame_id",
-                                      ".transform.#.header"));*/
+                                      ".transform.#.header"));
     return rules;
 }
 
