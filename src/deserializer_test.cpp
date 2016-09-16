@@ -50,10 +50,12 @@ TEST_CASE("Deserialize JointState", "Deserialize")
 
     ROSType main_type( DataType<sensor_msgs::JointState >::value() );
 
-    ROSTypeFlat flat_container = buildRosFlatType(type_map,
-                                                  main_type,
-                                                  "JointState",
-                                                  &buffer_ptr);
+    ROSTypeFlat flat_container;
+    buildRosFlatType(type_map,
+                     main_type,
+                     "JointState",
+                     &buffer_ptr, &flat_container);
+
     for(auto&it: flat_container.value) {
         std::cout << it.first << " >> " << it.second << std::endl;
     }
@@ -121,10 +123,11 @@ TEST_CASE("Deserialize NavSatStatus", "Deserialize")
 
     ROSType main_type( DataType<sensor_msgs::NavSatStatus >::value() );
 
-    ROSTypeFlat flat_container = buildRosFlatType(type_map,
-                                                  main_type,
-                                                  "nav_stat",
-                                                  &buffer_ptr);
+    ROSTypeFlat flat_container;
+    buildRosFlatType(type_map,
+                     main_type,
+                     "nav_stat",
+                     &buffer_ptr, &flat_container);
 
     std::cout << " -------------------- " << std::endl;
 
@@ -182,10 +185,11 @@ TEST_CASE("Deserialize IMU", "Deserialize")
 
     ROSType main_type( DataType<sensor_msgs::Imu >::value() );
 
-    ROSTypeFlat flat_container = buildRosFlatType(type_map,
-                                                  main_type,
-                                                  "imu",
-                                                  &buffer_ptr);
+    ROSTypeFlat flat_container;
+    buildRosFlatType(type_map,
+                     main_type,
+                     "imu",
+                     &buffer_ptr, &flat_container);
 
     std::cout << " -------------------- " << std::endl;
     for(auto&it: flat_container.value) {
@@ -277,7 +281,7 @@ TEST_CASE("Deserialize Int16MultiArray", "Deserialize")
     multi_array.data.resize(N);
 
     for (unsigned i=0; i<N; i++){
-      multi_array.data[i] = i;
+        multi_array.data[i] = i;
     }
 
 
@@ -289,10 +293,11 @@ TEST_CASE("Deserialize Int16MultiArray", "Deserialize")
 
     ROSType main_type( DataType<std_msgs::Int16MultiArray>::value() );
 
-    ROSTypeFlat flat_container = buildRosFlatType(type_map,
-                                                  main_type,
-                                                  "multi_array",
-                                                  &buffer_ptr);
+    ROSTypeFlat flat_container;
+    buildRosFlatType(type_map,
+                     main_type,
+                     "multi_array",
+                     &buffer_ptr, &flat_container);
 
     std::cout << " -------------------- " << std::endl;
 

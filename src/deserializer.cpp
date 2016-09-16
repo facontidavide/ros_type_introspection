@@ -179,26 +179,25 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
 }
 
 
-ROSTypeFlat buildRosFlatType(const ROSTypeList& type_map,
+void  buildRosFlatType(const ROSTypeList& type_map,
                              ROSType type,
                              const SString & prefix,
                              uint8_t** buffer_ptr,
+                             ROSTypeFlat* flat_container,
                              uint8_t max_array_size)
 {
-    ROSTypeFlat flat_container;
+    flat_container->value.clear();
+    flat_container->name_id.clear();
 
+    buildRosFlatTypeImpl( type_map, type, prefix, buffer_ptr,  flat_container, max_array_size );
 
-    buildRosFlatTypeImpl( type_map, type, prefix, buffer_ptr,  &flat_container, max_array_size );
-
-    std::sort( flat_container.name_id.begin(),  flat_container.name_id.end(),
+    std::sort( flat_container->name_id.begin(),  flat_container->name_id.end(),
                []( const std::pair<SString,SString> & left,
                const std::pair<SString,SString> & right)
     {
         return left.first < right.first;
     }
     );
-
-    return flat_container;
 }
 
 

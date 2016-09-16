@@ -58,10 +58,11 @@ TEST_CASE("Deserialize JointState and rename", "Deserialize")
 
     ROSType main_type( DataType<sensor_msgs::JointState >::value() );
 
-    ROSTypeFlat flat_container = buildRosFlatType(type_map,
-                                                  main_type,
-                                                  "JointState",
-                                                  &buffer_ptr);
+    ROSTypeFlat flat_container;
+    buildRosFlatType(type_map,
+                     main_type,
+                     "JointState",
+                     &buffer_ptr, &flat_container);
     applyNameTransform( rules, &flat_container );
 
     for(auto&it: flat_container.value) {

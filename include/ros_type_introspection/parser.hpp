@@ -112,7 +112,7 @@ public:
 
 protected:
     SString _name;
-    ROSType     _type;
+    ROSType _type;
     SString _value;
 };
 

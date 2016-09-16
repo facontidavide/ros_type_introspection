@@ -10,11 +10,12 @@ typedef struct{
     std::vector< std::pair<SString, SString> > name_id;
 }ROSTypeFlat;
 
-ROSTypeFlat buildRosFlatType(const ROSTypeList& type_map,
+void  buildRosFlatType(const ROSTypeList& type_map,
                              ROSType type,
-                             const SString& prefix,
-                             uint8_t **buffer_ptr,
-                             uint8_t max_array_size = 32);
+                             const SString & prefix,
+                             uint8_t** buffer_ptr,
+                             ROSTypeFlat* flat_container,
+                             uint8_t max_array_size= 32);
 
 } //end namespace
 
