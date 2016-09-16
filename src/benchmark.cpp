@@ -17,7 +17,7 @@ using namespace RosIntrospection;
 std::vector<SubstitutionRule> Rules()
 {
     std::vector<SubstitutionRule> rules;
-    rules.push_back( SubstitutionRule(".position[#]",
+   /* rules.push_back( SubstitutionRule(".position[#]",
                                       ".name[#]",
                                       ".#.position") );
 
@@ -28,14 +28,14 @@ std::vector<SubstitutionRule> Rules()
     rules.push_back( SubstitutionRule(".effort[#]",
                                       ".name[#]",
                                       ".#.effort") );
-
+*/
     rules.push_back( SubstitutionRule(".transforms[#].transform",
                                       ".transforms[#].header.frame_id",
                                       ".transform.#") );
 
-    rules.push_back( SubstitutionRule(".transforms[#].header",
+   /* rules.push_back( SubstitutionRule(".transforms[#].header",
                                       ".transforms[#].header.frame_id",
-                                      ".transform.#.header") );
+                                      ".transform.#.header"));*/
     return rules;
 }
 
@@ -80,12 +80,12 @@ int main( int argc, char** argv)
     ros::serialization::Serializer<tf::tfMessage>::write(stream, tf_msg);
     ROSType main_type (DataType<tf::tfMessage >::value());
 
-    for (int i=0; i<100000;i++)
+    for (int i=0; i<100*1000;i++)
     {
         uint8_t* buffer_ptr = buffer.data();
 
         ROSTypeFlat flat_container = buildRosFlatType(type_map,main_type, "msgTransform", &buffer_ptr);
-      //  applyNameTransform( Rules(), &flat_container );
+        applyNameTransform( Rules(), &flat_container );
     }
 
     auto end = std::chrono::high_resolution_clock::now();
