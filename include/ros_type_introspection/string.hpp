@@ -102,20 +102,22 @@ public:
 
     basic_string(CharT const* string, std::size_t size) {
 
+      if(string){
          if(size <= sso_capacity) {
-            Traits::move(m_data.sso.string, string, size);
+            Traits::copy(m_data.sso.string, string, size);
             Traits::assign(m_data.sso.string[size], static_cast<CharT>(0));
             set_sso_size(size);
         } else {
             m_data.non_sso.ptr = new CharT[size + 1];
-            Traits::move(m_data.non_sso.ptr, string, size);
+            Traits::copy(m_data.non_sso.ptr, string, size);
             Traits::assign(m_data.non_sso.ptr[size], static_cast<CharT>(0));
             set_non_sso_data(size, size);
         }
+      }
     }
 
     basic_string(CharT const* string)
-        : basic_string{string, std::strlen(string)} {
+        : basic_string(string, std::strlen(string)) {
     }
 
     basic_string(const basic_string& other) {

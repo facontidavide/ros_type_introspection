@@ -10,10 +10,10 @@ namespace RosIntrospection{
 class StringTreeLeaf{
     friend std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf );
 public:
-    StringTreeLeaf(): element_ptr(nullptr), array_size(0)
-    {  }
+    StringTreeLeaf(): node_ptr(nullptr), array_size(0)
+    {  for (int i=0; i<7; i++) index_array[i] = 0;}
 
-    StringElement* element_ptr;
+    StringElement* node_ptr;
     uint16_t array_size;
     uint16_t index_array[7];
 
@@ -28,6 +28,8 @@ typedef struct{
     StringTree tree;
     std::vector< std::pair<StringTreeLeaf, double> > value;
     std::vector< std::pair<StringTreeLeaf, SString> > name_id;
+    std::vector< std::pair<SString, double> > renamed_value;
+
 }ROSTypeFlat;
 
 ROSTypeFlat buildRosFlatType(const ROSTypeList& type_map,

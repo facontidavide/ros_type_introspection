@@ -20,10 +20,10 @@ public:
 #if !STATIC_TREE
     typedef boost::container::stable_vector<TreeElement> ChildrenVector;
 #else
-    typedef std::vector<TreeElement> ChildrenVector; // dangerous
+    typedef std::vector<TreeElement> ChildrenVector; // dangerous beacause of pointer invalidation (but faster)
 #endif
 
-    TreeElement(TreeElement<T> *parent, const T& value );
+    TreeElement(const TreeElement* parent, const T& value );
 
     const TreeElement* parent() const       { return _parent; }
     const T& value() const                  { return _value; }
@@ -36,7 +36,7 @@ public:
     std::string toStr() const;
 
 private:
-    TreeElement*   _parent;
+    const TreeElement*   _parent;
     T              _value;
     ChildrenVector _children;
 };
@@ -102,7 +102,9 @@ std::ostream& operator<<(std::ostream &os, const std::pair<const TreeElement<T>*
 
     while ( index >=0)
     {
-        if( array[index] ) os << array[index]->value();
+        if( array[index] ){
+            os << array[index]->value();
+        }
         if( index >0 )  os << ".";
         index--;
     }
@@ -115,16 +117,22 @@ void Tree<T>::print_impl(std::ostream &os, const typename TreeElement<T>::Childr
     for (const auto& child: children)
     {
         for (int i=0; i<indent; i++) os << " ";
-        os << child.value() << std::endl;
+        os << child.value();
+        if( child.parent())
+          std::cout << "("<< child.parent()->value() << ")" << std::endl;
+        else
+          std::cout << "(null)" << std::endl;
         print_impl(os, child.children(), indent+3);
     }
 }
 
 template <typename T> inline
-TreeElement<T>::TreeElement(TreeElement<T> *parent, const T& value):
+TreeElement<T>::TreeElement(const TreeElement *parent, const T& value):
     _parent(parent), _value(value)
 {
-
+  //std::cout << "ctor " << value << " <- ";
+ // if( !parent ) std::cout << "NULL" << std::endl;
+ // else std::cout << parent->value() << std::endl;
 }
 /*
 template <typename T> inline
