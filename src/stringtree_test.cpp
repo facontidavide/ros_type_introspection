@@ -43,7 +43,7 @@ int main( int argc, char** argv)
 
     vect =  { "B", "1"};
 
-    FindPattern(vect,0, tree.croot() ,heads);
+    //FindPattern(vect,0, tree.croot() ,heads);
     std::cout << "Found: "<< heads.size() << std::endl;
 
     for (auto head: heads)

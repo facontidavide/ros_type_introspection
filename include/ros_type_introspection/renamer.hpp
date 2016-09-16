@@ -12,22 +12,12 @@ typedef struct {
     std::vector<SString> substitution;
 } SubstitutionRule;
 
-const StringElement* FindPatternTail( const SString& value,
-                                      const StringElement* tail);
-
-bool FindPattern( const std::vector<SString>& pattern,  size_t index,
-                  const StringElement* tail,
-                  std::vector<const  StringElement*>& heads );
 
 typedef std::map<std::string, SubstitutionRule> SubstitutionRuleSet;
 
 
-bool PatternMatch(const StringElement* head, const StringElement* node_ptr );
-
-
-/*
 void applyNameTransform(const std::vector<SubstitutionRule> &rules,
-                        ROSTypeFlat* container);*/
+                        ROSTypeFlat* container);
 
 
 } //end namespace
