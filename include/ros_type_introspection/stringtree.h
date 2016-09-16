@@ -6,6 +6,7 @@
 #include <iostream>
 #include <boost/container/stable_vector.hpp>
 #include <ros_type_introspection/string.hpp>
+#include <boost/noncopyable.hpp>
 
 namespace details{
 
@@ -14,7 +15,8 @@ namespace details{
 /**
  * @brief Element of the tree. it has a single parent and N >= 0 children.
  */
-template <typename T> class TreeElement{
+template <typename T> class TreeElement
+{
 
 public:
 #if !STATIC_TREE
@@ -42,7 +44,7 @@ private:
 };
 
 
-template <typename T> class Tree
+template <typename T> class Tree : boost::noncopyable
 {
 public:
     Tree(): _root(nullptr,"root") {}

@@ -32,10 +32,10 @@ std::vector<SubstitutionRule> Rules()
     rule.pattern = { "transforms", "#", "header"};
     rule.location = { "transforms", "#", "header", "frame_id"};
     rule.substitution = { "transforms", "#", "header"};
-
+/*
     rules.push_back( rule );
 
-  /*  rules.push_back( SubstitutionRule(".position[#]",
+   rules.push_back( SubstitutionRule(".position[#]",
                                       ".name[#]",
                                       ".#.position") );
 
@@ -99,12 +99,27 @@ int main( int argc, char** argv)
 
   ROSType main_type (DataType<tf::tfMessage >::value());
 
+  SString A("hi");
+  SString B,D;
+  B=A;
+  SString C( A );
+  D = SString("world");
+
+  std::cout << A << ": " << A.size() << std::endl;
+  std::cout << B << ": " << B.size() << std::endl;
+  std::cout << C << ": " << C.size() << std::endl;
+  std::cout << D << ": " << D.size() << std::endl;
+
   ROSTypeFlat flat_container;
+
   for (long i=0; i<100*1000;i++)
   {
     uint8_t* buffer_ptr = buffer.data();
 
-    flat_container = buildRosFlatType(type_map,main_type, "msgTransform", &buffer_ptr);
+    buildRosFlatType(type_map,main_type, SString("msgTransform"),
+                     &buffer_ptr,
+                     &flat_container);
+
     applyNameTransform( Rules(), &flat_container );
   }
 

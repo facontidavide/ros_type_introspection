@@ -8,31 +8,31 @@
 namespace RosIntrospection{
 
 class StringTreeLeaf{
-    friend std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf );
+  friend std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf );
 public:
-    StringTreeLeaf(): node_ptr(nullptr), array_size(0)
-    {  for (int i=0; i<7; i++) index_array[i] = 0;}
+  StringTreeLeaf(): node_ptr(nullptr), array_size(0)
+  {  for (int i=0; i<7; i++) index_array[i] = 0;}
 
-    StringElement* node_ptr;
-    uint16_t array_size;
-    uint16_t index_array[7];
+  StringElement* node_ptr;
+  uint16_t array_size;
+  uint16_t index_array[7];
 
-    SString toStr() const;
+  SString toStr() const;
 };
 
 typedef struct{
-    StringTree tree;
-    std::vector< std::pair<StringTreeLeaf, double> > value;
-    std::vector< std::pair<StringTreeLeaf, SString> > name_id;
-    std::vector< std::pair<SString, double> > renamed_value;
-
+  StringTree tree;
+  std::vector< std::pair<StringTreeLeaf, double> > value;
+  std::vector< std::pair<StringTreeLeaf, SString> > name_id;
+  std::vector< std::pair<SString, double> > renamed_value;
 }ROSTypeFlat;
 
-ROSTypeFlat buildRosFlatType(const ROSTypeList& type_map,
-                             ROSType type,
-                             const SString& prefix,
-                             uint8_t **buffer_ptr,
-                             uint8_t max_array_size = 32);
+void buildRosFlatType(const ROSTypeList& type_map,
+                      ROSType type,
+                      SString prefix,
+                      uint8_t **buffer_ptr,
+                      ROSTypeFlat* flat_container_output,
+                      uint8_t max_array_size = 32);
 
 
 inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )

@@ -10,7 +10,7 @@
 namespace RosIntrospection{
 
 
-#if 1
+#if 0
 typedef ssoX::basic_string< 63, char> SString;
 #else
 typedef std::string SString;

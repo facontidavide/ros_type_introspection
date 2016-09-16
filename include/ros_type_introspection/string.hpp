@@ -97,7 +97,7 @@ class basic_string {
     typedef typename std::make_unsigned<CharT>::type UCharT;
 public:
     basic_string() noexcept
-        : basic_string{"", static_cast<std::size_t>(0)} {
+        : basic_string("", static_cast<std::size_t>(0)) {
     }
 
     basic_string(CharT const* string, std::size_t size) {

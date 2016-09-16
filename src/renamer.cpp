@@ -103,7 +103,7 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
 
   if( debug) std::cout << container->tree << std::endl;
 
-  for(auto&value_leaf: container->value)
+  for(const auto& value_leaf: container->value)
   {
     bool substituted = false;
     for(const auto& rule: rules)
@@ -174,7 +174,7 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
 
               //------------------------
               SString new_identifier;
-              //new_identifier.reserve( char_count + concatenated_name.size() + 1 );
+              new_identifier.reserve( char_count + concatenated_name.size() + 1 );
 
               for (int i = concatenated_name.size()-1; i >= 0; i--)
               {
@@ -184,7 +184,7 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
               if( debug) std::cout << "Result: " << new_identifier << std::endl;
 
               container->renamed_value.push_back(
-                    std::make_pair( new_identifier, value_leaf.second ) );
+                    std::make_pair(std::move(new_identifier), value_leaf.second ) );
               substituted = true;
             }
           }
