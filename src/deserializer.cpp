@@ -259,7 +259,7 @@ SString StringTreeLeaf::toStr() const{
   array[index] = nullptr;
   index--;
 
-  output.reserve( index + 10+ char_count);
+  //output.reserve( index + 10+ char_count);
 
   int array_count = 0;
 

@@ -174,7 +174,7 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
 
               //------------------------
               SString new_identifier;
-              new_identifier.reserve( char_count + concatenated_name.size() + 1 );
+              //new_identifier.reserve( char_count + concatenated_name.size() + 1 );
 
               for (int i = concatenated_name.size()-1; i >= 0; i--)
               {
