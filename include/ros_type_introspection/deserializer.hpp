@@ -17,11 +17,7 @@ public:
     uint16_t array_size;
     uint16_t index_array[7];
 
-    std::string toStr(){
-        std::stringstream ss;
-        ss << *this;
-        return ss.str();
-    }
+    SString toStr() const;
 };
 
 typedef struct{
@@ -39,7 +35,11 @@ ROSTypeFlat buildRosFlatType(const ROSTypeList& type_map,
                              uint8_t max_array_size = 32);
 
 
-std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf );
+inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
+{
+  os << leaf.toStr();
+  return os;
+}
 
 } //end namespace
 

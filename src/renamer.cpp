@@ -4,8 +4,8 @@ namespace RosIntrospection{
 
 
 bool FindPattern(const std::vector<SString>& pattern,  size_t index,
-                  const StringElement* tail,
-                  const StringElement **head );
+                 const StringElement* tail,
+                 const StringElement **head );
 
 bool PatternMatch(const StringElement* head,
                   const StringElement* node_ptr );
@@ -95,103 +95,111 @@ bool PatternMatch(const StringElement* pattern_head, const StringElement *node_p
   return false;
 }
 
-void applyNameTransform(const SubstitutionRule &rule,
-                        ROSTypeFlat* container,
-                        bool debug)
+void applyNameTransform(const std::vector<SubstitutionRule>& rules,
+                        ROSTypeFlat* container )
 {
+
+  const bool debug = false ;
 
   if( debug) std::cout << container->tree << std::endl;
 
-  const StringElement* pattern_head = nullptr;
-  const StringElement* location_head = nullptr;
-
-  FindPattern( rule.pattern, 0, container->tree.croot(), &pattern_head );
-  FindPattern(rule.location,0, container->tree.croot(), &location_head );
-
-  for(auto&it: container->value)
+  for(auto&value_leaf: container->value)
   {
-    if( debug) std::cout << it.first << " >> " << it.second << " ... ";
-
-    if( pattern_head )
+    bool substituted = false;
+    for(const auto& rule: rules)
     {
-      auto& leaf = it.first;
-      if( PatternMatch( pattern_head, leaf.node_ptr))   {
-        if( debug) std::cout << " match pattern... ";
+      if( substituted ) break;
 
-        if( location_head )
-        {
-          const SString* new_name = FindSubstitutionName(location_head, *container, leaf );
-          if( new_name )
+      const StringElement* pattern_head = nullptr;
+      const StringElement* location_head = nullptr;
+
+      FindPattern( rule.pattern, 0, container->tree.croot(), &pattern_head );
+      FindPattern( rule.location,0,  container->tree.croot(), &location_head );
+
+      if( debug) std::cout << value_leaf.first << " >> " << value_leaf.second << " ... ";
+
+      if( pattern_head )
+      {
+        auto& leaf = value_leaf.first;
+        if( PatternMatch( pattern_head, leaf.node_ptr))   {
+          if( debug) std::cout << " match pattern... ";
+
+          if( location_head )
           {
-            if( debug) std::cout << " CONCATENATION\n";
-            int char_count = 0;
-            std::vector<SString> concatenated_name;
-            concatenated_name.reserve( 10 );
-
-            const StringElement* node_ptr = leaf.node_ptr;
-            while( node_ptr != pattern_head)
+            const SString* new_name = FindSubstitutionName(location_head, *container, leaf );
+            if( new_name )
             {
-              const SString* value = &node_ptr->value();
-              concatenated_name.push_back( *value );
-              char_count += value->size();
-              if( debug) std::cout << "A: " << *value << std::endl;;
-              node_ptr = node_ptr->parent();
-            }
+              if( debug) std::cout << " CONCATENATION\n";
+              int char_count = 0;
+              std::vector<const SString*> concatenated_name;
+              concatenated_name.reserve( 10 );
 
-            for (int i = rule.substitution.size()-1; i >= 0; i--)
-            {
-              const SString* value = &rule.substitution[i];
-
-              if( value->size()==1 && value->at(0) == '#')
+              const StringElement* node_ptr = leaf.node_ptr;
+              while( node_ptr != pattern_head)
               {
-                value = new_name;
+                const SString* value = &node_ptr->value();
+                concatenated_name.push_back( value );
+                char_count += value->size();
+                if( debug) std::cout << "A: " << *value << std::endl;;
+                node_ptr = node_ptr->parent();
               }
 
-              concatenated_name.push_back( *value );
-              char_count += value->size();
-              if( debug) std::cout << "B: " << *value << std::endl;;
-            }
+              for (int i = rule.substitution.size()-1; i >= 0; i--)
+              {
+                const SString* value = &rule.substitution[i];
 
-            for (int i = 0; i < rule.pattern.size() && node_ptr; i++)
-            {
-              node_ptr = node_ptr->parent();
-            }
+                if( value->size()==1 && value->at(0) == '#')
+                {
+                  value = new_name;
+                }
 
-            while( node_ptr )
-            {
-              const SString* value = &node_ptr->value();
-              concatenated_name.push_back( *value );
-              char_count += value->size();
-              if( debug) std::cout << "C: " << *value << std::endl;;
-              node_ptr = node_ptr->parent();
-            }
+                concatenated_name.push_back( value );
+                char_count += value->size();
+                if( debug) std::cout << "B: " << *value << std::endl;;
+              }
 
-            //------------------------
-            SString new_identifier;
-            new_identifier.reserve( char_count + concatenated_name.size() + 1 );
+              for (int i = 0; i < rule.pattern.size() && node_ptr; i++)
+              {
+                node_ptr = node_ptr->parent();
+              }
 
-            for (int i = concatenated_name.size()-1; i >= 0; i--)
-            {
-              new_identifier.append( concatenated_name[i] );
-              if( i>0) new_identifier.append(".");
+              while( node_ptr )
+              {
+                const SString* value = &node_ptr->value();
+                concatenated_name.push_back( value );
+                char_count += value->size();
+                if( debug) std::cout << "C: " << *value << std::endl;;
+                node_ptr = node_ptr->parent();
+              }
+
+              //------------------------
+              SString new_identifier;
+              new_identifier.reserve( char_count + concatenated_name.size() + 1 );
+
+              for (int i = concatenated_name.size()-1; i >= 0; i--)
+              {
+                new_identifier.append( *concatenated_name[i] );
+                if( i>0) new_identifier.append(".");
+              }
+              if( debug) std::cout << "Result: " << new_identifier << std::endl;
+
+              container->renamed_value.push_back(
+                    std::make_pair( new_identifier, value_leaf.second ) );
+              substituted = true;
             }
-            if( debug) std::cout << "Result: " << new_identifier << std::endl;
           }
         }
       }
+      if( debug) std::cout << std::endl;
     }
-    if( debug) std::cout << std::endl;
+    if( !substituted)
+    {
+      container->renamed_value.push_back(
+            std::make_pair(value_leaf.first.toStr(), value_leaf.second ) );
+    }
   }
 }
 
-void applyNameTransform(const std::vector<SubstitutionRule> &rules, ROSTypeFlat *container)
-{
-  container->renamed_value.reserve( container->value.size() );
-  for (const auto& rule: rules)
-  {
-    applyNameTransform(rule,container, 0);
-  }
-}
 
 
 
