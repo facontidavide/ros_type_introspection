@@ -32,9 +32,9 @@ std::vector<SubstitutionRule> Rules()
     rule.pattern = { "transforms", "#", "header"};
     rule.location = { "transforms", "#", "header", "frame_id"};
     rule.substitution = { "transforms", "#", "header"};
-/*
-    rules.push_back( rule );
 
+    rules.push_back( rule );
+/*
    rules.push_back( SubstitutionRule(".position[#]",
                                       ".name[#]",
                                       ".#.position") );

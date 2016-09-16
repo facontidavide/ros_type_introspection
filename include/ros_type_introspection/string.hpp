@@ -134,6 +134,10 @@ public:
         other.set_moved_from();
     }
 
+    void reserve(size_t) noexcept {
+      //not implemented
+    }
+
     basic_string(const std::basic_string<CharT>& other){
         *this = basic_string( other.data(), other.size() );
     }
