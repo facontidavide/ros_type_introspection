@@ -5,23 +5,16 @@
 
 namespace RosIntrospection{
 
-class SubstitutionRule{
-public:
-    SubstitutionRule( std::string pattern, std::string name_location, std::string substitution);
 
-    std::string pattern_suf;
-    std::string pattern_pre;
+typedef struct {
+    std::vector<SString> pattern;
+    std::vector<SString> location;
+    std::vector<SString> substitution;
+} SubstitutionRule;
 
-    std::string location_suf;
-    std::string location_pre;
-
-    std::string substitution_suf;
-    std::string substitution_pre;
-private:
-
-};
 
 typedef std::map<std::string, SubstitutionRule> SubstitutionRuleSet;
+
 
 void applyNameTransform(const std::vector<SubstitutionRule> &rules,
                         ROSTypeFlat* container);

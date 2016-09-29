@@ -14,7 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
 
 # Build flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ")
-
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+#set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
 
 ###################################
 ## catkin specific configuration ##
@@ -60,6 +61,7 @@ include_directories(
    include/ros_type_introspection/deserializer.hpp
    include/ros_type_introspection/string.hpp
    include/ros_type_introspection/renamer.hpp
+   include/ros_type_introspection/stringtree.h
  )
 
 target_link_libraries(ros_type_introspection ${catkin_LIBRARIES})
@@ -75,6 +77,16 @@ add_executable(ros_introspection_benchmark src/benchmark.cpp)
 add_dependencies(ros_introspection_benchmark ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(ros_introspection_benchmark
+  ${catkin_LIBRARIES}
+  ros_type_introspection
+)
+
+
+add_executable(stringtree_test src/stringtree_test.cpp)
+
+add_dependencies(stringtree_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+target_link_libraries(stringtree_test
   ${catkin_LIBRARIES}
   ros_type_introspection
 )
@@ -119,7 +131,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
  add_executable(ros_introspection_test
      src/parser_test.cpp
      src/deserializer_test.cpp
-     src/renamer_test.cpp
+    # src/renamer_test.cpp
      )
 
  target_link_libraries(ros_introspection_test
@@ -127,7 +139,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
    ros_type_introspection
 )
 
-## Add gtest based cpp test target and link libraries
+# Add gtest based cpp test target and link libraries
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_ros_type_introspection.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})

@@ -5,16 +5,19 @@
 #include <map>
 #include <boost/utility/string_ref.hpp>
 #include <ros_type_introspection/string.hpp>
+#include <ros_type_introspection/stringtree.h>
 
 namespace RosIntrospection{
 
 
 #if 1
-typedef ssoX::basic_string<63,char> SString;
+typedef ssoX::basic_string< 63, char> SString;
 #else
 typedef std::string SString;
 #endif
 
+typedef details::TreeElement<SString> StringElement;
+typedef details::Tree<SString> StringTree;
 
 enum BuiltinType {
     BOOL , BYTE, CHAR,
@@ -33,8 +36,6 @@ const int BuiltinTypeSize[OTHER] = {
     8, 8,
     -1
 };
-
-
 
 class ROSType {
 public:
@@ -112,7 +113,7 @@ public:
 
 protected:
     SString _name;
-    ROSType _type;
+    ROSType     _type;
     SString _value;
 };
 

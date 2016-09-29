@@ -97,8 +97,8 @@ class basic_string {
     typedef typename std::make_unsigned<CharT>::type UCharT;
 public:
     basic_string() noexcept
-        : basic_string{"", static_cast<std::size_t>(0)} {
-    }   
+        : basic_string("", static_cast<std::size_t>(0)) {
+    }
 
     basic_string(CharT const* string, std::size_t size) {
 
@@ -109,7 +109,8 @@ public:
             Traits::assign(m_data.sso.string[size], static_cast<CharT>(0));
             set_sso_size(size);
         } else {
-            m_data.non_sso.ptr = new CharT[size + 1];
+            size_t new_size = std::min( sso_capacity*2, size );
+            m_data.non_sso.ptr = new CharT[new_size +1 ];
             Traits::move(m_data.non_sso.ptr, string, size);
             Traits::assign(m_data.non_sso.ptr[size], static_cast<CharT>(0));
             set_non_sso_data(size, size);
@@ -124,13 +125,17 @@ public:
         if(other.sso()) {
             m_data.sso = other.m_data.sso;
         } else {
-            new (this) basic_string{other.data(), other.size()};
+            new (this) basic_string{other.data(), other.size() };
         }
-    }  
+    }
 
     basic_string(basic_string&& other) noexcept {
         m_data = other.m_data;
         other.set_moved_from();
+    }
+
+    void reserve(size_t) noexcept {
+      //not implemented
     }
 
     basic_string(const std::basic_string<CharT>& other){
@@ -173,6 +178,7 @@ public:
             Traits::assign(m_data.sso.string[new_size], static_cast<CharT>(0));
             set_sso_size(new_size);
         } else {
+            new_size = std::min( sso_capacity*2, new_size );
             CharT* ptr = new CharT[new_size + 1];
 
             if( this->sso() == false ) {
@@ -181,6 +187,7 @@ public:
             }
             else{
                 Traits::move( ptr, m_data.sso.string, std::min(old_size, new_size) );
+                new_size = std::min( sso_capacity*2, new_size );
                 m_data.non_sso.ptr = new CharT[new_size + 1];
             }
             m_data.non_sso.ptr = ptr;
@@ -239,6 +246,10 @@ public:
         return data()[index];
     }
 
+    const char at( size_t index ) const
+    {
+        return data()[index];
+    }
 
     std::size_t capacity() const noexcept {
         if(sso()) {
@@ -325,7 +336,7 @@ private:
 private:
     union Data {
         struct NonSSO {
-            CharT overhead[MAX_SIZE + 1 - sizeof( CharT*) - 2*sizeof(std::size_t) - sizeof(CharT) ]; //waster memory to keep the alignment
+            CharT overhead[MAX_SIZE + sizeof(UCharT)  - sizeof(CharT*) -2*sizeof(std::size_t) ]; //waster memory to keep the alignment
             CharT* ptr;
             std::size_t size;
             std::size_t capacity;

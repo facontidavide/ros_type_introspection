@@ -5,7 +5,6 @@
 #include <boost/utility/string_ref.hpp>
 #include <geometry_msgs/Pose.h>
 #include <sensor_msgs/JointState.h>
-#include <tf/tfMessage.h>
 #include <sstream>
 #include <iostream>
 #include <chrono>
@@ -14,64 +13,71 @@
 using namespace ros::message_traits;
 using namespace RosIntrospection;
 
+
 std::vector<SubstitutionRule> Rules()
 {
     std::vector<SubstitutionRule> rules;
-   /* rules.push_back( SubstitutionRule(".position[#]",
-                                      ".name[#]",
-                                      ".#.position") );
 
-    rules.push_back( SubstitutionRule(".velocity[#]",
-                                      ".name[#]",
-                                      ".#.velocity") );
+    SubstitutionRule rule;
+    /*rule.pattern = { "transforms", "#", "transform"};
+    rule.location = { "transforms", "#", "header", "frame_id"};
+    rule.substitution = { "transforms", "#"};
+    rules.push_back( rule );
 
-    rules.push_back( SubstitutionRule(".effort[#]",
-                                      ".name[#]",
-                                      ".#.effort") );
+    rule.pattern = { "transforms", "#", "header"};
+    rule.location = { "transforms", "#", "header", "frame_id"};
+    rule.substitution = { "transforms", "#", "header"};
+    rules.push_back( rule );
 */
-    rules.push_back( SubstitutionRule(".transforms[#].header",
-                                      ".transforms[#].header.frame_id",
-                                      ".transform.#.header"));
 
-    rules.push_back( SubstitutionRule(".transforms[#].transform",
-                                      ".transforms[#].header.frame_id",
-                                      ".transform.#") );
+    rule.pattern = { "position", "#"};
+    rule.location = { "name", "#"};
+    rule.substitution = { "#", "position" };
+    rules.push_back( rule );
 
+    rule.pattern = { "velocity", "#"};
+    rule.location = { "name", "#"};
+    rule.substitution = { "#", "velocity" };
+    rules.push_back( rule );
+
+    rule.pattern = { "effort", "#"};
+    rule.location = { "name", "#"};
+    rule.substitution = { "#", "effort" };
+    rules.push_back( rule );
 
     return rules;
 }
+
 
 int main( int argc, char** argv)
 {
 
     ROSTypeList type_map =  buildROSTypeMapFromDefinition(
-                DataType<tf::tfMessage >::value(),
-                Definition<tf::tfMessage>::value() );
+                DataType<sensor_msgs::JointState >::value(),
+                Definition<sensor_msgs::JointState>::value() );
 
     std::cout << "------------------------------"  << std::endl;
     std::cout << type_map << std::endl;
 
-    tf::tfMessage tf_msg;
+    sensor_msgs::JointState js_msg;
 
-    tf_msg.transforms.resize(6);
+    js_msg.name.resize(6);
+    js_msg.position.resize(6);
+    js_msg.velocity.resize(6);
+    js_msg.effort.resize(6);
 
     const char* suffix[6] = { "_A", "_B", "_C", "_D" , "_E", "_F"};
 
-    for (int i=0; i< tf_msg.transforms.size() ; i++)
+    for (int i=0; i< js_msg.name.size() ; i++)
     {
-        tf_msg.transforms[i].header.seq = 100+i;
-        tf_msg.transforms[i].header.stamp.sec = 1234;
-        tf_msg.transforms[i].header.frame_id = std::string("frame").append(suffix[i]);
+        js_msg.header.seq = 100+i;
+        js_msg.header.stamp.sec = 1234;
+        js_msg.header.frame_id = std::string("frame").append(suffix[i]);
 
-        tf_msg.transforms[i].child_frame_id = std::string("child").append(suffix[i]);
-        tf_msg.transforms[i].transform.translation.x = 10 +i;
-        tf_msg.transforms[i].transform.translation.y = 20 +i;
-        tf_msg.transforms[i].transform.translation.z = 30 +i;
-
-        tf_msg.transforms[i].transform.rotation.x = 40 +i;
-        tf_msg.transforms[i].transform.rotation.y = 50 +i;
-        tf_msg.transforms[i].transform.rotation.z = 60 +i;
-        tf_msg.transforms[i].transform.rotation.w = 70 +i;
+        js_msg.name[i] = std::string("child").append(suffix[i]);
+        js_msg.position[i]  = 10 +i;
+        js_msg.velocity[i]  = 20 +i;
+        js_msg.effort[i]    = 30 +i;
     }
 
     std::vector<uint8_t> buffer(64*1024);
@@ -79,15 +85,15 @@ int main( int argc, char** argv)
     auto start = std::chrono::high_resolution_clock::now();
 
     ros::serialization::OStream stream(buffer.data(), buffer.size());
-    ros::serialization::Serializer<tf::tfMessage>::write(stream, tf_msg);
-    ROSType main_type (DataType<tf::tfMessage >::value());
+    ros::serialization::Serializer<sensor_msgs::JointState>::write(stream, js_msg);
+    ROSType main_type (DataType<sensor_msgs::JointState>::value());
 
     ROSTypeFlat flat_container;
     for (int i=0; i<100*1000;i++)
     {
         uint8_t* buffer_ptr = buffer.data();
 
-        buildRosFlatType(type_map,main_type, "msgTransform", &buffer_ptr, &flat_container);
+        buildRosFlatType(type_map,main_type, "joint_state", &buffer_ptr, &flat_container);
         applyNameTransform( Rules(), &flat_container );
     }
 
