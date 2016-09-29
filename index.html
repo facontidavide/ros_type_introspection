@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Ros-type-introspection by facontidavide</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Ros-type-introspection</h1>
+      <h2 class="project-tagline">Introspection at runtime of unknown data types in ROS (Robotic Operative System)</h2>
+      <a href="https://github.com/facontidavide/ros-type-introspection" class="btn">View on GitHub</a>
+      <a href="https://github.com/facontidavide/ros-type-introspection/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/facontidavide/ros-type-introspection/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="ros-message-introspection" class="anchor" href="#ros-message-introspection" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Ros message introspection</h1>
+
+<h3>
+<a id="or-if-you-dont-know-why-you-need-it-probably-you-dont-need-it" class="anchor" href="#or-if-you-dont-know-why-you-need-it-probably-you-dont-need-it" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Or... "If you don't know why you need it, probably you don't need it".</h3>
+
+<p>This simple library extracts information from a ROS message/type
+unknown at compilation time. </p>
+
+<p>Have you ever wanted to build an app that can subscribe to <strong>any</strong> 
+<code>topic</code> and extract its content, or can read data from <strong>any</strong> <code>rosbag</code>? 
+What if the topic and/or the bag contains user defined ROS types ignored at compilation time?</p>
+
+<p>The common solution in the ROS ecosystem is to use Python, that provides
+the needed introspection. Tools, for instance, like <strong>rqt_plot</strong> and <strong>rqt_bag</strong> took this approach.
+This library implements a <strong>C++ alternative</strong>.</p>
+
+<p>Introspections is achieved parsing the schema stored in <code>ros::message_traits::Definition</code></p>
+
+<p>Once this schema is parsed and understood, it can be used to deserialize a raw message.</p>
+
+<p>It also offer an easy way to remap/rename the data using a simple set of 
+rules.</p>
+
+<h1>
+<a id="background" class="anchor" href="#background" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Background</h1>
+
+<h3>
+<a id="or-repeating-something-you-know-already" class="anchor" href="#or-repeating-something-you-know-already" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Or... "Repeating something you know already"</h3>
+
+<p>The ROS Message Types (I will refer to them as "ROS types" further) can be described as 
+a <a href="https://en.wikipedia.org/wiki/Interface_description_language">Interface Describtion Language</a>.
+This approach is very well known and commonly used on the web and in distributed systems in general.</p>
+
+<p>A <a href="http://wiki.ros.org/rosmsg">rosmsg</a> is defined by the user; an "IDL compiler", i.e. 
+<a href="http://wiki.ros.org/gencpp">gencpp</a>, 
+reads this schema and generates an header file that contains the code that shall be included
+in the applications, both on the publisher <em>and</em> subscriber sides.</p>
+
+<p>This approach creates strong and type-safe contracts between the producer and the consumer 
+of the message and, additionally, is needed to implements a fast 
+serialization / deserialization mechanism.</p>
+
+<p>The only "limitation", at least in C++, is the fact that the generated header files 
+must be included in the source code.</p>
+
+<h1>
+<a id="the-parser" class="anchor" href="#the-parser" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The parser</h1>
+
+<h3>
+<a id="orthank-you-gencpp-for-storing-everything-i-need-to-build-introspection" class="anchor" href="#orthank-you-gencpp-for-storing-everything-i-need-to-build-introspection" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Or..."Thank you gencpp for storing everything I need to build introspection"</h3>
+
+<p>In most cases we have access to the Ros Message Type Definition.
+Luckily for us this string contains <strong>all</strong> the information we need to know how to deserialize 
+the ROS message.
+The goal of the <a href="ros-type-introspection/blob/master/include/ros_type_introspection/parser.hpp">parser</a>
+is to extract the schema and made it available to the user and the deserializer.</p>
+
+<p>This can be simply done calling the function:</p>
+
+<div class="highlight highlight-source-c++"><pre>  ROSTypeList <span class="pl-en">buildROSTypeMapFromDefinition</span>( <span class="pl-k">const</span> std::string&amp; type_name,
+                                             <span class="pl-k">const</span> std::string&amp; msg_definition );</pre></div>
+
+<h3>
+<a id="example-1" class="anchor" href="#example-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example 1</h3>
+
+<p>Further we try to parse the type(s) contained in
+<a href="http://docs.ros.org/kinetic/api/geometry_msgs/html/msg/Pose.html">geometry_msgs::Pose</a></p>
+
+<div class="highlight highlight-source-c++"><pre>  #<span class="pl-k">include</span> <span class="pl-s"><span class="pl-pds">&lt;</span>geometry_msgs/Pose.h<span class="pl-pds">&gt;</span></span>
+  <span class="pl-c">// NOTE: in this trivial example we need to include geometry_msgs/Pose</span>
+  <span class="pl-c">// even if the main goal of this library is to avoid that.</span>
+
+  <span class="pl-c">///...</span>
+
+  <span class="pl-k">using</span> <span class="pl-k">namespace</span> <span class="pl-en">RosIntrospection</span><span class="pl-k">;</span>
+  ROSTypeList typelist = buildROSTypeMapFromDefinition(
+                ros::message_traits::DataType&lt; geometry_msgs::Pose &gt;::value(),
+                ros::message_traits::Definition&lt; geometry_msgs::Pose &gt;::value());
+  std::cout &lt;&lt; typelist &lt;&lt; std::endl;             </pre></div>
+
+<p>The expected output is:</p>
+
+<pre><code>   geometry_msgs/Pose : 
+      position : geometry_msgs/Point
+      orientation : geometry_msgs/Quaternion
+
+   geometry_msgs/Point : 
+      x : float64
+      y : float64
+      z : float64
+
+   geometry_msgs/Quaternion : 
+      x : float64
+      y : float64
+      z : float64
+      w : float64
+</code></pre>
+
+<p>As expected each message type has a set of fields with a fieldname and a typename.</p>
+
+<p>What is noteworthy is that also all of the non-built-in type in the hierarchy 
+are parsed as well, specifically <code>geometry_msgs/Point</code> and <code>geometry_msgs/Quaternion</code>.</p>
+
+<h3>
+<a id="example-2" class="anchor" href="#example-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example 2</h3>
+
+<p>In the next example we will parse all the types found in a single ROS bag.
+We will <strong>not</strong> need to <strong><code>#include</code></strong> any of those ROS Types. </p>
+
+<p>To understand this chunk of code you must
+be familiar with the <a href="http://wiki.ros.org/rosbag/Code%20API">rosbag::Bag API</a></p>
+
+<div class="highlight highlight-source-c++"><pre>  rosbag::Bag bag;
+  bag.open( file_name, rosbag::bagmode::Read );
+
+  rosbag::View <span class="pl-en">bag_view</span> ( bag, ros::TIME_MIN, ros::TIME_MAX, <span class="pl-c1">true</span> );
+  <span class="pl-k">auto</span> first_time = bag_view.getBeginTime();
+
+  <span class="pl-k">const</span> <span class="pl-k">auto</span>&amp; connections = bag_view.getConnections();
+
+  <span class="pl-c">// create a list and a type map for each topic</span>
+  std::map&lt;std::string, RosIntrospection::ROSTypeList&gt; type_map;
+
+  <span class="pl-k">for</span>(<span class="pl-k">unsigned</span> i=<span class="pl-c1">0</span>; i&lt;connections.size(); i++)
+  {
+     <span class="pl-k">auto</span> topic_map = <span class="pl-c1">buildROSTypeMapFromDefinition</span>( connections[i]-&gt;datatype,
+                                                     connections[i]-&gt;msg_def);
+
+     type_map.<span class="pl-c1">insert</span>( <span class="pl-c1">std::make_pair</span>(connections[i]-&gt;topic, topic_map));
+  }</pre></div>
+
+<h1>
+<a id="the-deserializer" class="anchor" href="#the-deserializer" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The deserializer</h1>
+
+<h3>
+<a id="or-reverse-engineering-of-boostserialization--inefficient-data-structures" class="anchor" href="#or-reverse-engineering-of-boostserialization--inefficient-data-structures" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Or... "Reverse engineering of boost::serialization + inefficient data structures"</h3>
+
+<p>The next thing to understand is the 
+<a href="ros-type-introspection/blob/master/include/ros_type_introspection/deserializer.hpp">deserializer</a>.
+Once the schema is available in the form of a 'RosIntrospection::ROSTypeList` we are
+able to take a raw message and extract valuable information from that.</p>
+
+<p>We don't have the support of the C++ typesystem, which was provided by the 
+included file generated by the IDL compiler, therefore the fields of the message can not be
+"composed" into a <code>struct</code> or <code>class</code>.</p>
+
+<p>The only data structure that can contain our data is currently a flat structure that store
+simple key-value pairs:</p>
+
+<div class="highlight highlight-source-c++"><pre>  <span class="pl-c">// note; LongString is just a string with improved small object optimization.</span>
+  <span class="pl-k">typedef</span> <span class="pl-k">struct</span>{
+    std::vector&lt; std::pair&lt;LongString, <span class="pl-k">double</span>&gt; &gt; value;
+    std::vector&lt; std::pair&lt;LongString, LongString&gt; &gt; name_id;
+  }ROSTypeFlat;</pre></div>
+
+<p>This highlights already some of the main limitations of the parser:</p>
+
+<ul>
+<li><p>It is not well suited for objects with large arrays, like images, maps point clouds.
+From a very selfish point of view, I am not optimizing this use case because I don't need it.
+Very large arrays are simply discarted. </p></li>
+<li><p>A double is used as a "conservative" type to store any integral. This, together with the LongString class
+makes the code simpler but inefficient from the point of view of memory.</p></li>
+<li><p>LongString run faster than std:string in many cases, because it use stack allocation instead of heap allocation.
+Unfortunately, as a result more RAM is needed. Nevertheless it is easy to change this with compilation flags.</p></li>
+</ul>
+
+<h3>
+<a id="example-3" class="anchor" href="#example-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example 3</h3>
+
+<p>Let's see how parser and deserializer work together with a slightly more complex type, 
+<a href="http://docs.ros.org/api/sensor_msgs/html/msg/JointState.html">sensor_msgs::JointState</a>. </p>
+
+<p>Let's suppose that a publisher sends this instance of <strong>sensor_msgs::JointState</strong> using a ROS topic
+(the code related to ROS and publishing is ignored here):</p>
+
+<div class="highlight highlight-source-c++"><pre>    sensor_msgs::JointState joint_state;
+
+    joint_state.header.seq = <span class="pl-c1">2016</span>;
+    joint_state.header.stamp.sec  = <span class="pl-c1">1234</span>;
+    joint_state.header.stamp.nsec = <span class="pl-c1">567</span>*<span class="pl-c1">1000</span>*<span class="pl-c1">1000</span>;
+    joint_state.header.frame_id = <span class="pl-s"><span class="pl-pds">"</span>pippo<span class="pl-pds">"</span></span>;
+
+    joint_state.name.resize( <span class="pl-c1">3</span> );
+    joint_state.position.resize( <span class="pl-c1">3</span> );
+    joint_state.velocity.resize( <span class="pl-c1">3</span> );
+    joint_state.effort.resize( <span class="pl-c1">3</span> );
+
+    std::string names[<span class="pl-c1">3</span>];
+    names[<span class="pl-c1">0</span>] = (<span class="pl-s"><span class="pl-pds">"</span>hola<span class="pl-pds">"</span></span>);
+    names[<span class="pl-c1">1</span>] = (<span class="pl-s"><span class="pl-pds">"</span>ciao<span class="pl-pds">"</span></span>);
+    names[<span class="pl-c1">2</span>] = (<span class="pl-s"><span class="pl-pds">"</span>bye<span class="pl-pds">"</span></span>);
+
+    <span class="pl-k">for</span> (<span class="pl-k">int</span> i=<span class="pl-c1">0</span>; i&lt;<span class="pl-c1">3</span>; i++)
+    {
+        joint_state.<span class="pl-smi">name</span>[i] = names[i];
+        joint_state.<span class="pl-smi">position</span>[i]= <span class="pl-c1">11</span>+i;
+        joint_state.<span class="pl-smi">velocity</span>[i]= <span class="pl-c1">21</span>+i;
+        joint_state.<span class="pl-smi">effort</span>[i]= <span class="pl-c1">31</span>+i;
+    }
+
+  <span class="pl-c">//publish this on a ros topic...</span></pre></div>
+
+<p>On the receiver side we want to read this data but we don't know at compilation
+time that it is a <code>sensor_msgs::Imu</code>.
+To solve this problem we need the support of an usefull but not well know class:
+<a href="http://docs.ros.org/diamondback/api/topic_tools/html/classtopic__tools_1_1ShapeShifter.html">topic_tools::ShapeShifter</a></p>
+
+<div class="highlight highlight-source-c++"><pre><span class="pl-c">//callback subscribed to the topic</span>
+<span class="pl-k">void</span> <span class="pl-en">DataStreamROS::topicCallback</span>(<span class="pl-k">const</span> topic_tools::ShapeShifter::ConstPtr&amp; msg)
+{
+    <span class="pl-k">using</span> <span class="pl-k">namespace</span> <span class="pl-en">RosIntrospection</span><span class="pl-k">;</span>
+
+    <span class="pl-c">// reuse if already parsed.</span>
+    <span class="pl-k">static</span> std::map&lt;std::string, ROSTypeList&gt; registered_types;
+
+    <span class="pl-k">auto</span>&amp; datatype_name = msg-&gt;<span class="pl-c1">getDataType</span>();
+
+    <span class="pl-c">// If not stored, parse it and store it.</span>
+    <span class="pl-k">if</span>( registered_types.<span class="pl-c1">find</span>( datatype_name ) == registered_types.<span class="pl-c1">end</span>() )
+    {
+        registered_type[datatype_name] = <span class="pl-c1">buildROSTypeMapFromDefinition</span>(
+                                        datatype_name,
+                                        msg-&gt;<span class="pl-c1">getMessageDefinition</span>() );
+    }
+    <span class="pl-c">// allocate a buffer and copy the raw message.</span>
+    std::vector&lt;<span class="pl-c1">uint8_t</span>&gt; <span class="pl-c1">buffer</span>( msg-&gt;<span class="pl-c1">size</span>() ); 
+    ros::serialization::OStream <span class="pl-smi">stream</span>(buffer, <span class="pl-k">sizeof</span>(buffer));
+    msg-&gt;<span class="pl-c1">write</span>(stream);
+
+    <span class="pl-c">// Important: use a COPY of the pointer.</span>
+    <span class="pl-c1">uint8_t</span>* buffer_ptr = buffer;
+
+    LongString <span class="pl-smi">topicname</span>( topic_name.<span class="pl-c1">data</span>(), topic_name.<span class="pl-c1">length</span>() );
+
+    ROSTypeFlat flat_container;
+    flat_container = <span class="pl-c1">buildRosFlatType</span>( registered_type[datatype_name], 
+                                       <span class="pl-c1">ROSType</span>(datatype_name), 
+                                       topicname, 
+                                       &amp;buffer_ptr);
+
+    <span class="pl-k">for</span>(<span class="pl-k">auto</span>&amp;it: flat_container.<span class="pl-smi">value</span>) {
+        std::cout &lt;&lt; it.<span class="pl-smi">first</span> &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span> &gt;&gt; <span class="pl-pds">"</span></span> &lt;&lt; it.<span class="pl-smi">second</span> &lt;&lt; std::endl;
+    }
+    std::cout &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span>----<span class="pl-pds">"</span></span> &lt;&lt; std::endl;
+    <span class="pl-k">for</span>(<span class="pl-k">auto</span>&amp;it: flat_container.<span class="pl-smi">name_id</span>) {
+        std::cout &lt;&lt; it.<span class="pl-smi">first</span> &lt;&lt; <span class="pl-s"><span class="pl-pds">"</span> &gt;&gt; <span class="pl-pds">"</span></span> &lt;&lt; it.<span class="pl-smi">second</span> &lt;&lt; std::endl;
+    }
+}</pre></div>
+
+<p>The exepected output is:</p>
+
+<pre><code>JointState.header.seq &gt;&gt; 2016
+JointState.header.stamp &gt;&gt; 1234.57
+JointState.position[0] &gt;&gt; 11
+JointState.position[1] &gt;&gt; 12
+JointState.position[2] &gt;&gt; 13
+JointState.velocity[0] &gt;&gt; 21
+JointState.velocity[1] &gt;&gt; 22
+JointState.velocity[2] &gt;&gt; 23
+JointState.effort[0] &gt;&gt; 31
+JointState.effort[1] &gt;&gt; 32
+JointState.effort[2] &gt;&gt; 33
+----
+JointState.header.frame_id &gt;&gt; pippo
+JointState.name[0] &gt;&gt; hola
+JointState.name[1] &gt;&gt; ciao
+JointState.name[2] &gt;&gt; bye
+
+</code></pre>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/facontidavide/ros-type-introspection">Ros-type-introspection</a> is maintained by <a href="https://github.com/facontidavide">facontidavide</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
