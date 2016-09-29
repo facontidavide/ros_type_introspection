@@ -215,7 +215,7 @@ void buildRosFlatType(const ROSTypeList& type_map,
   flat_container_output->tree.root()->value() = prefix;
   flat_container_output->name_id.clear();
   flat_container_output->value.clear();
-  flat_container_output->renamed_value.clear();
+//  flat_container_output->renamed_value.clear();
 
   StringTreeLeaf rootnode;
   rootnode.node_ptr = flat_container_output->tree.root();

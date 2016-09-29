@@ -336,7 +336,7 @@ private:
 private:
     union Data {
         struct NonSSO {
-            CharT overhead[MAX_SIZE + 1 - sizeof( CharT*) - 2*sizeof(std::size_t) - sizeof(CharT) ]; //waster memory to keep the alignment
+            CharT overhead[MAX_SIZE + sizeof(UCharT)  - sizeof(CharT*) -2*sizeof(std::size_t) ]; //waster memory to keep the alignment
             CharT* ptr;
             std::size_t size;
             std::size_t capacity;

@@ -106,9 +106,12 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
 
     if( debug) std::cout << container->tree << std::endl;
 
+    container->renamed_value.resize( container->value.size() );
 
     std::vector<uint8_t> substituted( container->value.size() );
     for(auto& sub: substituted) { sub = false; }
+
+    size_t renamed_index = 0;
 
     for(const auto& rule: rules)
     {
@@ -186,12 +189,13 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
                     for (int i = concatenated_name.size()-1; i >= 0; i--)
                     {
                         new_identifier.append( *concatenated_name[i] );
-                        if( i>0) new_identifier.append(".");
+                        if( i>0 ) new_identifier.append(".");
                     }
                     if( debug) std::cout << "Result: " << new_identifier << std::endl;
 
-                    container->renamed_value.push_back(
-                                std::make_pair(std::move(new_identifier), value_leaf.second ) );
+                    container->renamed_value[ renamed_index ].first = std::move( new_identifier );
+                    container->renamed_value[renamed_index].second  =  value_leaf.second ;
+                    renamed_index++;
                     substituted[i] = true;
                 }
                 if( debug) std::cout << std::endl;
@@ -204,9 +208,9 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
         if( substituted[i] == false)
         {
             const auto& value_leaf = container->value[i];
-            container->renamed_value.push_back(
-                        std::make_pair( value_leaf.first.toStr(),
-                                        value_leaf.second) );
+            container->renamed_value[renamed_index].first  =  value_leaf.first.toStr();
+            container->renamed_value[renamed_index].second =  value_leaf.second ;
+            renamed_index++;
         }
     }
 }
