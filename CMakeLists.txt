@@ -103,12 +103,9 @@ target_link_libraries(stringtree_test
 install(TARGETS ros_type_introspection 
    ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
    LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
  )
 
-install(TARGETS ros_type_introspection
-        LIBRARY DESTINATION /usr/local/lib/
-        RUNTIME DESTINATION /usr/local/lib )
 
 ## Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
@@ -117,12 +114,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
    PATTERN ".git" EXCLUDE
 )
 
-## Mark other files for installation (e.g. launch and bag files, etc.)
-# install(FILES
-#   # myfile1
-#   # myfile2
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )
 
 #############
 ## Testing ##
@@ -138,12 +129,3 @@ install(DIRECTORY include/${PROJECT_NAME}/
    ${catkin_LIBRARIES} boost_regex
    ros_type_introspection
 )
-
-# Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_ros_type_introspection.cpp)
-# if(TARGET ${PROJECT_NAME}-test)
-#   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
-# endif()
-
-## Add folders to be run by python nosetests
-# catkin_add_nosetests(test)

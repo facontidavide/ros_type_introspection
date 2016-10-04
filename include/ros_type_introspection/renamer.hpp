@@ -12,9 +12,7 @@ typedef struct {
     std::vector<SString> substitution;
 } SubstitutionRule;
 
-
-typedef std::map<std::string, SubstitutionRule> SubstitutionRuleSet;
-
+typedef std::map< std::string, std::vector< RosIntrospection::SubstitutionRule > > SubstitutionRuleMap;
 
 void applyNameTransform(const std::vector<SubstitutionRule> &rules,
                         ROSTypeFlat* container);
