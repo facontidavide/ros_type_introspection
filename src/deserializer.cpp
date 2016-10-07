@@ -31,7 +31,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                           StringTreeLeaf leaf, // easier to use copy instead of reference or pointer
                           uint8_t** buffer_ptr,
                           ROSTypeFlat* flat_container,
-                          uint8_t max_array_size )
+                          uint16_t max_array_size )
 {
   //std::cout << flat_container->tree << std::endl;
 
@@ -209,7 +209,7 @@ void buildRosFlatType(const ROSTypeList& type_map,
                              SString prefix,
                              uint8_t** buffer_ptr,
                              ROSTypeFlat* flat_container_output,
-                             uint8_t max_array_size)
+                             uint16_t max_array_size)
 {
   flat_container_output->tree.root()->children().clear();
   flat_container_output->tree.root()->value() = prefix;
