@@ -28,8 +28,10 @@ public:
     TreeElement(const TreeElement* parent, const T& value );
 
     const TreeElement* parent() const       { return _parent; }
+
     const T& value() const                  { return _value; }
     T& value()                              { return _value; }
+
     const ChildrenVector& children()const   { return _children; }
     ChildrenVector& children()              { return _children; }
 
@@ -166,6 +168,15 @@ std::string TreeElement<T>::toStr() const
 template <typename T> inline
 void TreeElement<T>::addChild(const T& value)
 {
+    //skip existing child
+    for (int i=0; i< _children.size(); i++){
+      if( value == _children[i].value() ){
+        return;
+      }
+    }
+#if STATIC_TREE
+   assert(_children.capacity() > _children.size() );
+#endif
     _children.push_back( TreeElement<T>(this, value));
 }
 

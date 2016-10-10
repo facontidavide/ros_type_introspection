@@ -69,35 +69,35 @@ TEST_CASE("Deserialize JointState", "Deserialize")
   REQUIRE( flat_container.value[1].first.toStr()  == ("JointState.header.stamp"));
   REQUIRE( flat_container.value[1].second == 1234.567 );
 
-  REQUIRE( flat_container.value[2].first.toStr()  == ("JointState.position.[0]"));
+  REQUIRE( flat_container.value[2].first.toStr()  == ("JointState.position.0"));
   REQUIRE( flat_container.value[2].second == 11 );
-  REQUIRE( flat_container.value[3].first.toStr()  == ("JointState.position.[1]"));
+  REQUIRE( flat_container.value[3].first.toStr()  == ("JointState.position.1"));
   REQUIRE( flat_container.value[3].second == 12 );
-  REQUIRE( flat_container.value[4].first.toStr()  == ("JointState.position.[2]"));
+  REQUIRE( flat_container.value[4].first.toStr()  == ("JointState.position.2"));
   REQUIRE( flat_container.value[4].second == 13 );
 
-  REQUIRE( flat_container.value[5].first.toStr()  == ("JointState.velocity.[0]"));
+  REQUIRE( flat_container.value[5].first.toStr()  == ("JointState.velocity.0"));
   REQUIRE( flat_container.value[5].second == 21 );
-  REQUIRE( flat_container.value[6].first.toStr()  == ("JointState.velocity.[1]"));
+  REQUIRE( flat_container.value[6].first.toStr()  == ("JointState.velocity.1"));
   REQUIRE( flat_container.value[6].second == 22 );
-  REQUIRE( flat_container.value[7].first.toStr()  == ("JointState.velocity.[2]"));
+  REQUIRE( flat_container.value[7].first.toStr()  == ("JointState.velocity.2"));
   REQUIRE( flat_container.value[7].second == 23 );
 
-  REQUIRE( flat_container.value[8].first.toStr()  == ("JointState.effort.[0]"));
+  REQUIRE( flat_container.value[8].first.toStr()  == ("JointState.effort.0"));
   REQUIRE( flat_container.value[8].second == 31 );
-  REQUIRE( flat_container.value[9].first.toStr()  == ("JointState.effort.[1]"));
+  REQUIRE( flat_container.value[9].first.toStr()  == ("JointState.effort.1"));
   REQUIRE( flat_container.value[9].second == 32 );
-  REQUIRE( flat_container.value[10].first.toStr()  == ("JointState.effort.[2]"));
+  REQUIRE( flat_container.value[10].first.toStr()  == ("JointState.effort.2"));
   REQUIRE( flat_container.value[10].second == 33 );
 
   REQUIRE( flat_container.name_id[0].first.toStr()  == ("JointState.header.frame_id"));
   REQUIRE( flat_container.name_id[0].second == ("pippo") );
 
-  REQUIRE( flat_container.name_id[1].first.toStr()  == ("JointState.name.[0]"));
+  REQUIRE( flat_container.name_id[1].first.toStr()  == ("JointState.name.0"));
   REQUIRE( flat_container.name_id[1].second == ("hola") );
-  REQUIRE( flat_container.name_id[2].first.toStr()  == ("JointState.name.[1]"));
+  REQUIRE( flat_container.name_id[2].first.toStr()  == ("JointState.name.1"));
   REQUIRE( flat_container.name_id[2].second == ("ciao") );
-  REQUIRE( flat_container.name_id[3].first.toStr()  == ("JointState.name.[2]"));
+  REQUIRE( flat_container.name_id[3].first.toStr()  == ("JointState.name.2"));
   REQUIRE( flat_container.name_id[3].second == ("bye") );
 }
 
@@ -222,7 +222,7 @@ TEST_CASE("Deserialize IMU", "Deserialize")
   for(int i=0; i<9; i++)
   {
     char str[64];
-    sprintf(str, "imu.orientation_covariance.[%d]",i);
+    sprintf(str, "imu.orientation_covariance.%d",i);
     REQUIRE( flat_container.value[index].first.toStr()  == (str) );
     REQUIRE( flat_container.value[index].second == 40+i );
     index++;
@@ -241,7 +241,7 @@ TEST_CASE("Deserialize IMU", "Deserialize")
   for(int i=0; i<9; i++)
   {
     char str[64];
-    sprintf(str, "imu.angular_velocity_covariance.[%d]",i);
+    sprintf(str, "imu.angular_velocity_covariance.%d",i);
     REQUIRE( flat_container.value[index].first.toStr()  == (str) );
     REQUIRE( flat_container.value[index].second == 50+i );
     index++;
@@ -260,7 +260,7 @@ TEST_CASE("Deserialize IMU", "Deserialize")
   for(int i=0; i<9; i++)
   {
     char str[64];
-    sprintf(str, "imu.linear_acceleration_covariance.[%d]",i);
+    sprintf(str, "imu.linear_acceleration_covariance.%d",i);
     REQUIRE( flat_container.value[index].first.toStr()  == (str) );
     REQUIRE( flat_container.value[index].second == 60+i );
     index++;

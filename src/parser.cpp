@@ -153,11 +153,11 @@ ROSTypeList buildROSTypeMapFromDefinition(
         ROSMessage msg( split[i] );
         if( i == 0)
         {
-            msg.type = ROSType(type_name);
+            msg.mutateType( ROSType(type_name) );
         }
 
         type_list.push_back( msg );
-        all_types.push_back( msg.type );
+        all_types.push_back( msg.type() );
     }
 
     for( ROSMessage& msg: type_list )
@@ -173,12 +173,12 @@ std::ostream& operator<<(std::ostream& ss, const ROSTypeList& type_list)
 {
     for (const ROSMessage& msg: type_list)
     {
-        ss<< "\n" << msg.type.baseName() <<" : " << std::endl;
+        ss<< "\n" << msg.type().baseName() <<" : " << std::endl;
 
-        for (int i=0; i< msg.fields.size(); i++ )
+        for (const ROSField& field : msg.fields() )
         {
-            ss << "\t" << msg.fields.at(i).name()
-               <<" : " << msg.fields.at(i).type().baseName() << std::endl;
+            ss << "\t" << field.name()
+               <<" : " << field.type().baseName() << std::endl;
         }
     }
     return ss;
@@ -258,18 +258,18 @@ ROSMessage::ROSMessage(const std::string &msg_def)
         if( line.compare(0, 5, "MSG: ") == 0)
         {
             line.erase(0,5);
-            this->type = ROSType(line);
-            if( ! std::getline(messageDescriptor, line, '\n') ) { break; }
+            _type = ROSType(line);
         }
         else{
-            fields.push_back( ROSField(line) );
+            auto new_field = ROSField(line);
+            _fields.push_back(new_field);
         }
     }
 }
 
 void ROSMessage::updateTypes(std::vector<ROSType> all_types)
 {
-    for (ROSField& field: fields)
+    for (ROSField& field: _fields)
     {
         // if package name is missing, try to find msgName in the list of known_type
         if( field.type().pkgName().size() == 0 )
@@ -348,7 +348,6 @@ ROSField::ROSField(const std::string &definition)
     _name  = fieldname;
     _value = value;
 }
-
 
 
 

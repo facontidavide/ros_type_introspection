@@ -3,16 +3,16 @@
 namespace RosIntrospection{
 
 
-bool PatternMatch(const StringElement* head,
-                  const StringElement* node_ptr );
+bool PatternMatch(const StringTreeNode* head,
+                  const StringTreeNode* node_ptr );
 
-const SString* FindSubstitutionName(const StringElement* pattern_head,
+const SString* FindSubstitutionName(const StringTreeNode* pattern_head,
                                     const ROSTypeFlat& container,
                                     const StringTreeLeaf& leaf );
 
 //--------------------------------------
 
-const SString* FindSubstitutionName(const StringElement* pattern_head,
+const SString* FindSubstitutionName(const StringTreeNode* pattern_head,
                                     const ROSTypeFlat& container,
                                     const StringTreeLeaf& leaf )
 {
@@ -40,8 +40,8 @@ const SString* FindSubstitutionName(const StringElement* pattern_head,
 int find_pattern_count = 0;
 
 inline bool FindPattern( const std::vector<SString>& pattern,  size_t index,
-                         const StringElement* tail,
-                         const  StringElement** head )
+                         const StringTreeNode* tail,
+                         const  StringTreeNode** head )
 {
     if(  tail->children().empty() && index < pattern.size() -1)
     {
@@ -78,8 +78,8 @@ inline bool FindPattern( const std::vector<SString>& pattern,  size_t index,
     return found;
 }
 
-StringElement* applyNameTransform( const std::vector< SubstitutionRule >&  rules,
-                                   const StringElement* element,
+StringTreeNode* applyNameTransform( const std::vector< SubstitutionRule >&  rules,
+                                   const StringTreeNode* element,
                                    const StringTree& tree, StringTree* new_tree)
 {
 
@@ -87,7 +87,7 @@ StringElement* applyNameTransform( const std::vector< SubstitutionRule >&  rules
     return nullptr;
 }
 
-bool PatternMatch(const StringElement* pattern_head, const StringElement *node_ptr)
+bool PatternMatch(const StringTreeNode* pattern_head, const StringTreeNode *node_ptr)
 {
     while( node_ptr ) {
         if( node_ptr == pattern_head ) {
@@ -115,8 +115,8 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
 
     for(const auto& rule: rules)
     {
-        const StringElement* pattern_head = nullptr;
-        const StringElement* location_head = nullptr;
+        const StringTreeNode* pattern_head = nullptr;
+        const StringTreeNode* location_head = nullptr;
 
         FindPattern( rule.pattern, 0, container->tree.croot(), &pattern_head );
         FindPattern( rule.location,0,  container->tree.croot(), &location_head );
@@ -144,7 +144,7 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
                     std::vector<const SString*> concatenated_name;
                     concatenated_name.reserve( 10 );
 
-                    const StringElement* node_ptr = leaf.node_ptr;
+                    const StringTreeNode* node_ptr = leaf.node_ptr;
                     while( node_ptr != pattern_head)
                     {
                         const SString* value = &node_ptr->value();

@@ -74,74 +74,74 @@ TEST_CASE("parse_comments", "ROSMessageFields") {
         "float64 z\n"
         );
   ROSMessage mt(def);
-  REQUIRE( mt.type.baseName() == "geometry_msgs/Quaternion" );
+  REQUIRE( mt.type().baseName() == "geometry_msgs/Quaternion" );
 
-  REQUIRE( mt.fields.size() == 2);
-  REQUIRE(mt.fields[0].type().msgName() == "float64");
-  REQUIRE(mt.fields[1].type().msgName() == "float64");
-  REQUIRE(mt.fields[0].name() == "x");
-  REQUIRE(mt.fields[1].name() == "z");
+  REQUIRE( mt.fields().size() == 2);
+  REQUIRE(mt.field(0).type().msgName() == "float64");
+  REQUIRE(mt.field(1).type().msgName() == "float64");
+  REQUIRE(mt.field(0).name() == "x");
+  REQUIRE(mt.field(1).name() == "z");
 
-  REQUIRE( mt.fields[0].isConstant() == false);
-  REQUIRE( mt.fields[1].isConstant() == false);
+  REQUIRE( mt.field(0).isConstant() == false);
+  REQUIRE( mt.field(1).isConstant() == false);
 }
 
 TEST_CASE("constant_uint8", "ROSMessageFields")
 {
   ROSMessage msg("uint8 a = 66\n");
 
-  REQUIRE(msg.fields.size() == 1);
-  REQUIRE( msg.fields[0].name() == "a" );
-  REQUIRE( msg.fields[0].type().baseName() == "uint8" );
-  REQUIRE( msg.fields[0].isConstant() == true);
-  REQUIRE(msg.fields[0].value() == "66");
+  REQUIRE(msg.fields().size() == 1);
+  REQUIRE( msg.field(0).name() == "a" );
+  REQUIRE( msg.field(0).type().baseName() == "uint8" );
+  REQUIRE( msg.field(0).isConstant() == true);
+  REQUIRE(msg.field(0).value() == "66");
 }
 
 TEST_CASE("constant_example_navstatus", "ROSMessageFields")
 {
     ROSMessage msg( Definition<sensor_msgs::NavSatStatus >::value() );
 
-    REQUIRE( msg.fields.size() == 10);
+    REQUIRE( msg.fields().size() == 10);
 
-    REQUIRE( msg.fields[0].name() == ("STATUS_NO_FIX") );
-    REQUIRE( msg.fields[0].type().baseName() == ("int8"));
-    REQUIRE( msg.fields[0].value()  == ("-1"));
+    REQUIRE( msg.field(0).name() == ("STATUS_NO_FIX") );
+    REQUIRE( msg.field(0).type().baseName() == ("int8"));
+    REQUIRE( msg.field(0).value()  == ("-1"));
 
-    REQUIRE( msg.fields[1].name() == ("STATUS_FIX") );
-    REQUIRE( msg.fields[1].type().baseName() == ("int8"));
-    REQUIRE( msg.fields[1].value()  == ("0"));
+    REQUIRE( msg.field(1).name() == ("STATUS_FIX") );
+    REQUIRE( msg.field(1).type().baseName() == ("int8"));
+    REQUIRE( msg.field(1).value()  == ("0"));
 
-    REQUIRE( msg.fields[2].name() == ("STATUS_SBAS_FIX") );
-    REQUIRE( msg.fields[2].type().baseName() == ("int8"));
-    REQUIRE( msg.fields[2].value()  == ("1"));
+    REQUIRE( msg.field(2).name() == ("STATUS_SBAS_FIX") );
+    REQUIRE( msg.field(2).type().baseName() == ("int8"));
+    REQUIRE( msg.field(2).value()  == ("1"));
 
-    REQUIRE( msg.fields[3].name() == ("STATUS_GBAS_FIX") );
-    REQUIRE( msg.fields[3].type().baseName() == ("int8"));
-    REQUIRE( msg.fields[3].value()  == ("2"));
+    REQUIRE( msg.field(3).name() == ("STATUS_GBAS_FIX") );
+    REQUIRE( msg.field(3).type().baseName() == ("int8"));
+    REQUIRE( msg.field(3).value()  == ("2"));
 
-    REQUIRE( msg.fields[4].name() == ("status") );
-    REQUIRE( msg.fields[4].type().baseName() == ("int8"));
-    REQUIRE( msg.fields[4].isConstant()  == false);
+    REQUIRE( msg.field(4).name() == ("status") );
+    REQUIRE( msg.field(4).type().baseName() == ("int8"));
+    REQUIRE( msg.field(4).isConstant()  == false);
 
-    REQUIRE( msg.fields[5].name() == ("SERVICE_GPS") );
-    REQUIRE( msg.fields[5].type().baseName() == ("uint16"));
-    REQUIRE( msg.fields[5].value()  == ("1"));
+    REQUIRE( msg.field(5).name() == ("SERVICE_GPS") );
+    REQUIRE( msg.field(5).type().baseName() == ("uint16"));
+    REQUIRE( msg.field(5).value()  == ("1"));
 
-    REQUIRE( msg.fields[6].name() == ("SERVICE_GLONASS") );
-    REQUIRE( msg.fields[6].type().baseName() == ("uint16"));
-    REQUIRE( msg.fields[6].value()  == ("2"));
+    REQUIRE( msg.field(6).name() == ("SERVICE_GLONASS") );
+    REQUIRE( msg.field(6).type().baseName() == ("uint16"));
+    REQUIRE( msg.field(6).value()  == ("2"));
 
-    REQUIRE( msg.fields[7].name() == ("SERVICE_COMPASS") );
-    REQUIRE( msg.fields[7].type().baseName() == ("uint16"));
-    REQUIRE( msg.fields[7].value()  == ("4"));
+    REQUIRE( msg.field(7).name() == ("SERVICE_COMPASS") );
+    REQUIRE( msg.field(7).type().baseName() == ("uint16"));
+    REQUIRE( msg.field(7).value()  == ("4"));
 
-    REQUIRE( msg.fields[8].name() == ("SERVICE_GALILEO") );
-    REQUIRE( msg.fields[8].type().baseName() == ("uint16"));
-    REQUIRE( msg.fields[8].value()  == ("8"));
+    REQUIRE( msg.field(8).name() == ("SERVICE_GALILEO") );
+    REQUIRE( msg.field(8).type().baseName() == ("uint16"));
+    REQUIRE( msg.field(8).value()  == ("8"));
 
-    REQUIRE( msg.fields[9].name() == ("service") );
-    REQUIRE( msg.fields[9].type().baseName() == ("uint16"));
-    REQUIRE( msg.fields[9].isConstant()  == false);
+    REQUIRE( msg.field(9).name() == ("service") );
+    REQUIRE( msg.field(9).type().baseName() == ("uint16"));
+    REQUIRE( msg.field(9).isConstant()  == false);
 }
 
 
@@ -153,21 +153,21 @@ TEST_CASE("constant_comments", "ROSMessageFields")
     "float64 a=64.0 # numeric comment\n");
 
 
-  REQUIRE( msg.fields.size() == 3);
-  REQUIRE( ("strA")== msg.fields[0].name());
-  REQUIRE( ("string")== msg.fields[0].type().baseName() );
-  REQUIRE( msg.fields[0].isConstant() == true);
-  REQUIRE( ("this string has a # comment in it") == msg.fields[0].value());
+  REQUIRE( msg.fields().size() == 3);
+  REQUIRE( ("strA")== msg.field(0).name());
+  REQUIRE( ("string")== msg.field(0).type().baseName() );
+  REQUIRE( msg.field(0).isConstant() == true);
+  REQUIRE( ("this string has a # comment in it") == msg.field(0).value());
 
-  REQUIRE( ("strB") == msg.fields[1].name());
-  REQUIRE( ("string")== msg.fields[1].type().baseName() );
-  REQUIRE( msg.fields[1].isConstant() == true);
-  REQUIRE( ("this string has \"quotes\" and \\slashes\\ in it") ==  msg.fields[1].value());
+  REQUIRE( ("strB") == msg.field(1).name());
+  REQUIRE( ("string")== msg.field(1).type().baseName() );
+  REQUIRE( msg.field(1).isConstant() == true);
+  REQUIRE( ("this string has \"quotes\" and \\slashes\\ in it") ==  msg.field(1).value());
 
-  REQUIRE( ("a")== msg.fields[2].name());
-  REQUIRE( ("float64")== msg.fields[2].type().baseName() );
-  REQUIRE( msg.fields[2].isConstant() == true);
-  REQUIRE( ("64.0")== msg.fields[2].value());
+  REQUIRE( ("a")== msg.field(2).name());
+  REQUIRE( ("float64")== msg.field(2).type().baseName() );
+  REQUIRE( msg.field(2).isConstant() == true);
+  REQUIRE( ("64.0")== msg.field(2).value());
 }
 
 
@@ -182,34 +182,34 @@ TEST_CASE( "Test Pose parsing", "buildROSTypeMapFromDefinition" )
     std::cout << rmap << std::endl;
 
     ROSMessage& msg = rmap.at(0);
-    REQUIRE( msg.type.baseName() == "geometry_msgs/Pose" );
-    REQUIRE( msg.fields.size() == 2);
-    REQUIRE( msg.fields[0].type().baseName() == "geometry_msgs/Point" );
-    REQUIRE( msg.fields[0].name() == "position" );
-    REQUIRE( msg.fields[1].type().baseName() == "geometry_msgs/Quaternion" );
-    REQUIRE( msg.fields[1].name() == "orientation" );
+    REQUIRE( msg.type().baseName() == "geometry_msgs/Pose" );
+    REQUIRE( msg.fields().size() == 2);
+    REQUIRE( msg.field(0).type().baseName() == "geometry_msgs/Point" );
+    REQUIRE( msg.field(0).name() == "position" );
+    REQUIRE( msg.field(1).type().baseName() == "geometry_msgs/Quaternion" );
+    REQUIRE( msg.field(1).name() == "orientation" );
 
     msg = rmap.at(1);
-    REQUIRE( ("geometry_msgs/Point" ) == msg.type.baseName() );
-    REQUIRE( msg.fields.size() == 3);
-    REQUIRE( msg.fields[0].type().baseName() == "float64" );
-    REQUIRE( msg.fields[0].name() == "x" );
-    REQUIRE( msg.fields[1].type().baseName() == "float64" );
-    REQUIRE( msg.fields[1].name() == "y" );
-    REQUIRE( msg.fields[2].type().baseName() == "float64" );
-    REQUIRE( msg.fields[2].name() == "z" );
+    REQUIRE( ("geometry_msgs/Point" ) == msg.type().baseName() );
+    REQUIRE( msg.fields().size() == 3);
+    REQUIRE( msg.field(0).type().baseName() == "float64" );
+    REQUIRE( msg.field(0).name() == "x" );
+    REQUIRE( msg.field(1).type().baseName() == "float64" );
+    REQUIRE( msg.field(1).name() == "y" );
+    REQUIRE( msg.field(2).type().baseName() == "float64" );
+    REQUIRE( msg.field(2).name() == "z" );
 
     msg = rmap.at(2);
-    REQUIRE( ("geometry_msgs/Quaternion" ) == msg.type.baseName() );
-    REQUIRE( msg.fields.size() == 4);
-    REQUIRE( msg.fields[0].type().baseName() == "float64" );
-    REQUIRE( msg.fields[0].name() == "x" );
-    REQUIRE( msg.fields[1].type().baseName()  == "float64" );
-    REQUIRE( msg.fields[1].name() == "y" );
-    REQUIRE( msg.fields[2].type().baseName()  == "float64" );
-    REQUIRE( msg.fields[2].name() == "z" );
-    REQUIRE( msg.fields[3].type().baseName()  == "float64" );
-    REQUIRE( msg.fields[3].name() == "w" );
+    REQUIRE( ("geometry_msgs/Quaternion" ) == msg.type().baseName() );
+    REQUIRE( msg.fields().size() == 4);
+    REQUIRE( msg.field(0).type().baseName() == "float64" );
+    REQUIRE( msg.field(0).name() == "x" );
+    REQUIRE( msg.field(1).type().baseName()  == "float64" );
+    REQUIRE( msg.field(1).name() == "y" );
+    REQUIRE( msg.field(2).type().baseName()  == "float64" );
+    REQUIRE( msg.field(2).name() == "z" );
+    REQUIRE( msg.field(3).type().baseName()  == "float64" );
+    REQUIRE( msg.field(3).name() == "w" );
 }
 
 TEST_CASE( "Test IMU parsing", "buildROSTypeMapFromDefinition" )
@@ -223,65 +223,65 @@ TEST_CASE( "Test IMU parsing", "buildROSTypeMapFromDefinition" )
     std::cout << rmap << std::endl;
 
     ROSMessage& msg = rmap.at(0);
-    REQUIRE( ("sensor_msgs/Imu") == msg.type.baseName() );
-    REQUIRE( msg.fields.size() == 7);
-    REQUIRE( ("std_msgs/Header" ) == msg.fields[0].type().baseName() );
-    REQUIRE( ("header" )          == msg.fields[0].name() );
+    REQUIRE( ("sensor_msgs/Imu") == msg.type().baseName() );
+    REQUIRE( msg.fields().size() == 7);
+    REQUIRE( ("std_msgs/Header" ) == msg.field(0).type().baseName() );
+    REQUIRE( ("header" )          == msg.field(0).name() );
 
-    REQUIRE( ("geometry_msgs/Quaternion" ) == msg.fields[1].type().baseName() );
-    REQUIRE( ("orientation" )              == msg.fields[1].name() );
+    REQUIRE( ("geometry_msgs/Quaternion" ) == msg.field(1).type().baseName() );
+    REQUIRE( ("orientation" )              == msg.field(1).name() );
 
-    REQUIRE( ("float64[9]" )              == msg.fields[2].type().baseName() );
-    REQUIRE( ("orientation_covariance" )  == msg.fields[2].name() );
-    REQUIRE( msg.fields[2].type().arraySize() == 9);
+    REQUIRE( ("float64[9]" )              == msg.field(2).type().baseName() );
+    REQUIRE( ("orientation_covariance" )  == msg.field(2).name() );
+    REQUIRE( msg.field(2).type().arraySize() == 9);
 
-    REQUIRE( ("geometry_msgs/Vector3" ) == msg.fields[3].type().baseName() );
-    REQUIRE( ("angular_velocity" )      == msg.fields[3].name() );
+    REQUIRE( ("geometry_msgs/Vector3" ) == msg.field(3).type().baseName() );
+    REQUIRE( ("angular_velocity" )      == msg.field(3).name() );
 
-    REQUIRE( ("float64[9]" )                  == msg.fields[4].type().baseName() );
-    REQUIRE( ("angular_velocity_covariance" ) == msg.fields[4].name() );
-    REQUIRE( msg.fields[4].type().arraySize() == 9);
+    REQUIRE( ("float64[9]" )                  == msg.field(4).type().baseName() );
+    REQUIRE( ("angular_velocity_covariance" ) == msg.field(4).name() );
+    REQUIRE( msg.field(4).type().arraySize() == 9);
 
-    REQUIRE( ("geometry_msgs/Vector3" ) == msg.fields[5].type().baseName() );
-    REQUIRE( ("linear_acceleration" )   == msg.fields[5].name() );
+    REQUIRE( ("geometry_msgs/Vector3" ) == msg.field(5).type().baseName() );
+    REQUIRE( ("linear_acceleration" )   == msg.field(5).name() );
 
-    REQUIRE( ("float64[9]" )                     == msg.fields[6].type().baseName() );
-    REQUIRE( ("linear_acceleration_covariance" ) == msg.fields[6].name() );
-    REQUIRE( msg.fields[6].type().arraySize() == 9);
+    REQUIRE( ("float64[9]" )                     == msg.field(6).type().baseName() );
+    REQUIRE( ("linear_acceleration_covariance" ) == msg.field(6).name() );
+    REQUIRE( msg.field(6).type().arraySize() == 9);
 
 
     //---------------------------------
     msg = rmap.at(1);
-    REQUIRE( msg.type.baseName() == "std_msgs/Header" );
-    REQUIRE( msg.fields.size() == 3);
-    REQUIRE( msg.fields[0].type().baseName() == ("uint32" ));
-    REQUIRE( msg.fields[0].name() == ("seq") );
-    REQUIRE( msg.fields[1].type().baseName() == ("time") );
-    REQUIRE( msg.fields[1].name() == "stamp" );
-    REQUIRE( msg.fields[2].type().baseName() == "string" );
-    REQUIRE( msg.fields[2].name() == "frame_id" );
+    REQUIRE( msg.type().baseName() == "std_msgs/Header" );
+    REQUIRE( msg.fields().size() == 3);
+    REQUIRE( msg.field(0).type().baseName() == ("uint32" ));
+    REQUIRE( msg.field(0).name() == ("seq") );
+    REQUIRE( msg.field(1).type().baseName() == ("time") );
+    REQUIRE( msg.field(1).name() == "stamp" );
+    REQUIRE( msg.field(2).type().baseName() == "string" );
+    REQUIRE( msg.field(2).name() == "frame_id" );
 
     msg = rmap.at(2);
-    REQUIRE( msg.type.baseName() == ("geometry_msgs/Quaternion") );
-    REQUIRE( msg.fields.size() == 4);
-    REQUIRE( msg.fields[0].type().baseName() == "float64" );
-    REQUIRE( msg.fields[0].name() == "x" );
-    REQUIRE( msg.fields[1].type().baseName() == "float64" );
-    REQUIRE( msg.fields[1].name() == "y" );
-    REQUIRE( msg.fields[2].type().baseName() == "float64" );
-    REQUIRE( msg.fields[2].name() == "z" );
-    REQUIRE( msg.fields[3].type().baseName() == "float64" );
-    REQUIRE( msg.fields[3].name() == "w" );
+    REQUIRE( msg.type().baseName() == ("geometry_msgs/Quaternion") );
+    REQUIRE( msg.fields().size() == 4);
+    REQUIRE( msg.field(0).type().baseName() == "float64" );
+    REQUIRE( msg.field(0).name() == "x" );
+    REQUIRE( msg.field(1).type().baseName() == "float64" );
+    REQUIRE( msg.field(1).name() == "y" );
+    REQUIRE( msg.field(2).type().baseName() == "float64" );
+    REQUIRE( msg.field(2).name() == "z" );
+    REQUIRE( msg.field(3).type().baseName() == "float64" );
+    REQUIRE( msg.field(3).name() == "w" );
 
     msg = rmap.at(3);
-    REQUIRE( msg.type.baseName() == ("geometry_msgs/Vector3") );
-    REQUIRE( msg.fields.size() == 3);
-    REQUIRE( msg.fields[0].type().baseName() == "float64" );
-    REQUIRE( msg.fields[0].name() == "x" );
-    REQUIRE( msg.fields[1].type().baseName() == "float64" );
-    REQUIRE( msg.fields[1].name() == "y" );
-    REQUIRE( msg.fields[2].type().baseName() == "float64" );
-    REQUIRE( msg.fields[2].name() == "z" );
+    REQUIRE( msg.type().baseName() == ("geometry_msgs/Vector3") );
+    REQUIRE( msg.fields().size() == 3);
+    REQUIRE( msg.field(0).type().baseName() == "float64" );
+    REQUIRE( msg.field(0).name() == "x" );
+    REQUIRE( msg.field(1).type().baseName() == "float64" );
+    REQUIRE( msg.field(1).name() == "y" );
+    REQUIRE( msg.field(2).type().baseName() == "float64" );
+    REQUIRE( msg.field(2).name() == "z" );
 }
 
 TEST_CASE( "Test Int16MultiArray parsing", "buildROSTypeMapFromDefinition" )
@@ -296,7 +296,7 @@ TEST_CASE( "Test Int16MultiArray parsing", "buildROSTypeMapFromDefinition" )
                 DataType<std_msgs::Int16MultiArray >::value(),
                 Definition<std_msgs::Int16MultiArray >::value());
 
-    //std::cout << rmap << std::endl;
+    std::cout << rmap << std::endl;
 
     /*
     std_msgs/Int16MultiArray :
@@ -308,43 +308,49 @@ TEST_CASE( "Test Int16MultiArray parsing", "buildROSTypeMapFromDefinition" )
         data_offset : uint32
 
     std_msgs/MultiArrayDimension :
+        label : string
         size : uint32
         stride : uint32*/
 
     ROSMessage& msg = rmap.at(0);
 
-    REQUIRE( ("std_msgs/Int16MultiArray") == msg.type.baseName() );
-    REQUIRE( msg.fields.size() == 2);
-    REQUIRE( ("std_msgs/MultiArrayLayout" ) == msg.fields[0].type().baseName() );
-    REQUIRE( ("layout" )                    == msg.fields[0].name() );
-    REQUIRE( false == msg.fields[0].type().isArray() );
+    REQUIRE( ("std_msgs/Int16MultiArray") == msg.type().baseName() );
+    REQUIRE( msg.fields().size() == 2);
+    REQUIRE( ("std_msgs/MultiArrayLayout" ) == msg.field(0).type().baseName() );
+    REQUIRE( ("layout" )                    == msg.field(0).name() );
+    REQUIRE( false == msg.field(0).type().isArray() );
 
-    REQUIRE( ("int16[]" ) == msg.fields[1].type().baseName() );
-    REQUIRE( ("data" )  == msg.fields[1].name() );
-    REQUIRE( true == msg.fields[1].type().isArray() );
+    REQUIRE( ("int16[]" ) == msg.field(1).type().baseName() );
+    REQUIRE( ("data" )  == msg.field(1).name() );
+    REQUIRE( true == msg.field(1).type().isArray() );
 
     msg = rmap.at(1);
-    REQUIRE( ("std_msgs/MultiArrayLayout") == msg.type.baseName() );
-    REQUIRE( msg.fields.size() == 2);
-    REQUIRE( ("std_msgs/MultiArrayDimension[]" ) == msg.fields[0].type().baseName() );
-    REQUIRE( ("dim" )                            == msg.fields[0].name() );
-    REQUIRE( true == msg.fields[0].type().isArray() );
+    REQUIRE( ("std_msgs/MultiArrayLayout") == msg.type().baseName() );
+    REQUIRE( msg.fields().size() == 2);
+    REQUIRE( ("std_msgs/MultiArrayDimension[]" ) == msg.field(0).type().baseName() );
+    REQUIRE( ("dim" )                            == msg.field(0).name() );
+    REQUIRE( true == msg.field(0).type().isArray() );
 
-    REQUIRE( ("uint32" )       == msg.fields[1].type().baseName() );
-    REQUIRE( ("data_offset" )  == msg.fields[1].name() );
-    REQUIRE( false == msg.fields[1].type().isArray() );
+    REQUIRE( ("uint32" )       == msg.field(1).type().baseName() );
+    REQUIRE( ("data_offset" )  == msg.field(1).name() );
+    REQUIRE( false == msg.field(1).type().isArray() );
 
 
     msg = rmap.at(2);
-    REQUIRE( ("std_msgs/MultiArrayDimension") == msg.type.baseName() );
-    REQUIRE( msg.fields.size() == 2);
-    REQUIRE( ("uint32" ) == msg.fields[0].type().baseName() );
-    REQUIRE( ("size" )   == msg.fields[0].name() );
-    REQUIRE( false == msg.fields[0].type().isArray() );
+    REQUIRE( ("std_msgs/MultiArrayDimension") == msg.type().baseName() );
+    REQUIRE( msg.fields().size() == 3);
 
-    REQUIRE( ("uint32" )  == msg.fields[1].type().baseName() );
-    REQUIRE( ("stride" )  == msg.fields[1].name() );
-    REQUIRE( false == msg.fields[1].type().isArray() );
+    REQUIRE( ("string" ) == msg.field(0).type().baseName() );
+    REQUIRE( ("label" )   == msg.field(0).name() );
+    REQUIRE( false == msg.field(0).type().isArray() );
+
+    REQUIRE( ("uint32" ) == msg.field(1).type().baseName() );
+    REQUIRE( ("size" )   == msg.field(1).name() );
+    REQUIRE( false == msg.field(1).type().isArray() );
+
+    REQUIRE( ("uint32" )  == msg.field(2).type().baseName() );
+    REQUIRE( ("stride" )  == msg.field(2).name() );
+    REQUIRE( false == msg.field(2).type().isArray() );
 
 }
 

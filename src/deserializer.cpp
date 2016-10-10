@@ -28,137 +28,138 @@ inline void SkipBytesInBuffer( uint8_t** buffer, int vector_size, const BuiltinT
 
 void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                           const ROSType &type,
-                          StringTreeLeaf leaf, // easier to use copy instead of reference or pointer
+                          StringTreeLeaf tree_node, // easier to use copy instead of reference or pointer
                           uint8_t** buffer_ptr,
                           ROSTypeFlat* flat_container,
                           uint16_t max_array_size )
 {
-  //std::cout << flat_container->tree << std::endl;
-
   int array_size = type.arraySize();
   if( array_size == -1)
   {
     array_size = ReadFromBuffer<int32_t>( buffer_ptr );
   }
 
+ // std::cout << type.msgName() << " type: " <<  type.typeID() << " size: " << array_size << std::endl;
+
   std::function<void(StringTreeLeaf)> deserializeAndStore;
 
   switch( type.typeID())
   {
   case STRING: {
-    deserializeAndStore = [&](StringTreeLeaf leaf)
+    deserializeAndStore = [&](StringTreeLeaf tree_node)
     {
       size_t string_size = (size_t) ReadFromBuffer<int32_t>( buffer_ptr );
       SString id( (const char*)(*buffer_ptr), string_size );
       (*buffer_ptr) += string_size;
-      flat_container->name_id.push_back( std::make_pair( std::move(leaf), id ) );
+      flat_container->name_id.push_back( std::make_pair( std::move(tree_node), id ) );
     };
   }break;
 
   case FLOAT64: {
-    deserializeAndStore = [&](StringTreeLeaf leaf){
-      flat_container->value.push_back( std::make_pair( std::move(leaf), (double) ReadFromBuffer<double>(buffer_ptr) ) );
+    deserializeAndStore = [&](StringTreeLeaf tree_node){
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<double>(buffer_ptr) ) );
     };
   }break;
   case FLOAT32: {
-    deserializeAndStore = [&](StringTreeLeaf leaf){
-      flat_container->value.push_back( std::make_pair( std::move(leaf), (double) ReadFromBuffer<float>(buffer_ptr) ) );
+    deserializeAndStore = [&](StringTreeLeaf tree_node){
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<float>(buffer_ptr) ) );
     };
   }break;
   case TIME: {
-    deserializeAndStore = [&](StringTreeLeaf leaf){
+    deserializeAndStore = [&](StringTreeLeaf tree_node){
       double sec  = (double) ReadFromBuffer<uint32_t>(buffer_ptr);
       double nsec = (double) ReadFromBuffer<uint32_t>(buffer_ptr);
-      flat_container->value.push_back( std::make_pair( std::move(leaf), (double)( sec + nsec/(1000*1000*1000) ) ) );
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double)( sec + nsec/(1000*1000*1000) ) ) );
     };
   }break;
   case UINT64: {
-    deserializeAndStore = [&](StringTreeLeaf leaf){
-      flat_container->value.push_back( std::make_pair( std::move(leaf), (double) ReadFromBuffer<uint64_t>(buffer_ptr) ) );
+    deserializeAndStore = [&](StringTreeLeaf tree_node){
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<uint64_t>(buffer_ptr) ) );
     };
   }break;
   case INT64: {
-    deserializeAndStore = [&](StringTreeLeaf leaf){
-      flat_container->value.push_back( std::make_pair( std::move(leaf), (double) ReadFromBuffer<int64_t>(buffer_ptr) ) );
+    deserializeAndStore = [&](StringTreeLeaf tree_node){
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<int64_t>(buffer_ptr) ) );
     };
   }break;
   case UINT32: {
-    deserializeAndStore = [&](StringTreeLeaf leaf){
-      flat_container->value.push_back( std::make_pair( std::move(leaf), (double) ReadFromBuffer<uint32_t>(buffer_ptr) ) );
+    deserializeAndStore = [&](StringTreeLeaf tree_node){
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<uint32_t>(buffer_ptr) ) );
     };
   }break;
   case INT32: {
-    deserializeAndStore = [&](StringTreeLeaf leaf){
-      flat_container->value.push_back( std::make_pair( std::move(leaf), (double) ReadFromBuffer<int32_t>(buffer_ptr) ) );
+    deserializeAndStore = [&](StringTreeLeaf tree_node){
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<int32_t>(buffer_ptr) ) );
     };
   }break;
   case UINT16: {
-    deserializeAndStore = [&](StringTreeLeaf leaf){
-      flat_container->value.push_back( std::make_pair( std::move(leaf), (double) ReadFromBuffer<uint16_t>(buffer_ptr) ) );
+    deserializeAndStore = [&](StringTreeLeaf tree_node){
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<uint16_t>(buffer_ptr) ) );
     };
   }break;
   case INT16: {
-    deserializeAndStore = [&](StringTreeLeaf leaf){
-      flat_container->value.push_back( std::make_pair( std::move(leaf), (double) ReadFromBuffer<int16_t>(buffer_ptr) ) );
+    deserializeAndStore = [&](StringTreeLeaf tree_node){
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<int16_t>(buffer_ptr) ) );
     };
   }break;
   case BOOL:
   case UINT8: {
-    deserializeAndStore = [&](StringTreeLeaf leaf){
-      flat_container->value.push_back( std::make_pair( std::move(leaf), (double) ReadFromBuffer<uint8_t>(buffer_ptr) ) );
+    deserializeAndStore = [&](StringTreeLeaf tree_node){
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<uint8_t>(buffer_ptr) ) );
     };
   }break;
   case BYTE:
   case INT8: {
-    deserializeAndStore = [&](StringTreeLeaf leaf){
-      flat_container->value.push_back( std::make_pair( std::move(leaf), (double) ReadFromBuffer<int8_t>(buffer_ptr) ) );
+    deserializeAndStore = [&](StringTreeLeaf tree_node){
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<int8_t>(buffer_ptr) ) );
     };
   }break;
 
   case DURATION: {
-    deserializeAndStore = [&](StringTreeLeaf leaf){
+    deserializeAndStore = [&](StringTreeLeaf tree_node){
       double sec  = (double) ReadFromBuffer<int32_t>(buffer_ptr);
       double nsec = (double) ReadFromBuffer<int32_t>(buffer_ptr);
-      flat_container->value.push_back( std::make_pair( std::move(leaf), (double)( sec + nsec/(1000*1000*1000) ) ) );
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double)( sec + nsec/(1000*1000*1000) ) ) );
     };
   }break;
 
   case OTHER:{
-    deserializeAndStore = [&](StringTreeLeaf leaf)
+    deserializeAndStore = [&](StringTreeLeaf tree_node)
     {
       bool done = false;
       for(const ROSMessage& msg: type_list) // find in the list
       {
-        if( msg.type.msgName() == type.msgName() &&
-            msg.type.pkgName() == type.pkgName()  )
+        if( msg.type().msgName() == type.msgName() &&
+            msg.type().pkgName() == type.pkgName()  )
         {
-          auto& children_nodes = leaf.node_ptr->children();
+          auto& children_nodes = tree_node.node_ptr->children();
 
           bool to_add = false;
           if( children_nodes.empty() )
           {
-            children_nodes.reserve( msg.fields.size() );
+            children_nodes.reserve( msg.fields().size() );
             to_add = true;
           }
 
           size_t index = 0;
-          for (const ROSField& field: msg.fields )
+
+          for (const ROSField& field : msg.fields() )
           {
-            if(field.isConstant() == false) {
+              if(field.isConstant() == false) {
 
               if( to_add){
-                SString node_name( field.name().data(), field.name().size() )  ;
-                leaf.node_ptr->addChild( node_name );
+                 SString node_name( field.name().data(), field.name().size() )  ;
+                 tree_node.node_ptr->addChild( node_name );
               }
-              auto new_leaf = leaf;
-              new_leaf.node_ptr = &children_nodes[index++];
+              auto new_tree_node = tree_node;
+              new_tree_node.node_ptr = &children_nodes[index++];
 
               // note: this is not invalidated only because we reserved space in the vector
-              //  leaf.element_ptr = &children_nodes[index++];
+              //  tree_node.element_ptr = &children_nodes[index++];
 
               buildRosFlatTypeImpl(type_list,
                                    field.type(),
-                                   (new_leaf),
+                                   (new_tree_node),
                                    buffer_ptr,
                                    flat_container,
                                    max_array_size);
@@ -179,22 +180,23 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
 
   if( array_size < max_array_size )
   {
-    StringElement* node = leaf.node_ptr;
+    StringTreeNode* node = tree_node.node_ptr;
 
     if( type.isArray()  )
     {
+      node->children().reserve(1);
       node->addChild( "#" );
-      leaf.node_ptr = &node->children().back();
-      leaf.array_size++;
+      tree_node.node_ptr = &node->children().back();
+      tree_node.array_size++;
 
       for (int v=0; v<array_size; v++)
       {
-        leaf.index_array[ leaf.array_size-1 ] = v;
-        deserializeAndStore( (leaf) );
+        tree_node.index_array[ tree_node.array_size-1 ] = v;
+        deserializeAndStore( (tree_node) );
       }
     }
     else{
-      deserializeAndStore( (leaf) );
+      deserializeAndStore( (tree_node) );
     }
 
   }
@@ -231,11 +233,11 @@ void buildRosFlatType(const ROSTypeList& type_map,
 SString StringTreeLeaf::toStr() const{
 
 
-  const StringElement* node = this->node_ptr;
+  const StringTreeNode* node = this->node_ptr;
 
-  if( !node ) return std::string();
+  if( !node ) return SString();
 
-  const StringElement* array[64];
+  const StringTreeNode* array[64];
   int index = 0;
 
   int char_count = 0;
@@ -247,6 +249,7 @@ SString StringTreeLeaf::toStr() const{
     index++;
     node = node->parent();
   };
+
   array[index] = nullptr;
   index--;
 

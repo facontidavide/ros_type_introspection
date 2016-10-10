@@ -13,9 +13,9 @@ public:
   StringTreeLeaf(): node_ptr(nullptr), array_size(0)
   {  for (int i=0; i<7; i++) index_array[i] = 0;}
 
-  StringElement* node_ptr;
-  uint16_t array_size;
-  uint16_t index_array[7];
+  StringTreeNode* node_ptr;
+  uint8_t array_size;
+  std::array<uint16_t,7> index_array;
 
   SString toStr() const;
 };

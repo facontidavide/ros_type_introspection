@@ -39,7 +39,7 @@ int main( int argc, char** argv)
 
 
 
-    std::vector<const  StringElement*> heads;
+    std::vector<const  StringTreeNode*> heads;
 
     vect =  { "B", "1"};
 
