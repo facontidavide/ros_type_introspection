@@ -22,7 +22,7 @@ public:
 #if !STATIC_TREE
     typedef boost::container::stable_vector<TreeElement> ChildrenVector;
 #else
-    typedef std::vector<TreeElement> ChildrenVector; // dangerous beacause of pointer invalidation (but faster)
+    typedef std::vector<TreeElement> ChildrenVector; // dangerous because of pointer invalidation (but faster)
 #endif
 
     TreeElement(const TreeElement* parent, const T& value );
@@ -134,36 +134,8 @@ template <typename T> inline
 TreeElement<T>::TreeElement(const TreeElement *parent, const T& value):
     _parent(parent), _value(value)
 {
-  //std::cout << "ctor " << value << " <- ";
- // if( !parent ) std::cout << "NULL" << std::endl;
- // else std::cout << parent->value() << std::endl;
+
 }
-/*
-template <typename T> inline
-std::string TreeElement<T>::toStr() const
-{
-    const TreeElement<T>* node = this;
-    std::vector<const TreeElement<T>*> vect;
-    vect.push_back( node );
-
-    while( node->parent() != nullptr )
-    {
-        node = node->parent();
-        vect.push_back( node );
-    }
-
-    std::string out;
-    if( vect.size() > 0)
-    {
-        for (int i = vect.size() -1; i >= 0 ; i--)
-        {
-            const auto& name = vect[i]->value();
-            out.append( name.data(), name.size() );
-            if( i != 0) out.append(".");
-        }
-    }
-    return out;
-}*/
 
 template <typename T> inline
 void TreeElement<T>::addChild(const T& value)
