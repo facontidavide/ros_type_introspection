@@ -2,217 +2,243 @@
 
 namespace RosIntrospection{
 
-
-bool PatternMatch(const StringTreeNode* head,
-                  const StringTreeNode* node_ptr );
-
-const SString* FindSubstitutionName(const StringTreeNode* pattern_head,
-                                    const ROSTypeFlat& container,
-                                    const StringTreeLeaf& leaf );
-
-//--------------------------------------
-
-const SString* FindSubstitutionName(const StringTreeNode* pattern_head,
-                                    const ROSTypeFlat& container,
-                                    const StringTreeLeaf& leaf )
+inline bool isNumberPlaceholder( const SString& s)
 {
-    for(auto& it: container.name_id)
-    {
-        const StringTreeLeaf& name_leaf = it.first;
-        bool arrays_eq = true;
-        if( name_leaf.array_size != leaf.array_size) arrays_eq = false;
-        for (int i=0; i <name_leaf.array_size && arrays_eq; i++)
-        {
-            arrays_eq = ( name_leaf.index_array[i] == leaf.index_array[i] );
-        }
-
-        if( arrays_eq ) // array part is ok, check the pattern
-        {
-            if( PatternMatch( pattern_head, name_leaf.node_ptr) ) {
-                //std::cout << " substritution: " << it.second;
-                return &(it.second);
-            }
-        }
-    }
-    return nullptr;
+  return s.size() == 1 && s.at(0) == '#';
 }
-
-int find_pattern_count = 0;
 
 inline bool FindPattern( const std::vector<SString>& pattern,  size_t index,
                          const StringTreeNode* tail,
                          const  StringTreeNode** head )
 {
-    if(  tail->children().empty() && index < pattern.size() -1)
-    {
-        return false;
+  if( tail->value() == pattern[index])
+  {
+    index++;
+  }
+  else{ // mismatch
+    if( index > 0 ){
+      // reset counter;
+      FindPattern( pattern, 0, tail, head);
+      return false;
     }
+    index = 0;
+  }
 
-    //  find_pattern_count++;
+  if( index == pattern.size()){
+    *head = ( tail );
+    return true;
+  }
 
-    //  std::cout<< tail->value() << " == " << pattern[index] << std::endl;
-    if( tail->value() == pattern[index])
+  bool found = false;
+
+  for (auto& child: tail->children() ) {
+
+    found = FindPattern( pattern, index, &child, head);
+    if( found) break;
+  }
+  return found;
+}
+
+
+// given a leaf of the tree, that can have multiple index_array,
+// find the only index which corresponds to the # in the pattern
+int  PatternMatchAndIndexPosition(const StringTreeLeaf& leaf,
+                                  const StringTreeNode* pattern_head )
+{
+  const StringTreeNode* node_ptr = leaf.node_ptr;
+
+  int pos = leaf.array_size-1;
+
+  while( node_ptr )
+  {
+    if( node_ptr != pattern_head )
     {
-        index++;
+      if( isNumberPlaceholder( node_ptr->value() ))
+      {
+        pos--;
+      }
     }
     else{
-        if( index > 0 ){
-            FindPattern( pattern, 0, tail, head);
-            return false;
-        }
-        index = 0;
+      return pos;
     }
-
-    if( index == pattern.size()){
-        *head = ( tail );
-        return true;
-    }
-
-    bool found = false;
-
-    for (auto& child: tail->children() ) {
-
-        found = FindPattern( pattern, index, &child, head);
-        if( found) break;
-    }
-    return found;
+    node_ptr = node_ptr->parent();
+  } // end while
+  return -1;
 }
 
-StringTreeNode* applyNameTransform( const std::vector< SubstitutionRule >&  rules,
-                                   const StringTreeNode* element,
-                                   const StringTree& tree, StringTree* new_tree)
-{
-
-
-    return nullptr;
-}
-
-bool PatternMatch(const StringTreeNode* pattern_head, const StringTreeNode *node_ptr)
-{
-    while( node_ptr ) {
-        if( node_ptr == pattern_head ) {
-            return true;
-        }
-        node_ptr = node_ptr->parent();
-    }
-    return false;
-}
 
 void applyNameTransform(const std::vector<SubstitutionRule>& rules,
                         ROSTypeFlat* container )
 {
 
-    const bool debug = false ;
+  const bool debug = false ;
 
-    if( debug) std::cout << container->tree << std::endl;
+  if( debug) std::cout << container->tree << std::endl;
 
-    container->renamed_value.resize( container->value.size() );
+  container->renamed_value.resize( container->value.size() );
 
-    std::vector<uint8_t> substituted( container->value.size() );
-    for(auto& sub: substituted) { sub = false; }
+  std::vector<uint8_t> substituted( container->value.size() );
+  for(auto& sub: substituted) { sub = false; }
 
-    size_t renamed_index = 0;
+  size_t renamed_index = 0;
 
-    for(const auto& rule: rules)
+  std::vector<int> alias_array_pos( container->name_id.size() );
+  std::vector<SString> formatted_string;
+  formatted_string.reserve(20);
+
+  for(const auto& rule: rules)
+  {
+    const StringTreeNode* pattern_head = nullptr;
+    const StringTreeNode* alias_head = nullptr;
+
+    FindPattern( rule.pattern, 0, container->tree.croot(), &pattern_head );
+    if( !pattern_head) continue;
+
+    FindPattern( rule.alias,   0, container->tree.croot(), &alias_head );
+    if(!alias_head) continue;
+
+    for (int n=0; n< container->name_id.size(); n++)
     {
-        const StringTreeNode* pattern_head = nullptr;
-        const StringTreeNode* location_head = nullptr;
-
-        FindPattern( rule.pattern, 0, container->tree.croot(), &pattern_head );
-        FindPattern( rule.location,0,  container->tree.croot(), &location_head );
-
-        if( !pattern_head || !location_head) break;
-
-        for(size_t i=0; i< container->value.size(); i++)
-        {
-            if( substituted[i]) continue;
-
-            const auto& value_leaf = container->value[i];
-
-            if( debug) std::cout << value_leaf.first << " >> " << value_leaf.second << " ... ";
-
-            auto& leaf = value_leaf.first;
-            if( PatternMatch( pattern_head, leaf.node_ptr))
-            {
-                if( debug) std::cout << " match pattern... ";
-
-                const SString* new_name = FindSubstitutionName(location_head, *container, leaf );
-                if( new_name )
-                {
-                    if( debug) std::cout << " CONCATENATION\n";
-                    int char_count = 0;
-                    std::vector<const SString*> concatenated_name;
-                    concatenated_name.reserve( 10 );
-
-                    const StringTreeNode* node_ptr = leaf.node_ptr;
-                    while( node_ptr != pattern_head)
-                    {
-                        const SString* value = &node_ptr->value();
-                        concatenated_name.push_back( value );
-                        char_count += value->size();
-                        if( debug) std::cout << "A: " << *value << std::endl;;
-                        node_ptr = node_ptr->parent();
-                    }
-
-                    for (int i = rule.substitution.size()-1; i >= 0; i--)
-                    {
-                        const SString* value = &rule.substitution[i];
-
-                        if( value->size()==1 && value->at(0) == '#')
-                        {
-                            value = new_name;
-                        }
-
-                        concatenated_name.push_back( value );
-                        char_count += value->size();
-                        if( debug) std::cout << "B: " << *value << std::endl;;
-                    }
-
-                    for (int i = 0; i < rule.pattern.size() && node_ptr; i++)
-                    {
-                        node_ptr = node_ptr->parent();
-                    }
-
-                    while( node_ptr )
-                    {
-                        const SString* value = &node_ptr->value();
-                        concatenated_name.push_back( value );
-                        char_count += value->size();
-                        if( debug) std::cout << "C: " << *value << std::endl;;
-                        node_ptr = node_ptr->parent();
-                    }
-
-                    //------------------------
-                    SString new_identifier;
-                    new_identifier.reserve( char_count + concatenated_name.size() + 1 );
-
-                    for (int i = concatenated_name.size()-1; i >= 0; i--)
-                    {
-                        new_identifier.append( *concatenated_name[i] );
-                        if( i>0 ) new_identifier.append(".");
-                    }
-                    if( debug) std::cout << "Result: " << new_identifier << std::endl;
-
-                    container->renamed_value[ renamed_index ].first = std::move( new_identifier );
-                    container->renamed_value[renamed_index].second  =  value_leaf.second ;
-                    renamed_index++;
-                    substituted[i] = true;
-                }
-                if( debug) std::cout << std::endl;
-            } // end if( PatternMatch )
-        } // end for values
-    } // end for rules
+      const StringTreeLeaf& alias_leaf = container->name_id[n].first;
+      alias_array_pos[n] = PatternMatchAndIndexPosition(alias_leaf, alias_head);
+    }
 
     for(size_t i=0; i< container->value.size(); i++)
     {
-        if( substituted[i] == false)
+      if( substituted[i]) continue;
+
+      const auto& value_leaf = container->value[i];
+
+      if( debug) std::cout << value_leaf.first << " >> " << value_leaf.second << " ... ";
+
+      const StringTreeLeaf& leaf = value_leaf.first;
+
+      int pattern_array_pos = PatternMatchAndIndexPosition(leaf,   pattern_head);
+
+      if( pattern_array_pos>= 0) // -1 if pattern doesn't match
+      {
+        if( debug) std::cout << " match pattern... ";
+
+        const SString* new_name = nullptr;
+
+        for (int n=0; n< container->name_id.size(); n++)
         {
-            const auto& value_leaf = container->value[i];
-            container->renamed_value[renamed_index].first  =  value_leaf.first.toStr();
-            container->renamed_value[renamed_index].second =  value_leaf.second ;
-            renamed_index++;
+          const auto & it = container->name_id[n];
+          const StringTreeLeaf& alias_leaf = it.first;
+
+          if( alias_array_pos[n] >= 0 ) // -1 if pattern doesn't match
+          {
+            if( alias_leaf.index_array[ alias_array_pos[n] ] ==
+                leaf.index_array[ pattern_array_pos] )
+            {
+              if( debug) std::cout << " substitution: " << it.second << std::endl;
+              new_name =  &(it.second);
+              break;
+            }
+          }
         }
+
+        //--------------------------
+        if( new_name )
+        {
+          int char_count = 0;
+          std::vector<const SString*> concatenated_name;
+          concatenated_name.reserve( 10 );
+
+          const StringTreeNode* node_ptr = leaf.node_ptr;
+
+          int position = leaf.array_size - 1;
+
+          while( node_ptr != pattern_head)
+          {
+            const SString* value = &node_ptr->value();
+
+            if( isNumberPlaceholder( *value) ){
+              char buffer[16];
+              sprintf( buffer,"%d", leaf.index_array[position--]);
+              formatted_string.push_back( std::move(SString(buffer)) );
+              value = &formatted_string.back();
+            }
+
+            char_count += value->size();
+            if( debug) std::cout << "A: " << *value << std::endl;;
+            concatenated_name.push_back( std::move(value) );
+            node_ptr = node_ptr->parent();
+          }
+
+          for (int s = rule.substitution.size()-1; s >= 0; s--)
+          {
+            const SString* value = &rule.substitution[s];
+
+            if( isNumberPlaceholder( *value) ) {
+              value = new_name;
+              position--;
+            }
+
+            char_count += value->size();
+            if( debug) std::cout << "B: " << *value << std::endl;;
+            concatenated_name.push_back( std::move(value) );
+          }
+
+          for (int p = 0; p < rule.pattern.size() && node_ptr; p++)
+          {
+            node_ptr = node_ptr->parent();
+          }
+
+          while( node_ptr )
+          {
+            const SString* value = &node_ptr->value();
+
+            if( isNumberPlaceholder( *value) ){
+              char buffer[16];
+              sprintf( buffer,"%d", leaf.index_array[position--]);
+              formatted_string.push_back( std::move(SString(buffer)) );
+              value = &formatted_string.back();
+            }
+
+            char_count += value->size();
+            if( debug) std::cout << "C: " << *value << std::endl;;
+            concatenated_name.push_back( std::move(value) );
+            node_ptr = node_ptr->parent();
+          }
+
+          //------------------------
+          SString new_identifier;
+          new_identifier.reserve( char_count + concatenated_name.size() + 1 );
+
+          for (int c = concatenated_name.size()-1; c >= 0; c--)
+          {
+            new_identifier.append( *concatenated_name[c] );
+            if( c>0 ) new_identifier.append(".");
+          }
+          if( debug) std::cout << "Result: " << new_identifier << std::endl;
+
+          container->renamed_value[ renamed_index ].first = std::move( new_identifier );
+          container->renamed_value[renamed_index].second  =  value_leaf.second ;
+          renamed_index++;
+          substituted[i] = true;
+          if( debug) std::cout << std::endl;
+        }// end if( new_name )
+        else {
+          if( debug ) std::cout << "NO substitution" << std::endl;
+        }
+      }// end if( PatternMatching )
+      else  {
+        if( debug ) std::cout << "NO MATCHING" << std::endl;
+      }
+    } // end for values
+  } // end for rules
+
+  for(size_t i=0; i< container->value.size(); i++)
+  {
+    if( substituted[i] == false)
+    {
+      const auto& value_leaf = container->value[i];
+      container->renamed_value[renamed_index].first  =  value_leaf.first.toStr();
+      container->renamed_value[renamed_index].second =  value_leaf.second ;
+      renamed_index++;
     }
+  }
 }
 
 

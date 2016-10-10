@@ -8,7 +8,7 @@ namespace RosIntrospection{
 
 typedef struct {
     std::vector<SString> pattern;
-    std::vector<SString> location;
+    std::vector<SString> alias;
     std::vector<SString> substitution;
 } SubstitutionRule;
 

@@ -31,17 +31,17 @@ std::vector<SubstitutionRule> Rules()
 */
 
     rule.pattern = { "position", "#"};
-    rule.location = { "name", "#"};
+    rule.alias = { "name", "#"};
     rule.substitution = { "#", "position" };
     rules.push_back( rule );
 
     rule.pattern = { "velocity", "#"};
-    rule.location = { "name", "#"};
+    rule.alias = { "name", "#"};
     rule.substitution = { "#", "velocity" };
     rules.push_back( rule );
 
     rule.pattern = { "effort", "#"};
-    rule.location = { "name", "#"};
+    rule.alias = { "name", "#"};
     rule.substitution = { "#", "effort" };
     rules.push_back( rule );
 

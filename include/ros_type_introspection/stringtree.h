@@ -39,6 +39,8 @@ public:
 
     std::string toStr() const;
 
+    bool isLeaf() const { return _children.empty(); }
+
 private:
     const TreeElement*   _parent;
     T              _value;
