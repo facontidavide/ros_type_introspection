@@ -23,7 +23,7 @@ public:
 typedef struct{
   StringTree tree;
   std::vector< std::pair<StringTreeLeaf, double> > value;
-  std::vector< std::pair<StringTreeLeaf, SString> > name_id;
+  std::vector< std::pair<StringTreeLeaf, SString> > name;
   std::vector< std::pair<SString, double> > renamed_value;
 }ROSTypeFlat;
 

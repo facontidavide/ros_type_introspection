@@ -18,33 +18,18 @@ std::vector<SubstitutionRule> Rules()
 {
     std::vector<SubstitutionRule> rules;
 
-    SubstitutionRule rule;
-    /*rule.pattern = { "transforms", "#", "transform"};
-    rule.location = { "transforms", "#", "header", "frame_id"};
-    rule.substitution = { "transforms", "#"};
-    rules.push_back( rule );
+/*
+    rules.push_back( SubstitutionRule( "transforms.#.transform",
+                                       "transforms.#.header.frame_id",
+                                       "transforms.#" ));
 
-    rule.pattern = { "transforms", "#", "header"};
-    rule.location = { "transforms", "#", "header", "frame_id"};
-    rule.substitution = { "transforms", "#", "header"};
-    rules.push_back( rule );
-*/
+    rules.push_back( SubstitutionRule( "transforms.#.header",
+                                       "transforms.#.header.frame_id",
+                                       "transforms.#.header" ));*/
 
-    rule.pattern = { "position", "#"};
-    rule.alias = { "name", "#"};
-    rule.substitution = { "#", "position" };
-    rules.push_back( rule );
-
-    rule.pattern = { "velocity", "#"};
-    rule.alias = { "name", "#"};
-    rule.substitution = { "#", "velocity" };
-    rules.push_back( rule );
-
-    rule.pattern = { "effort", "#"};
-    rule.alias = { "name", "#"};
-    rule.substitution = { "#", "effort" };
-    rules.push_back( rule );
-
+    rules.push_back( SubstitutionRule( "position.#", "name.#", "#.position" ));
+    rules.push_back( SubstitutionRule( "velocity.#", "name.#", "#.velocity" ));
+    rules.push_back( SubstitutionRule( "effort.#",   "name.#", "#.effort"   ));
     return rules;
 }
 

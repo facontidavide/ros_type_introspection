@@ -1,4 +1,6 @@
 #include <ros_type_introspection/renamer.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/utility/string_ref.hpp>
 
 namespace RosIntrospection{
 
@@ -82,7 +84,7 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
 
   size_t renamed_index = 0;
 
-  std::vector<int> alias_array_pos( container->name_id.size() );
+  std::vector<int> alias_array_pos( container->name.size() );
   std::vector<SString> formatted_string;
   formatted_string.reserve(20);
 
@@ -91,15 +93,15 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
     const StringTreeNode* pattern_head = nullptr;
     const StringTreeNode* alias_head = nullptr;
 
-    FindPattern( rule.pattern, 0, container->tree.croot(), &pattern_head );
+    FindPattern( rule.pattern(), 0, container->tree.croot(), &pattern_head );
     if( !pattern_head) continue;
 
-    FindPattern( rule.alias,   0, container->tree.croot(), &alias_head );
+    FindPattern( rule.alias(),   0, container->tree.croot(), &alias_head );
     if(!alias_head) continue;
 
-    for (int n=0; n< container->name_id.size(); n++)
+    for (int n=0; n< container->name.size(); n++)
     {
-      const StringTreeLeaf& alias_leaf = container->name_id[n].first;
+      const StringTreeLeaf& alias_leaf = container->name[n].first;
       alias_array_pos[n] = PatternMatchAndIndexPosition(alias_leaf, alias_head);
     }
 
@@ -121,9 +123,9 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
 
         const SString* new_name = nullptr;
 
-        for (int n=0; n< container->name_id.size(); n++)
+        for (int n=0; n< container->name.size(); n++)
         {
-          const auto & it = container->name_id[n];
+          const auto & it = container->name[n];
           const StringTreeLeaf& alias_leaf = it.first;
 
           if( alias_array_pos[n] >= 0 ) // -1 if pattern doesn't match
@@ -166,9 +168,9 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
             node_ptr = node_ptr->parent();
           }
 
-          for (int s = rule.substitution.size()-1; s >= 0; s--)
+          for (int s = rule.substitution().size()-1; s >= 0; s--)
           {
-            const SString* value = &rule.substitution[s];
+            const SString* value = &rule.substitution()[s];
 
             if( isNumberPlaceholder( *value) ) {
               value = new_name;
@@ -180,7 +182,7 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
             concatenated_name.push_back( std::move(value) );
           }
 
-          for (int p = 0; p < rule.pattern.size() && node_ptr; p++)
+          for (int p = 0; p < rule.pattern().size() && node_ptr; p++)
           {
             node_ptr = node_ptr->parent();
           }
@@ -238,6 +240,31 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
       container->renamed_value[renamed_index].second =  value_leaf.second ;
       renamed_index++;
     }
+  }
+}
+
+SubstitutionRule::SubstitutionRule(const char *pattern, const char *alias, const char *substitution)
+{
+  std::vector<std::string> split_text;
+  boost::split(split_text, pattern, boost::is_any_of("."));
+
+  _pattern.reserve(split_text.size());
+  for (const auto& part: split_text){
+    _pattern.push_back( SString(part.data(), part.length()));
+  }
+
+  boost::split(split_text, alias, boost::is_any_of("."));
+
+  _alias.reserve(split_text.size());
+  for (const auto& part: split_text){
+    _alias.push_back( SString(part.data(), part.length()));
+  }
+
+  boost::split(split_text, substitution, boost::is_any_of("."));
+
+  _substitution.reserve(split_text.size());
+  for (const auto& part: split_text){
+    _substitution.push_back( SString(part.data(), part.length()));
   }
 }
 

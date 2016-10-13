@@ -60,7 +60,7 @@ TEST_CASE("Deserialize JointState", "Deserialize")
     std::cout << it.first << " >> " << it.second << std::endl;
   }
 
-  for(auto&it: flat_container.name_id) {
+  for(auto&it: flat_container.name) {
     std::cout << it.first << " >> " << it.second << std::endl;
   }
 
@@ -90,15 +90,15 @@ TEST_CASE("Deserialize JointState", "Deserialize")
   REQUIRE( flat_container.value[10].first.toStr()  == ("JointState.effort.2"));
   REQUIRE( flat_container.value[10].second == 33 );
 
-  REQUIRE( flat_container.name_id[0].first.toStr()  == ("JointState.header.frame_id"));
-  REQUIRE( flat_container.name_id[0].second == ("pippo") );
+  REQUIRE( flat_container.name[0].first.toStr()  == ("JointState.header.frame_id"));
+  REQUIRE( flat_container.name[0].second == ("pippo") );
 
-  REQUIRE( flat_container.name_id[1].first.toStr()  == ("JointState.name.0"));
-  REQUIRE( flat_container.name_id[1].second == ("hola") );
-  REQUIRE( flat_container.name_id[2].first.toStr()  == ("JointState.name.1"));
-  REQUIRE( flat_container.name_id[2].second == ("ciao") );
-  REQUIRE( flat_container.name_id[3].first.toStr()  == ("JointState.name.2"));
-  REQUIRE( flat_container.name_id[3].second == ("bye") );
+  REQUIRE( flat_container.name[1].first.toStr()  == ("JointState.name.0"));
+  REQUIRE( flat_container.name[1].second == ("hola") );
+  REQUIRE( flat_container.name[2].first.toStr()  == ("JointState.name.1"));
+  REQUIRE( flat_container.name[2].second == ("ciao") );
+  REQUIRE( flat_container.name[3].first.toStr()  == ("JointState.name.2"));
+  REQUIRE( flat_container.name[3].second == ("bye") );
 }
 
 TEST_CASE("Deserialize NavSatStatus", "Deserialize")

@@ -51,7 +51,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
       size_t string_size = (size_t) ReadFromBuffer<int32_t>( buffer_ptr );
       SString id( (const char*)(*buffer_ptr), string_size );
       (*buffer_ptr) += string_size;
-      flat_container->name_id.push_back( std::make_pair( std::move(tree_node), id ) );
+      flat_container->name.push_back( std::make_pair( std::move(tree_node), id ) );
     };
   }break;
 
@@ -215,7 +215,7 @@ void buildRosFlatType(const ROSTypeList& type_map,
 {
   flat_container_output->tree.root()->children().clear();
   flat_container_output->tree.root()->value() = prefix;
-  flat_container_output->name_id.clear();
+  flat_container_output->name.clear();
   flat_container_output->value.clear();
 //  flat_container_output->renamed_value.clear();
 
