@@ -17,15 +17,15 @@ The library is composed of three main modules:
 
 - __Parser__: it performs introspection of a Ros Message using the schema 
 stored in `ros::message_traits::Definition`.
-[[Read more.|The-Parser]] 
+[Read more](../../wiki/The-Parser) 
 
 - __Deserializer__:using the schema built by the parsed, it can extract the 
 actual values from a raw message. 
-[[Read more.|The-Deserializer]] 
+[Read more.](../../wiki/The-Deserializer)
 
 - __Renamer__: last but not least, the library offers as well an easy way to 
 remap/rename the data using a simple set of rules. This can be very handy in multiple
-scenarios that are very common in ROS. [[Read more.|The-Renamer]] 
+scenarios that are very common in ROS. [Read more.](../../wiki/The-Renamer) 
 
 This library is particularly useful to extract data from two type-erasing classes 
 provided by ROS itself:
