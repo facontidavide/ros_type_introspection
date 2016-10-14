@@ -9,6 +9,11 @@ inline bool isNumberPlaceholder( const SString& s)
   return s.size() == 1 && s.at(0) == '#';
 }
 
+inline bool isSubstitutionPlaceholder( const SString& s)
+{
+  return s.size() == 1 && s.at(0) == '@';
+}
+
 inline bool FindPattern( const std::vector<SString>& pattern,  size_t index,
                          const StringTreeNode* tail,
                          const  StringTreeNode** head )
@@ -172,7 +177,7 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
           {
             const SString* value = &rule.substitution()[s];
 
-            if( isNumberPlaceholder( *value) ) {
+            if( isSubstitutionPlaceholder( *value) ) {
               value = new_name;
               position--;
             }

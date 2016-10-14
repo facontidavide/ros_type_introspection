@@ -27,9 +27,9 @@ std::vector<SubstitutionRule> Rules()
                                        "transforms.#.header.frame_id",
                                        "transforms.#.header" ));*/
 
-    rules.push_back( SubstitutionRule( "position.#", "name.#", "#.position" ));
-    rules.push_back( SubstitutionRule( "velocity.#", "name.#", "#.velocity" ));
-    rules.push_back( SubstitutionRule( "effort.#",   "name.#", "#.effort"   ));
+    rules.push_back( SubstitutionRule( "position.#", "name.#", "@.position" ));
+    rules.push_back( SubstitutionRule( "velocity.#", "name.#", "@.velocity" ));
+    rules.push_back( SubstitutionRule( "effort.#",   "name.#", "@.effort"   ));
     return rules;
 }
 
@@ -73,13 +73,15 @@ int main( int argc, char** argv)
     ros::serialization::Serializer<sensor_msgs::JointState>::write(stream, js_msg);
     ROSType main_type (DataType<sensor_msgs::JointState>::value());
 
+    auto rules = Rules();
+
     ROSTypeFlat flat_container;
     for (int i=0; i<100*1000;i++)
     {
         uint8_t* buffer_ptr = buffer.data();
 
         buildRosFlatType(type_map,main_type, "joint_state", &buffer_ptr, &flat_container);
-        applyNameTransform( Rules(), &flat_container );
+        applyNameTransform( rules , &flat_container );
     }
 
     auto end = std::chrono::high_resolution_clock::now();
