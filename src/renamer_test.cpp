@@ -11,15 +11,9 @@ TEST_CASE("Deserialize JointState and rename", "Deserialize")
 //int func()
 {
     std::vector<SubstitutionRule> rules;
-    rules.push_back( SubstitutionRule(".position[#]",
-                                      ".name[#]",
-                                      ".#.position") );
-    rules.push_back( SubstitutionRule(".velocity[#]",
-                                      ".name[#]",
-                                      ".#.velocity") );
-    rules.push_back( SubstitutionRule(".effort[#]",
-                                      ".name[#]",
-                                      ".#.effort") );
+    rules.push_back( SubstitutionRule("position.#", "name.#", "@.position") );
+    rules.push_back( SubstitutionRule("velocity.#", "name.#", "@.velocity") );
+    rules.push_back( SubstitutionRule("effort.#",   "name.#", "@.effort") );
 
     ROSTypeList type_map = buildROSTypeMapFromDefinition(
                 DataType<sensor_msgs::JointState >::value(),
@@ -58,39 +52,48 @@ TEST_CASE("Deserialize JointState and rename", "Deserialize")
 
     ROSType main_type( DataType<sensor_msgs::JointState >::value() );
 
-    ROSTypeFlat flat_container = buildRosFlatType(type_map,
-                                                  main_type,
-                                                  "JointState",
-                                                  &buffer_ptr);
+    ROSTypeFlat flat_container;
+
+    buildRosFlatType(type_map, main_type, "JointState", &buffer_ptr, &flat_container);
     applyNameTransform( rules, &flat_container );
 
-    for(auto&it: flat_container.value) {
+    for(auto&it: flat_container.renamed_value) {
         std::cout << it.first << " >> " << it.second << std::endl;
     }
 
-    REQUIRE( flat_container.value[0].first  == ShortString("JointState.header.seq"));
-    REQUIRE( flat_container.value[0].second == 2016 );
-    REQUIRE( flat_container.value[1].first  == ShortString("JointState.header.stamp"));
-    REQUIRE( flat_container.value[1].second == 1234.567 );
+    int i = 0;
 
-    REQUIRE( flat_container.value[2].first  == ShortString("JointState.hola.position"));
-    REQUIRE( flat_container.value[2].second == 11 );
-    REQUIRE( flat_container.value[3].first  == ShortString("JointState.ciao.position"));
-    REQUIRE( flat_container.value[3].second == 12 );
-    REQUIRE( flat_container.value[4].first  == ShortString("JointState.bye.position"));
-    REQUIRE( flat_container.value[4].second == 13 );
+    REQUIRE( flat_container.renamed_value[i].first  == SString("JointState.hola.position"));
+    REQUIRE( flat_container.renamed_value[i++].second == 11 );
 
-    REQUIRE( flat_container.value[5].first  == ShortString("JointState.hola.velocity"));
-    REQUIRE( flat_container.value[5].second == 21 );
-    REQUIRE( flat_container.value[6].first  == ShortString("JointState.ciao.velocity"));
-    REQUIRE( flat_container.value[6].second == 22 );
-    REQUIRE( flat_container.value[7].first  == ShortString("JointState.bye.velocity"));
-    REQUIRE( flat_container.value[7].second == 23 );
+    REQUIRE( flat_container.renamed_value[i].first  == SString("JointState.ciao.position"));
+    REQUIRE( flat_container.renamed_value[i++].second == 12 );
 
-    REQUIRE( flat_container.value[8].first  == ShortString("JointState.hola.effort"));
-    REQUIRE( flat_container.value[8].second == 31 );
-    REQUIRE( flat_container.value[9].first  == ShortString("JointState.ciao.effort"));
-    REQUIRE( flat_container.value[9].second == 32 );
-    REQUIRE( flat_container.value[10].first  == ShortString("JointState.bye.effort"));
-    REQUIRE( flat_container.value[10].second == 33 );
+    REQUIRE( flat_container.renamed_value[i].first  == SString("JointState.bye.position"));
+    REQUIRE( flat_container.renamed_value[i++].second == 13 );
+
+    REQUIRE( flat_container.renamed_value[i].first  == SString("JointState.hola.velocity"));
+    REQUIRE( flat_container.renamed_value[i++].second == 21 );
+
+    REQUIRE( flat_container.renamed_value[i].first  == SString("JointState.ciao.velocity"));
+    REQUIRE( flat_container.renamed_value[i++].second == 22 );
+
+    REQUIRE( flat_container.renamed_value[i].first  == SString("JointState.bye.velocity"));
+    REQUIRE( flat_container.renamed_value[i++].second == 23 );
+
+    REQUIRE( flat_container.renamed_value[i].first  == SString("JointState.hola.effort"));
+    REQUIRE( flat_container.renamed_value[i++].second == 31 );
+
+    REQUIRE( flat_container.renamed_value[i].first  == SString("JointState.ciao.effort"));
+    REQUIRE( flat_container.renamed_value[i++].second == 32 );
+
+    REQUIRE( flat_container.renamed_value[i].first  == SString("JointState.bye.effort"));
+    REQUIRE( flat_container.renamed_value[i++].second == 33 );
+
+    REQUIRE( flat_container.renamed_value[i].first  == SString("JointState.header.seq"));
+    REQUIRE( flat_container.renamed_value[i++].second == 2016 );
+
+    REQUIRE( flat_container.renamed_value[i].first  == SString("JointState.header.stamp"));
+    REQUIRE( flat_container.renamed_value[i++].second == 1234.567 );
+
 }

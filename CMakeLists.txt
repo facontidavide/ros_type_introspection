@@ -122,7 +122,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
  add_executable(ros_introspection_test
      src/parser_test.cpp
      src/deserializer_test.cpp
-    # src/renamer_test.cpp
+     src/renamer_test.cpp
      )
 
  target_link_libraries(ros_introspection_test
