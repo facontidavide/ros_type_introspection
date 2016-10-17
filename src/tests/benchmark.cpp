@@ -78,9 +78,7 @@ int main( int argc, char** argv)
     ROSTypeFlat flat_container;
     for (int i=0; i<100*1000;i++)
     {
-        uint8_t* buffer_ptr = buffer.data();
-
-        buildRosFlatType(type_map,main_type, "joint_state", &buffer_ptr, &flat_container);
+        buildRosFlatType(type_map,main_type, "joint_state", buffer.data(), &flat_container);
         applyNameTransform( rules , &flat_container );
     }
 

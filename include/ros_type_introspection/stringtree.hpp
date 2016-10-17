@@ -10,6 +10,9 @@
 
 namespace details{
 
+// If you set this to true, Tree can not be modified
+// once it is created. The main reason is that std::vector will be used to store
+// the children. this is faster but might invalidate the pointer to the node's parent.
 #define STATIC_TREE true
 
 /**
@@ -53,13 +56,15 @@ template <typename T> class Tree : boost::noncopyable
 public:
     Tree(): _root(nullptr,"root") {}
 
+#if !STATIC_TREE // this operation is illegal in a static tree
     /**
      * Add the elements to the tree and return the pointer to the leaf.
      * The leaf correspnds to the last element of concatenated_values in the Tree.
      */
-#if !STATIC_TREE // this operation is illegal in a static tree
+
     template<typename Vect> void insert(const Vect& concatenated_values);
 #endif
+
     /**
      * Find a set of elements in the tree and return the pointer to the leaf.
      * The first element of the concatenated_values should be a root of the Tree.
@@ -67,17 +72,19 @@ public:
      */
     template<typename Vect> const TreeElement<T>* find( const Vect& concatenated_values, bool partial_allowed = false);
 
+    /// Constant pointer to the root of the tree.
     const TreeElement<T>* croot() const { return &_root; }
+
+    /// Mutable pointer to the root of the tree.
     TreeElement<T>* root() { return &_root; }
 
-private:
 
-    friend std::ostream& operator<<(std::ostream& os, const Tree& _this)
-    {
+    friend std::ostream& operator<<(std::ostream& os, const Tree& _this){
         _this.print_impl(os, (_this._root.children()), 0);
         return os;
     }
 
+private:
 
     void print_impl(std::ostream& os, const typename TreeElement<T>::ChildrenVector& children, int indent ) const;
 
@@ -85,6 +92,7 @@ private:
 };
 
 //-----------------------------------------
+
 
 template <typename T> inline
 std::ostream& operator<<(std::ostream &os, const std::pair<const TreeElement<T>*, const TreeElement<T>* >& tail_head )

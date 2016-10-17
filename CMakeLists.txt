@@ -13,9 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 # Build flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
-#set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x ")
 
 ###################################
 ## catkin specific configuration ##
@@ -61,35 +59,22 @@ include_directories(
    include/ros_type_introspection/deserializer.hpp
    include/ros_type_introspection/string.hpp
    include/ros_type_introspection/renamer.hpp
-   include/ros_type_introspection/stringtree.h
+   include/ros_type_introspection/stringtree.hpp
  )
 
 target_link_libraries(ros_type_introspection ${catkin_LIBRARIES})
 
-## Add cmake target dependencies of the library
-## as an example, code may need to be generated before libraries
-## either from message generation or dynamic reconfigure
-# add_dependencies(ros_type_introspection ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
 ## Declare a C++ executable
-add_executable(ros_introspection_benchmark src/benchmark.cpp)
+#add_executable(ros_introspection_benchmark src/benchmark.cpp)
+#add_dependencies(ros_introspection_benchmark
+#    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+#    ${catkin_EXPORTED_TARGETS})
 
-add_dependencies(ros_introspection_benchmark ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(ros_introspection_benchmark
+# ${catkin_LIBRARIES}
+#  ros_type_introspection
+#)
 
-target_link_libraries(ros_introspection_benchmark
-  ${catkin_LIBRARIES}
-  ros_type_introspection
-)
-
-
-add_executable(stringtree_test src/stringtree_test.cpp)
-
-add_dependencies(stringtree_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-
-target_link_libraries(stringtree_test
-  ${catkin_LIBRARIES}
-  ros_type_introspection
-)
 
 #############
 ## Install ##
@@ -119,10 +104,10 @@ install(DIRECTORY include/${PROJECT_NAME}/
 ## Testing ##
 #############
 
- add_executable(ros_introspection_test
-     src/parser_test.cpp
-     src/deserializer_test.cpp
-     src/renamer_test.cpp
+ catkin_add_gtest(ros_introspection_test
+     src/tests/parser_test.cpp
+     src/tests/deserializer_test.cpp
+     src/tests/renamer_test.cpp
      )
 
  target_link_libraries(ros_introspection_test

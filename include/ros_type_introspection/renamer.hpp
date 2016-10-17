@@ -12,8 +12,67 @@ public:
   /**
    * @brief Pass the three arguments (pattern, alias, substitution) as point separated strings.
    *
-   * @param pattern        The pattern to be found in ROSTypeFlat::value
-   * @param alias          The name_id that substitutes the number in the pattern. To be found in ROSTypeFlat::name
+   * Example; consider the JointState message. Before renaming your key/value pair will look like
+   *
+   *   JointState.header.seq >> 1234
+   *   JointState.header.stamp >> 2000.00
+   *   JointState.header.frame_id >> base_frame
+   *
+   *   JointState.position.0 >> 11
+   *   JointState.velocity.0 >> 21
+   *   JointState.effort.0 >> 31
+   *   JointState.name.0 >> first_joint
+   *
+   *   JointState.position.1 >> 12
+   *   JointState.velocity.1 >> 22
+   *   JointState.effort.1 >> 32
+   *   JointState.name.1 >> second_joint
+   *
+   * you can "remap" this to
+   *
+   *    JointState.header.seq >> 1234
+   *    JointState.header.stamp >> 2000.00
+   *    JointState.header.frame_id >> base_frame
+   *
+   *    JointState.first_joint.pos >> 11
+   *    JointState.first_joint.vel >> 21
+   *    JointState.first_joint.eff >> 31
+   *
+   *    JointState.second_joint.pos >> 12
+   *    JointState.second_joint.vel >> 22
+   *    JointState.second_joint.eff >> 32
+   *
+   * using these three rules:
+   *
+   *
+   *    std::vector<SubstitutionRule> rules;
+   *    rules.push_back( SubstitutionRule( "position.#", "name.#", "@.pos" ));
+   *    rules.push_back( SubstitutionRule( "velocity.#", "name.#", "@.vel" ));
+   *    rules.push_back( SubstitutionRule( "effort.#", "name.#", "@.eff" ));
+   *
+   * These rules are pretty easy to use. For instance, let's consider the following example:
+   *
+   *   the rule   `SubstitutionRule( "position.#", "name.#", "@.pos" )`
+   *   is using   `JointState.name.0 = first_joint`
+   *   to convert `JointState.position.0 = 11`
+   *   into       `JointState.first_joint.pos = 11`
+   *
+   *
+   *  1. The first argument, __"position.#"__, means: "find any element in `ROSTypeFlat::value` which contains the pattern [position.#] where __#__ is a number".
+   *
+   *     JointState.position.0 = 11
+   *
+   * 2. The second argument, __"name.#"__, means: "find the element in `ROSTypeFlat::name` which contains the pattern [name.#] where __#__ is the __same__ number found in the previous pattern".
+   *
+   *     JointState.name.0 = first_joint
+   *
+   * 3. The third argument, __"@.pos"__, means: "substitute the pattern found in 1. with this string, where the symbol __@__ represent the name found in 2". The final result is therefore:
+   *
+   *     JointState.first_joint.pos = 11
+   *
+   *
+   * @param pattern        The pattern to be found in ROSTypeFlat::value.
+   * @param alias          The name_id that substitutes the number in the pattern. To be found in ROSTypeFlat::name.
    * @param substitution   The way the alias should be used to substitute the pattern in ROSTypeFlat::renamed_value.
    */
   SubstitutionRule(const char* pattern, const char* alias, const char* substitution);

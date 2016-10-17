@@ -209,15 +209,17 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
 void buildRosFlatType(const ROSTypeList& type_map,
                              ROSType type,
                              SString prefix,
-                             uint8_t** buffer_ptr,
+                             uint8_t *buffer_ptr,
                              ROSTypeFlat* flat_container_output,
                              uint16_t max_array_size)
 {
+  uint8_t** buffer = &buffer_ptr;
+
   flat_container_output->tree.root()->children().clear();
   flat_container_output->tree.root()->value() = prefix;
   flat_container_output->name.clear();
   flat_container_output->value.clear();
-//  flat_container_output->renamed_value.clear();
+  flat_container_output->renamed_value.clear();
 
   StringTreeLeaf rootnode;
   rootnode.node_ptr = flat_container_output->tree.root();
@@ -225,10 +227,13 @@ void buildRosFlatType(const ROSTypeList& type_map,
   buildRosFlatTypeImpl( type_map,
                         type,
                         rootnode,
-                        buffer_ptr,
+                        buffer,
                         flat_container_output,
                         max_array_size );
 }
+
+StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr), array_size(0)
+{  for (int i=0; i<7; i++) index_array[i] = 0;}
 
 SString StringTreeLeaf::toStr() const{
 

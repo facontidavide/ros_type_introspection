@@ -267,14 +267,14 @@ ROSMessage::ROSMessage(const std::string &msg_def)
     }
 }
 
-void ROSMessage::updateTypes(std::vector<ROSType> all_types)
+void ROSMessage::updateTypes(const std::vector<ROSType> &all_types)
 {
     for (ROSField& field: _fields)
     {
         // if package name is missing, try to find msgName in the list of known_type
         if( field.type().pkgName().size() == 0 )
         {
-            for (ROSType& known_type: all_types)
+            for (const ROSType& known_type: all_types)
             {
                 if( field.type().msgName() == known_type.msgName() )
                 {
