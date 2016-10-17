@@ -2,6 +2,13 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.3.0 (2016-10-17)
+-----------
+
+* Doxygen added
+* Moved to gtests instead of Catch.
+* Final API (?)
+
 0.2.0 (2016-10-17)
 -----------
 
