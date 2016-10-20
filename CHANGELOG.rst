@@ -2,6 +2,10 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* added BSD license and rename ShapeShifter
+
 0.3.0 (2016-10-17)
 -----------
 
