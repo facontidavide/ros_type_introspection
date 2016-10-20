@@ -2,19 +2,17 @@
 <package>
   <name>ros_type_introspection</name>
   <version>0.3.0</version>
-  <description>The ros_type_introspection package</description>
+  <description>
+  The ros_type_introspection package allows the user to parse and deserialize
+  ROS messages which type is unknown at compilation time.
+  </description>
 
   <maintainer email="faconti@icarustechnology.com">Davide Faconti</maintainer>
-  <license>LGPLv3</license>
+  <license>BSD</license>
 
 
-  <!-- Url tags are optional, but mutiple are allowed, one per tag -->
-  <!-- Optional attribute type can be: website, bugtracker, or repository -->
-  <!-- Example: -->
-  <!-- <url type="website">http://wiki.ros.org/ros_type_introspection</url> -->
-
+  <url>http://www.ros.org/wiki/ros_type_introspection</url>
   <author email="faconti@icarustechnology.com">Davide Faconti</author> 
-
 
   <buildtool_depend>catkin</buildtool_depend>
   
@@ -38,9 +36,4 @@
   <test_depend>std_msgs</test_depend>
   <test_depend>tf2</test_depend>
 
-  <!-- The export tag contains other, unspecified, tags -->
-  <export>
-    <!-- Other tools can request additional information be placed here -->
-
-  </export>
 </package>

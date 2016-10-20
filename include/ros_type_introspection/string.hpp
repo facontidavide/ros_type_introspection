@@ -2,6 +2,8 @@
  * \file   string.hpp
  * \author Elliot Goodrich
  *
+ * Modified by Davide Faconti
+ *
  * Boost Software License - Version 1.0 - August 17th, 2003
  *
  * Permission is hereby granted, free of charge, to any person or organization
