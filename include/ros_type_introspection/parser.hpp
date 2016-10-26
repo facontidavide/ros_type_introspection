@@ -103,7 +103,7 @@ public:
 
   /// Concatenation of msg_name and pkg_name.
   /// ex.: geometry_msgs/Pose[40]"
-  const std::string& baseName() const;
+  const SString& baseName() const;
 
   /// ex.: geometry_msgs/Pose[40] -> "Pose"
   const SString& msgName()  const;
@@ -141,7 +141,7 @@ protected:
 
   BuiltinType _id;
   int         _array_size;
-  std::string _base_name;
+  SString _base_name;
   SString _msg_name;
   SString _pkg_name;
 

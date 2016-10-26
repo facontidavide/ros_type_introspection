@@ -84,7 +84,7 @@ ROSType::ROSType(const std::string &name):
 
     std::vector<std::string> split;
     std::string type_field;
-    boost::split(split, _base_name, boost::is_any_of("/"));
+    boost::split(split, name, boost::is_any_of("/"));
 
     if( split.size() == 1)
     {
@@ -219,7 +219,7 @@ std::ostream& operator<<(std::ostream& ss, const ROSTypeList& type_list)
 }
 
 
-const std::string &ROSType::baseName() const
+const SString &ROSType::baseName() const
 {
     return _base_name;
 }
@@ -238,8 +238,7 @@ void ROSType::setPkgName(const SString &new_pkg)
 {
     assert(_pkg_name.size() == 0);
     _pkg_name = new_pkg;
-    std::string pkg( new_pkg.data(), new_pkg.size() );
-    _base_name = pkg + std::string("/") + _base_name;
+    _base_name = SString(new_pkg).append("/").append(_base_name);
 }
 
 bool ROSType::isArray() const

@@ -37,6 +37,7 @@
 #include <climits>
 #include <cstring>
 #include <ostream>
+#include <string>
 #include <type_traits>
 
 #include <iostream>
@@ -135,6 +136,7 @@ public:
         m_data = other.m_data;
         other.set_moved_from();
     }
+
 
     void reserve(size_t) noexcept {
       //not implemented
@@ -273,6 +275,10 @@ public:
     int compare(const basic_string& other)
     {
         return strcmp( data(), other.data() );
+    }
+
+    std::basic_string<CharT> toStdString() const {
+        return std::basic_string<CharT>(data(), size() );
     }
 
 

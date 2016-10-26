@@ -289,21 +289,21 @@ SubstitutionRule::SubstitutionRule(const char *pattern, const char *alias, const
 
   _pattern.reserve(split_text.size());
   for (const auto& part: split_text){
-    if(part.size()>0)  _pattern.push_back( SString(part.data(), part.length()));
+    if(part.size()>0)  _pattern.push_back( part );
   }
 
   boost::split(split_text, alias, boost::is_any_of("."));
 
   _alias.reserve(split_text.size());
   for (const auto& part: split_text){
-    if(part.size()>0)  _alias.push_back( SString(part.data(), part.length()));
+    if(part.size()>0)  _alias.push_back( part );
   }
 
   boost::split(split_text, substitution, boost::is_any_of("."));
 
   _substitution.reserve(split_text.size());
   for (const auto& part: split_text){
-    if(part.size()>0)  _substitution.push_back( SString(part.data(), part.length()));
+    if(part.size()>0)  _substitution.push_back( part );
   }
 }
 

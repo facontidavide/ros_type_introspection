@@ -182,7 +182,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
               if(field.isConstant() == false) {
 
               if( to_add){
-                 SString node_name( field.name().data(), field.name().size() )  ;
+                 SString node_name( field.name() )  ;
                  tree_node.node_ptr->addChild( node_name );
               }
               auto new_tree_node = tree_node;
@@ -204,7 +204,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
         }
       }
       if( !done ){
-        throw std::runtime_error( "can't deserialize this stuff: " + type.baseName() );
+        throw std::runtime_error( "can't deserialize this stuff: " + type.baseName().toStdString() );
       }
     };
   }break;
