@@ -63,37 +63,37 @@ TEST(Renamer, DeserializeJointStateAndRename)
 
   int i = 0;
 
-  EXPECT_TRUE( flat_container.renamed_value[i].first  == SString("JointState.hola.position"));
-  EXPECT_TRUE( flat_container.renamed_value[i++].second == 11 );
+  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState.hola.position"));
+  EXPECT_EQ( flat_container.renamed_value[i++].second, 11 );
 
-  EXPECT_TRUE( flat_container.renamed_value[i].first  == SString("JointState.ciao.position"));
-  EXPECT_TRUE( flat_container.renamed_value[i++].second == 12 );
+  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState.ciao.position"));
+  EXPECT_EQ( flat_container.renamed_value[i++].second, 12 );
 
-  EXPECT_TRUE( flat_container.renamed_value[i].first  == SString("JointState.bye.position"));
-  EXPECT_TRUE( flat_container.renamed_value[i++].second == 13 );
+  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState.bye.position"));
+  EXPECT_EQ( flat_container.renamed_value[i++].second, 13 );
 
-  EXPECT_TRUE( flat_container.renamed_value[i].first  == SString("JointState.hola.velocity"));
-  EXPECT_TRUE( flat_container.renamed_value[i++].second == 21 );
+  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState.hola.velocity"));
+  EXPECT_EQ( flat_container.renamed_value[i++].second, 21 );
 
-  EXPECT_TRUE( flat_container.renamed_value[i].first  == SString("JointState.ciao.velocity"));
-  EXPECT_TRUE( flat_container.renamed_value[i++].second == 22 );
+  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState.ciao.velocity"));
+  EXPECT_EQ( flat_container.renamed_value[i++].second, 22 );
 
-  EXPECT_TRUE( flat_container.renamed_value[i].first  == SString("JointState.bye.velocity"));
-  EXPECT_TRUE( flat_container.renamed_value[i++].second == 23 );
+  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState.bye.velocity"));
+  EXPECT_EQ( flat_container.renamed_value[i++].second, 23 );
 
-  EXPECT_TRUE( flat_container.renamed_value[i].first  == SString("JointState.hola.effort"));
-  EXPECT_TRUE( flat_container.renamed_value[i++].second == 31 );
+  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState.hola.effort"));
+  EXPECT_EQ( flat_container.renamed_value[i++].second, 31 );
 
-  EXPECT_TRUE( flat_container.renamed_value[i].first  == SString("JointState.ciao.effort"));
-  EXPECT_TRUE( flat_container.renamed_value[i++].second == 32 );
+  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState.ciao.effort"));
+  EXPECT_EQ( flat_container.renamed_value[i++].second, 32 );
 
-  EXPECT_TRUE( flat_container.renamed_value[i].first  == SString("JointState.bye.effort"));
-  EXPECT_TRUE( flat_container.renamed_value[i++].second == 33 );
+  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState.bye.effort"));
+  EXPECT_EQ( flat_container.renamed_value[i++].second, 33 );
 
-  EXPECT_TRUE( flat_container.renamed_value[i].first  == SString("JointState.header.seq"));
-  EXPECT_TRUE( flat_container.renamed_value[i++].second == 2016 );
+  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState.header.seq"));
+  EXPECT_EQ( flat_container.renamed_value[i++].second, 2016 );
 
-  EXPECT_TRUE( flat_container.renamed_value[i].first  == SString("JointState.header.stamp"));
-  EXPECT_TRUE( flat_container.renamed_value[i++].second == 1234.567 );
+  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState.header.stamp"));
+  EXPECT_EQ( flat_container.renamed_value[i++].second, 1234.567 );
 
 }
