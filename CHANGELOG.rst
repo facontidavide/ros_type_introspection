@@ -2,6 +2,11 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fixing tests (EXPECTED_EQ is more informative)
+* changed the type of ROSType::baseName() and added SString::toStdString()
+
 0.3.1 (2016-10-20)
 ------------------
 * added BSD license
