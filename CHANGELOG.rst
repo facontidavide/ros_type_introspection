@@ -2,6 +2,11 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* removed serious bug that might cause double free
+* Contributors: davide
+
 0.3.2 (2016-10-26)
 ------------------
 * fixing tests (EXPECTED_EQ is more informative)
