@@ -142,8 +142,10 @@ public:
       //not implemented
     }
 
-    basic_string(const std::basic_string<CharT>& other){
-        *this = basic_string( other.data(), other.size() );
+    basic_string(const std::basic_string<CharT>& other):
+      basic_string(  other.c_str(), other.size() )
+    {
+
     }
 
     basic_string& operator=(basic_string const& other) {
