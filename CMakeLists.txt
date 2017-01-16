@@ -34,7 +34,7 @@ catkin_package(
    rosbag 
    rosbag_storage 
    roscpp_serialization
-   DEPENDS system_lib
+   DEPENDS 
 )
 
 ###########
@@ -103,6 +103,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
 #############
 ## Testing ##
 #############
+if(CATKIN_ENABLE_TESTING)
 
  catkin_add_gtest(ros_introspection_test
      src/tests/parser_test.cpp
@@ -113,4 +114,6 @@ install(DIRECTORY include/${PROJECT_NAME}/
  target_link_libraries(ros_introspection_test
    ${catkin_LIBRARIES} boost_regex
    ros_type_introspection
-)
+   )
+
+endif()
