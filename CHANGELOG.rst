@@ -2,6 +2,13 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* critical bug fixed
+* remove compilation warnings
+* Update README.md
+* Contributors: Davide Faconti
+
 0.3.3 (2016-11-04)
 ------------------
 * removed serious bug that might cause double free
