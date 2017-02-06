@@ -112,7 +112,7 @@ public:
             Traits::assign(m_data.sso.string[size], static_cast<CharT>(0));
             set_sso_size(size);
         } else {
-            size_t new_size = std::min( sso_capacity*2, size );
+            size_t new_size = std::max( sso_capacity*2, size );
             m_data.non_sso.ptr = new CharT[new_size +1 ];
             Traits::move(m_data.non_sso.ptr, string, size);
             Traits::assign(m_data.non_sso.ptr[size], static_cast<CharT>(0));
