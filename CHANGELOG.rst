@@ -2,8 +2,8 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.4.1 (2017-02-09)
+------------------
 * COSMETIC: more consistent code
 * considerable speed improvement in applyNameTransform
 * Contributors: Davide Faconti
