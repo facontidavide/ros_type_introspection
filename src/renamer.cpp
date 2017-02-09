@@ -281,15 +281,12 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
       auto it = cache.find( &value_leaf.first);
       if( it == cache.end())
       {
-        SString str = value_leaf.first.toStr();
-        cache.insert( std::make_pair((const StringTreeLeaf*)&value_leaf.first, str) );
-        container->renamed_value[renamed_index].first = std::move(str);
-      }
-      else{
-        container->renamed_value[renamed_index].first  = it->second;
+        auto ret = cache.insert( std::make_pair(&value_leaf.first, value_leaf.first.toStr()) );
+        it = ret.first;
       }
 
-      container->renamed_value[renamed_index].second =  value_leaf.second ;
+      container->renamed_value[renamed_index].first  = it->second;
+      container->renamed_value[renamed_index].second = value_leaf.second ;
       renamed_index++;
     }
   }
