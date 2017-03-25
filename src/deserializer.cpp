@@ -302,16 +302,13 @@ SString StringTreeLeaf::toStr() const{
     const SString& value =  array[index]->value();
     if( value.size()== 1 && value.at(0) == '#' )
     {
-     // char buffer[10];
-      //sprintf(buffer, "%d", this->index_array[ array_count++ ] );
+      buffer[off-1] = '.';
       off += sprintf( &buffer[off],"%d", this->index_array[ array_count++ ] );
-    //  output.append( buffer );
     }
     else{
       off += sprintf( &buffer[off],"%s", array[index]->value().data() );
-    //  output.append( array[index]->value() );
     }
-    if( index > 0 )  off += sprintf( &buffer[off],"."); //output.append(".");
+    if( index > 0 )  off += sprintf( &buffer[off],"/");
     index--;
   }
   return SString(buffer);
