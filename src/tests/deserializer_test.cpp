@@ -153,29 +153,29 @@ TEST( Deserialize, DeserializeIMU)
 
   sensor_msgs::Imu imu;
 
-  imu/header/seq = 2016;
-  imu/header/stamp.sec  = 1234;
-  imu/header/stamp.nsec = 567*1000*1000;
-  imu/header.frame_id = "pippo";
+  imu.header.seq = 2016;
+  imu.header.stamp.sec  = 1234;
+  imu.header.stamp.nsec = 567*1000*1000;
+  imu.header.frame_id = "pippo";
 
-  imu/orientation/x = 11;
-  imu/orientation/y = 12;
-  imu/orientation/z = 13;
-  imu/orientation/w = 14;
+  imu.orientation.x = 11;
+  imu.orientation.y = 12;
+  imu.orientation.z = 13;
+  imu.orientation.w = 14;
 
-  imu/angular_velocity/x = 21;
-  imu/angular_velocity/y = 22;
-  imu/angular_velocity/z = 23;
+  imu.angular_velocity.x = 21;
+  imu.angular_velocity.y = 22;
+  imu.angular_velocity.z = 23;
 
-  imu/linear_acceleration/x = 31;
-  imu/linear_acceleration/y = 32;
-  imu/linear_acceleration/z = 33;
+  imu.linear_acceleration.x = 31;
+  imu.linear_acceleration.y = 32;
+  imu.linear_acceleration.z = 33;
 
   for (int i=0; i<9; i++)
   {
-    imu/orientation_covariance[i]         = 40+i;
-    imu/angular_velocity_covariance[i]    = 50+i;
-    imu/linear_acceleration_covariance[i] = 60+i;
+    imu.orientation_covariance[i]         = 40+i;
+    imu.angular_velocity_covariance[i]    = 50+i;
+    imu.linear_acceleration_covariance[i] = 60+i;
   }
 
   std::vector<uint8_t> buffer(64*1024);
