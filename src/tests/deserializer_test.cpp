@@ -136,9 +136,9 @@ TEST( Deserialize, NavSatStatus)
     }
   }
 
-  EXPECT_EQ( flat_container.value[0].first.toStr() , ("nav_stat.status"));
+  EXPECT_EQ( flat_container.value[0].first.toStr() , ("nav_stat/status"));
   EXPECT_EQ( flat_container.value[0].second, nav_stat.STATUS_GBAS_FIX );
-  EXPECT_EQ( flat_container.value[1].first.toStr() , ("nav_stat.service"));
+  EXPECT_EQ( flat_container.value[1].first.toStr() , ("nav_stat/service"));
   EXPECT_EQ( flat_container.value[1].second, nav_stat.SERVICE_COMPASS );
 }
 
