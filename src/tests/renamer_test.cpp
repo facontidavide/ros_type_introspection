@@ -1,7 +1,7 @@
 #include "config.h"
 #include <gtest/gtest.h>
 
-#include <sensor_msgs/JointState/h>
+#include <sensor_msgs/JointState.h>
 #include <ros_type_introspection/renamer.hpp>
 
 using namespace ros::message_traits;

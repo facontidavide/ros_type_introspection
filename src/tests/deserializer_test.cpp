@@ -2,9 +2,9 @@
 #include <gtest/gtest.h>
 
 #include <ros_type_introspection/deserializer.hpp>
-#include <sensor_msgs/JointState/h>
+#include <sensor_msgs/JointState.h>
 #include <sensor_msgs/NavSatStatus.h>
-#include <sensor_msgs/imu/h>
+#include <sensor_msgs/Imu.h>
 #include <std_msgs/Int16MultiArray.h>
 
 using namespace ros::message_traits;
