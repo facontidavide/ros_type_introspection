@@ -2,6 +2,15 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix the test
+* fix tests?
+* compilation fix
+* typo fix
+* test fixed
+* Contributors: Davide Faconti
+
 0.5.0 (2017-03-25)
 ------------------
 * toStr changed
