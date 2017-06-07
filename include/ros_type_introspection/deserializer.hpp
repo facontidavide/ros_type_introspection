@@ -35,6 +35,7 @@
 #ifndef ROS_INTRO_DESERIALIZE_H
 #define ROS_INTRO_DESERIALIZE_H
 
+#include <array>
 #include <ros_type_introspection/parser.hpp>
 #include <ros_type_introspection/stringtree.hpp>
 #include <sstream>
