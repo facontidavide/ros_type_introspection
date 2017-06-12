@@ -46,15 +46,6 @@
 namespace RosIntrospection{
 
 
-static const  boost::regex type_regex("[a-zA-Z][a-zA-Z0-9_]*"
-                                      "(/[a-zA-Z][a-zA-Z0-9_]*){0,1}"
-                                      "(\\[[0-9]*\\]){0,1}");
-
-static const  boost::regex field_regex("[a-zA-Z][a-zA-Z0-9_]*");
-
-static const  boost::regex msg_separation_regex("^=+\\n+");
-
-
 inline bool isSeparator(const std::string& line)
 {
     if(line.size() != 80 ) return false;
@@ -175,6 +166,8 @@ ROSTypeList buildROSTypeMapFromDefinition(
         const std::string & type_name,
         const std::string & msg_definition)
 {
+    static const  boost::regex msg_separation_regex("^=+\\n+");
+
     ROSTypeList type_list;
 
     std::vector<std::string> split;
@@ -321,6 +314,12 @@ void ROSMessage::updateTypes(const std::vector<ROSType> &all_types)
 
 ROSField::ROSField(const std::string &definition)
 {
+    static const  boost::regex type_regex("[a-zA-Z][a-zA-Z0-9_]*"
+                                          "(/[a-zA-Z][a-zA-Z0-9_]*){0,1}"
+                                          "(\\[[0-9]*\\]){0,1}");
+
+    static const  boost::regex field_regex("[a-zA-Z][a-zA-Z0-9_]*");
+
     using boost::regex;
     std::string::const_iterator begin = definition.begin();
     std::string::const_iterator end   = definition.end();
@@ -334,7 +333,7 @@ ROSField::ROSField(const std::string &definition)
         begin = what[0].second;
     }
     else {
-        throw std::runtime_error("Bad type when parsing message\n" + definition);
+        throw std::runtime_error("Bad type when parsing message ----\n" + definition);
     }
 
     if (regex_search(begin, end, what, field_regex))
@@ -343,7 +342,7 @@ ROSField::ROSField(const std::string &definition)
         begin = what[0].second;
     }
     else {
-        throw std::runtime_error("Bad field when parsing message\n" + definition);
+        throw std::runtime_error("Bad field when parsing message ----\n" + definition);
     }
 
     // Determine next character
@@ -373,7 +372,7 @@ ROSField::ROSField(const std::string &definition)
             // Ignore comment
         } else {
             // Error
-            throw std::runtime_error("Unexpected character after type and field '" +
+            throw std::runtime_error("Unexpected character after type and field  ----\n" +
                                      definition);
         }
     }

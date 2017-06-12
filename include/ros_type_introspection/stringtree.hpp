@@ -42,6 +42,8 @@
 #include <ros_type_introspection/string.hpp>
 #include <boost/noncopyable.hpp>
 
+namespace RosIntrospection {
+
 namespace details{
 
 // If you set this to true, Tree can not be modified
@@ -247,6 +249,8 @@ const TreeElement<T> *Tree<T>::find(const Vect& concatenated_values, bool partia
         return  node;
     }
     return nullptr;
+}
+
 }
 
 }

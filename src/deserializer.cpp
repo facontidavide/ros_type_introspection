@@ -91,12 +91,12 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
 
   case FLOAT64: {
     deserializeAndStore = [&](StringTreeLeaf tree_node){
-      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<double>(buffer_ptr) ) );
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), ReadFromBuffer<double>(buffer_ptr) ) );
     };
   }break;
   case FLOAT32: {
     deserializeAndStore = [&](StringTreeLeaf tree_node){
-      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<float>(buffer_ptr) ) );
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), ReadFromBuffer<float>(buffer_ptr) ) );
     };
   }break;
   case TIME: {
@@ -108,44 +108,44 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
   }break;
   case UINT64: {
     deserializeAndStore = [&](StringTreeLeaf tree_node){
-      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<uint64_t>(buffer_ptr) ) );
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), ReadFromBuffer<uint64_t>(buffer_ptr) ) );
     };
   }break;
   case INT64: {
     deserializeAndStore = [&](StringTreeLeaf tree_node){
-      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<int64_t>(buffer_ptr) ) );
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), ReadFromBuffer<int64_t>(buffer_ptr) ) );
     };
   }break;
   case UINT32: {
     deserializeAndStore = [&](StringTreeLeaf tree_node){
-      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<uint32_t>(buffer_ptr) ) );
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), ReadFromBuffer<uint32_t>(buffer_ptr) ) );
     };
   }break;
   case INT32: {
     deserializeAndStore = [&](StringTreeLeaf tree_node){
-      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<int32_t>(buffer_ptr) ) );
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), ReadFromBuffer<int32_t>(buffer_ptr) ) );
     };
   }break;
   case UINT16: {
     deserializeAndStore = [&](StringTreeLeaf tree_node){
-      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<uint16_t>(buffer_ptr) ) );
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), ReadFromBuffer<uint16_t>(buffer_ptr) ) );
     };
   }break;
   case INT16: {
     deserializeAndStore = [&](StringTreeLeaf tree_node){
-      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<int16_t>(buffer_ptr) ) );
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), ReadFromBuffer<int16_t>(buffer_ptr) ) );
     };
   }break;
   case BOOL:
   case UINT8: {
     deserializeAndStore = [&](StringTreeLeaf tree_node){
-      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<uint8_t>(buffer_ptr) ) );
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), ReadFromBuffer<uint8_t>(buffer_ptr) ) );
     };
   }break;
   case BYTE:
   case INT8: {
     deserializeAndStore = [&](StringTreeLeaf tree_node){
-      flat_container->value.push_back( std::make_pair( std::move(tree_node), (double) ReadFromBuffer<int8_t>(buffer_ptr) ) );
+      flat_container->value.push_back( std::make_pair( std::move(tree_node), ReadFromBuffer<int8_t>(buffer_ptr) ) );
     };
   }break;
 
@@ -204,7 +204,14 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
         }
       }
       if( !done ){
-        throw std::runtime_error( "can't deserialize this stuff: " + type.baseName().toStdString() );
+          std::string output( "can't deserialize this stuff: ");
+          output +=  type.baseName().toStdString() + "\n\n";
+          output +=  "Available types are: \n\n";
+          for(const ROSMessage& msg: type_list) // find in the list
+          {
+            output += "   " +msg.type().baseName().toStdString() + "\n";
+          }
+        throw std::runtime_error( output );
       }
     };
   }break;
@@ -281,7 +288,7 @@ SString StringTreeLeaf::toStr() const{
 
   int char_count = 0;
 
-  while(node )
+  while(node)
   {
     char_count += node->value().size();
     array[index] = node;

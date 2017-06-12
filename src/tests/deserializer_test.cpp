@@ -57,7 +57,7 @@ TEST(Deserialize, JointState)
 
   if(VERBOSE_TEST){
     for(auto&it: flat_container.value) {
-      std::cout << it.first << " >> " << it.second << std::endl;
+      std::cout << it.first << " >> " << it.second.convert<double>() << std::endl;
     }
 
     for(auto&it: flat_container.name) {
@@ -132,14 +132,14 @@ TEST( Deserialize, NavSatStatus)
   if(VERBOSE_TEST){ std::cout << " -------------------- " << std::endl;
 
     for(auto&it: flat_container.value) {
-      std::cout << it.first << " >> " << it.second << std::endl;
+      std::cout << it.first << " >> " << it.second.convert<double>() << std::endl;
     }
   }
 
   EXPECT_EQ( flat_container.value[0].first.toStr() , ("nav_stat/status"));
-  EXPECT_EQ( flat_container.value[0].second, nav_stat.STATUS_GBAS_FIX );
+  EXPECT_EQ( flat_container.value[0].second, (int)nav_stat.STATUS_GBAS_FIX );
   EXPECT_EQ( flat_container.value[1].first.toStr() , ("nav_stat/service"));
-  EXPECT_EQ( flat_container.value[1].second, nav_stat.SERVICE_COMPASS );
+  EXPECT_EQ( flat_container.value[1].second, (int)nav_stat.SERVICE_COMPASS );
 }
 
 TEST( Deserialize, DeserializeIMU)
@@ -195,7 +195,7 @@ TEST( Deserialize, DeserializeIMU)
 
     std::cout << " -------------------- " << std::endl;
     for(auto&it: flat_container.value) {
-      std::cout << it.first << " >> " << it.second << std::endl;
+      std::cout << it.first << " >> " << it.second.convert<double>() << std::endl;
     }
   }
 
@@ -305,7 +305,7 @@ TEST( Deserialize, Int16MultiArrayDeserialize)
     std::cout << " -------------------- " << std::endl;
 
     for(auto&it: flat_container.value) {
-      std::cout << it.first << " >> " << it.second << std::endl;
+      std::cout << it.first << " >> " << it.second.convert<double>() << std::endl;
     }
   }
 

@@ -147,7 +147,7 @@ TEST(Renamer2, DeserializeJointStateAndRename)
 
   if(VERBOSE_TEST){
     for(auto&it: flat_container.renamed_value) {
-      std::cout << it.first << " >> " << it.second << std::endl;
+      std::cout << it.first << " >> " << it.second.convert<double>() << std::endl;
     }
   }
 
