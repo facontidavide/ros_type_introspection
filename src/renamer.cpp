@@ -150,8 +150,6 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
 
       const auto& value_leaf = container->value[i];
 
-      if( debug) std::cout << value_leaf.first << " >> " << value_leaf.second << " ... ";
-
       const StringTreeLeaf& leaf = value_leaf.first;
 
       int pattern_array_pos = PatternMatchAndIndexPosition(leaf,   pattern_head);
@@ -276,14 +274,7 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
   {
     if( substituted[i] == false)
     {
-      const std::pair<StringTreeLeaf, double> & value_leaf = container->value[i];
-
-//      auto it = cache.find( &value_leaf.first );
-//      if( it == cache.end())
-//      {
-//        auto ret = cache.insert( std::make_pair(&value_leaf.first, value_leaf.first.toStr()) );
-//        it = ret.first;
-//      }
+      const std::pair<StringTreeLeaf, VarNumber> & value_leaf = container->value[i];
 
       container->renamed_value[renamed_index].first  = value_leaf.first.toStr();
       container->renamed_value[renamed_index].second = value_leaf.second ;

@@ -38,6 +38,7 @@
 #include <array>
 #include <ros_type_introspection/parser.hpp>
 #include <ros_type_introspection/stringtree.hpp>
+#include <ros_type_introspection/variant.hpp>
 #include <sstream>
 
 namespace RosIntrospection{
@@ -50,7 +51,7 @@ namespace RosIntrospection{
  *
  * For example if you want to represent the string
  *
- *      foo.2.bar.3.hello.world
+ *      foo/2/bar/3/hello/world
  *
  * This would correspond to a branch of the tree (from root to the leaf) equal to these 6 nodes,
  * where "foo" is the root and "world" is the leaf
@@ -80,14 +81,14 @@ typedef struct{
 
   /// List of all those parsed fields that can be represented by a builtin value different from "string".
   /// This list will be filled by the funtion buildRosFlatType.
-  std::vector< std::pair<StringTreeLeaf, double> > value;
+  std::vector< std::pair<StringTreeLeaf, VarNumber> > value;
 
   /// Ñist of all those parsed fields that can be represented by a builtin value equal to "string".
   /// This list will be filled by the funtion buildRosFlatType.
   std::vector< std::pair<StringTreeLeaf, SString> > name;
 
   /// This list will be filled by the funtion applyNameTransform.
-  std::vector< std::pair<SString, double> > renamed_value;
+  std::vector< std::pair<SString, VarNumber> > renamed_value;
 
   // Not used yet
   std::vector< std::pair<StringTreeLeaf, std::vector<uint8_t>>> blob;
