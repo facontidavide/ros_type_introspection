@@ -94,8 +94,7 @@ void set_msb(unsigned char& byte, bool bit) {
 
 }
 
-template <size_t MAX_SIZE, typename CharT,
-          typename Traits = std::char_traits<CharT>>
+template <typename CharT, typename Traits = std::char_traits<CharT>>
 class basic_string {
     typedef typename std::make_unsigned<CharT>::type UCharT;
 public:
@@ -104,8 +103,6 @@ public:
     }
 
     basic_string(CharT const* string, std::size_t size) {
-
-        static_assert( MAX_SIZE >= 24 && MAX_SIZE <= 63, "Size must be >=24 && <= 63" );
 
         if(size <= sso_capacity) {
             Traits::move(m_data.sso.string, string, size);
@@ -184,21 +181,31 @@ public:
             Traits::assign(m_data.sso.string[new_size], static_cast<CharT>(0));
             set_sso_size(new_size);
         } else {
-            new_size = std::min( sso_capacity*2, new_size );
-            CharT* ptr = new CharT[new_size + 1];
+            size_t new_capacity;
+            CharT* ptr;
 
-            if( this->sso() == false ) {
-                Traits::move( ptr, m_data.non_sso.ptr, std::min(old_size, new_size) );
-                delete[] m_data.non_sso.ptr ;
+            if( this->sso() ){
+                // it was sso. Need to allocate new memory
+                new_capacity =  sso_capacity*2;
+                ptr = new CharT[ new_capacity + 1];
+                Traits::move( ptr, m_data.sso.string, std::min(old_size, new_size) );
+                m_data.non_sso.ptr = ptr;
+            }
+            else if( new_size < capacity() ){
+                // it was non_sso. capacity is sufficient. do nothing
+                new_capacity = m_data.non_sso.capacity;
             }
             else{
-                Traits::move( ptr, m_data.sso.string, std::min(old_size, new_size) );
-                new_size = std::min( sso_capacity*2, new_size );
-                m_data.non_sso.ptr = new CharT[new_size + 1];
+                // was non_sso, but I need to allocate more memory
+                new_capacity = std::max(new_size, capacity()*3/2);
+                ptr = new CharT[ new_capacity + 1];
+                Traits::move( ptr, m_data.non_sso.ptr, std::min(old_size, new_size) );
+                delete[] m_data.non_sso.ptr ;
+                m_data.non_sso.ptr = ptr;
             }
-            m_data.non_sso.ptr = ptr;
+
             Traits::assign(m_data.non_sso.ptr[new_size], static_cast<CharT>(0));
-            set_non_sso_data(new_size, new_size);
+            set_non_sso_data(new_size, new_capacity);
         }
     }
 
@@ -346,7 +353,7 @@ private:
 private:
     union Data {
         struct NonSSO {
-            CharT overhead[MAX_SIZE + sizeof(UCharT)  - sizeof(CharT*) -2*sizeof(std::size_t) ]; //waster memory to keep the alignment
+            CharT overhead[ 24 - sizeof(CharT*) - 2*sizeof(CharT*)];
             CharT* ptr;
             std::size_t size;
             std::size_t capacity;
@@ -361,33 +368,31 @@ public:
     static std::size_t const sso_capacity =  sizeof(typename Data::NonSSO) / sizeof(CharT)  - 1;
 };
 
-template <size_t MAX_SIZE, typename CharT, typename Traits>
-bool operator==(const basic_string<MAX_SIZE,CharT, Traits>& lhs, const CharT* rhs) noexcept {
+template <typename CharT, typename Traits>
+bool operator==(const basic_string<CharT, Traits>& lhs, const CharT* rhs) noexcept {
     return !std::strcmp(lhs.data(), rhs);
 }
 
-template <size_t MAX_SIZE, typename CharT, typename Traits>
-bool operator==(const CharT* lhs, const basic_string<MAX_SIZE,CharT, Traits>& rhs) noexcept {
+template <typename CharT, typename Traits>
+bool operator==(const CharT* lhs, const basic_string<CharT, Traits>& rhs) noexcept {
     return rhs == lhs;
 }
 
-template <size_t MAX_SIZE_A, size_t MAX_SIZE_B,
-          typename CharT, typename Traits>
-bool operator==(const basic_string<MAX_SIZE_A, CharT, Traits>& lhs,
-                const basic_string<MAX_SIZE_B, CharT, Traits>& rhs) noexcept {
+template <typename CharT, typename Traits>
+bool operator==(const basic_string<CharT, Traits>& lhs,
+                const basic_string<CharT, Traits>& rhs) noexcept {
     if(lhs.size() != rhs.size()) return false;
     return !std::strcmp(lhs.data(), rhs.data());
 }
 
-template <size_t MAX_SIZE,typename CharT, typename Traits>
-std::ostream& operator<<(std::ostream& stream, const basic_string<MAX_SIZE,CharT, Traits>& string) {
+template <typename CharT, typename Traits>
+std::ostream& operator<<(std::ostream& stream, const basic_string<CharT, Traits>& string) {
     return stream << string.data();
 }
 
-template <size_t MAX_SIZE_A, size_t MAX_SIZE_B,
-          typename CharT, typename Traits>
-bool operator < (const basic_string<MAX_SIZE_A,CharT, Traits>& lhs,
-                 const basic_string<MAX_SIZE_B,CharT, Traits>& rhs) noexcept {
+template <typename CharT, typename Traits>
+bool operator < (const basic_string<CharT, Traits>& lhs,
+                 const basic_string<CharT, Traits>& rhs) noexcept {
     return std::strcmp(lhs.data(), rhs.data()) < 0;
 }
 
