@@ -37,6 +37,7 @@
 
 #include <vector>
 #include <map>
+#include <functional>
 #include <boost/utility/string_ref.hpp>
 #include <ros_type_introspection/builtin_types.hpp>
 #include <ros_type_introspection/string.hpp>
