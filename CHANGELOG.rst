@@ -2,6 +2,15 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* moved the deserializing code
+* new API
+* fixing issue in resize (to be tested)
+* fixed osx compilation failure due to implicit_instantiation of std::array
+* Fix formating and typos
+* Contributors: Bo Li, Davide Faconti, Sam Pfeiffer
+
 0.5.1 (2017-04-02)
 ------------------
 * fix the test
