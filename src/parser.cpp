@@ -113,48 +113,97 @@ ROSType::ROSType(const std::string &name):
 
     if( _msg_name.compare( "bool" ) == 0 ) {
         _id = RosIntrospection::BOOL;
+        _deserialize_impl = [](uint8_t** buffer) {
+            return ReadFromBuffer<bool>(buffer);
+        };
     }
     else if(_msg_name.compare( "byte" ) == 0 ) {
         _id = RosIntrospection::BYTE;
+        _deserialize_impl = [](uint8_t** buffer) {
+            return ReadFromBuffer<int8_t>(buffer);
+        };
     }
     else if(_msg_name.compare( "char" ) == 0 ) {
         _id = RosIntrospection::CHAR;
+        _deserialize_impl = [](uint8_t** buffer) {
+            return ReadFromBuffer<char>(buffer);
+        };
     }
     else if(_msg_name.compare( "uint8" ) == 0 ) {
         _id = RosIntrospection::UINT8;
+        _deserialize_impl = [](uint8_t** buffer) {
+            return ReadFromBuffer<uint8_t>(buffer);
+        };
     }
     else if(_msg_name.compare( "uint16" ) == 0 ) {
         _id = RosIntrospection::UINT16;
+        _deserialize_impl = [](uint8_t** buffer) {
+            return ReadFromBuffer<uint16_t>(buffer);
+        };
     }
     else if(_msg_name.compare( "uint32" ) == 0 ) {
         _id = RosIntrospection::UINT32;
+        _deserialize_impl = [](uint8_t** buffer) {
+            return ReadFromBuffer<uint32_t>(buffer);
+        };
     }
     else if(_msg_name.compare( "uint64" ) == 0 ) {
         _id = RosIntrospection::UINT64;
+        _deserialize_impl = [](uint8_t** buffer) {
+            return ReadFromBuffer<uint64_t>(buffer);
+        };
     }
     else if(_msg_name.compare( "int8" ) == 0 ) {
         _id = RosIntrospection::INT8;
+        _deserialize_impl = [](uint8_t** buffer) {
+            return ReadFromBuffer<int8_t>(buffer);
+        };
     }
     else if(_msg_name.compare( "int16" ) == 0 ) {
         _id = RosIntrospection::INT16;
+        _deserialize_impl = [](uint8_t** buffer) {
+            return ReadFromBuffer<int16_t>(buffer);
+        };
     }
     else if(_msg_name.compare( "int32" ) == 0 ) {
         _id = RosIntrospection::INT32;
+        _deserialize_impl = [](uint8_t** buffer) {
+            return ReadFromBuffer<int32_t>(buffer);
+        };
     }
     else if(_msg_name.compare( "int64" ) == 0 ) {
         _id = RosIntrospection::INT64;
+        _deserialize_impl = [](uint8_t** buffer) {
+            return ReadFromBuffer<int64_t>(buffer);
+        };
     }
     else if(_msg_name.compare( "float32" ) == 0 ) {
         _id = RosIntrospection::FLOAT32;
+        _deserialize_impl = [](uint8_t** buffer) {
+            return ReadFromBuffer<float>(buffer);
+        };
     }
     else if(_msg_name.compare( "float64" ) == 0 ) {
         _id = RosIntrospection::FLOAT64;
+        _deserialize_impl = [](uint8_t** buffer) {
+            return ReadFromBuffer<double>(buffer);
+        };
     }
     else if(_msg_name.compare( "time" ) == 0 ) {
         _id = RosIntrospection::TIME;
+        _deserialize_impl = [](uint8_t** buffer) {
+            double sec  = (double) ReadFromBuffer<uint32_t>(buffer);
+            double nsec = (double) ReadFromBuffer<uint32_t>(buffer);
+            return (double)( sec + nsec*1e-9);
+        };
     }
     else if(_msg_name.compare( "duration" ) == 0 ) {
         _id = RosIntrospection::DURATION;
+        _deserialize_impl = [](uint8_t** buffer) {
+            double sec  = (double) ReadFromBuffer<uint32_t>(buffer);
+            double nsec = (double) ReadFromBuffer<uint32_t>(buffer);
+            return (double)( sec + nsec*1e-9 );
+        };
     }
     else if(_msg_name.compare( "string" ) == 0 ) {
         _id = RosIntrospection::STRING;
@@ -264,6 +313,8 @@ BuiltinType ROSType::typeID() const
 {
     return this->_id;
 }
+
+
 
 ROSMessage::ROSMessage(const std::string &msg_def)
 {

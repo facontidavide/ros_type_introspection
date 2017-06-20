@@ -30,6 +30,8 @@ public:
 
     template <typename T> void assign(const T& value);
 
+    explicit operator double() const { return convert<double>(); }
+
 private:
     uint8_t _raw_data[9];
 

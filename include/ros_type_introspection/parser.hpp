@@ -41,6 +41,7 @@
 #include <ros_type_introspection/builtin_types.hpp>
 #include <ros_type_introspection/string.hpp>
 #include <ros_type_introspection/stringtree.hpp>
+#include <ros_type_introspection/variant.hpp>
 
 namespace RosIntrospection{
 
@@ -102,6 +103,14 @@ public:
     return this->baseName() < other.baseName();
   }
 
+  VarNumber deserializeFromBuffer(uint8_t** buffer) const
+  {
+      if(!_deserialize_impl){ return VarNumber(); }
+      else{
+          return _deserialize_impl(buffer);
+      }
+  }
+
 protected:
 
   BuiltinType _id;
@@ -109,8 +118,18 @@ protected:
   SString _base_name;
   SString _msg_name;
   SString _pkg_name;
+  std::function<VarNumber(uint8_t** buffer)> _deserialize_impl;
 
 };
+
+// helper function to deserialize raw memory
+template <typename T> inline T ReadFromBuffer( uint8_t** buffer)
+{
+  T destination =  (*( reinterpret_cast<T*>( *buffer ) ) );
+  *buffer +=  sizeof(T);
+  return (destination);
+}
+
 
 /**
  * @brief A ROSMessage will contain one or more ROSField(s). Each field is little more
