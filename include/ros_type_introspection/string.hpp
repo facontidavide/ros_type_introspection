@@ -38,6 +38,7 @@
 #include <cstring>
 #include <ostream>
 #include <string>
+//#include <assert.h>
 #include <type_traits>
 
 #include <iostream>
@@ -134,11 +135,6 @@ public:
         other.set_moved_from();
     }
 
-
-    void reserve(size_t) noexcept {
-      //not implemented
-    }
-
     basic_string(const std::basic_string<CharT>& other):
       basic_string(  other.c_str(), other.size() )
     {
@@ -172,31 +168,35 @@ public:
     void resize( size_t new_size)
     {
         size_t old_size = this->size();
-        if(new_size <= sso_capacity) {
-            if( this->sso() == false ) {
+        if(new_size <= sso_capacity)
+        {
+          // it will be SSO
+            if( !this->sso() ) {
                 CharT* ptr = m_data.non_sso.ptr;
-                Traits::move( m_data.sso.string, ptr, std::min(old_size, new_size) );
+                Traits::move( m_data.sso.string, ptr, std::min(old_size, new_size) ); // most probably new_size
                 delete[] ptr;
             }
             Traits::assign(m_data.sso.string[new_size], static_cast<CharT>(0));
             set_sso_size(new_size);
         } else {
-            size_t new_capacity;
-            CharT* ptr;
+          // it will be non_sso
+            size_t new_capacity = 0;
+            CharT* ptr = nullptr;
 
             if( this->sso() ){
-                // it was sso. Need to allocate new memory
+                // from sso to non_sso. Need to allocate new memory
                 new_capacity =  sso_capacity*2;
                 ptr = new CharT[ new_capacity + 1];
                 Traits::move( ptr, m_data.sso.string, std::min(old_size, new_size) );
                 m_data.non_sso.ptr = ptr;
             }
             else if( new_size < capacity() ){
-                // it was non_sso. capacity is sufficient. do nothing
-                new_capacity = m_data.non_sso.capacity;
+                // was non_sso, still non_sso. Capacity is sufficient. Do nothing
+                new_capacity = capacity();
+                ptr =  m_data.non_sso.ptr;
             }
             else{
-                // was non_sso, but I need to allocate more memory
+                // was non_sso, still non_sso. But I need to allocate more memory
                 new_capacity = std::max(new_size, capacity()*3/2);
                 ptr = new CharT[ new_capacity + 1];
                 Traits::move( ptr, m_data.non_sso.ptr, std::min(old_size, new_size) );
@@ -204,6 +204,8 @@ public:
                 m_data.non_sso.ptr = ptr;
             }
 
+//            assert( new_capacity > sso_capacity);
+//            assert( ptr != nullptr);
             Traits::assign(m_data.non_sso.ptr[new_size], static_cast<CharT>(0));
             set_non_sso_data(new_size, new_capacity);
         }

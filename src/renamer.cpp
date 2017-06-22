@@ -243,7 +243,6 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
 
           //------------------------
           SString new_identifier;
-          new_identifier.reserve( char_count + concatenated_name.size() + 1 );
 
           for (int c = concatenated_name.size()-1; c >= 0; c--)
           {
@@ -252,7 +251,7 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
           }
           if( debug) std::cout << "Result: " << new_identifier << std::endl;
 
-          container->renamed_value[ renamed_index ].first = std::move( new_identifier );
+          container->renamed_value[renamed_index].first = std::move( new_identifier );
           container->renamed_value[renamed_index].second  =  value_leaf.second ;
           renamed_index++;
           substituted[i] = true;
