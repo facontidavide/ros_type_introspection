@@ -2,8 +2,8 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.6.1 (2017-06-22)
+------------------
 * fixed a bug in resize
 * potential compilation problem fixed
 * Contributors: Davide Faconti
