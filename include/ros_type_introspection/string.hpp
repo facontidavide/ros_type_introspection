@@ -165,6 +165,22 @@ public:
         return out;
     }
 
+    void clear()
+    {
+        this->resize(0);
+    }
+
+    void assign(const CharT* buffer, size_t length )
+    {
+        this->resize(length);
+
+        if(length <= sso_capacity) {
+            Traits::move(  m_data.sso.string, buffer, length);
+        } else {
+            Traits::move(  m_data.non_sso.ptr, buffer, length);
+        }
+    }
+
     void resize( size_t new_size)
     {
         size_t old_size = this->size();
@@ -185,7 +201,7 @@ public:
 
             if( this->sso() ){
                 // from sso to non_sso. Need to allocate new memory
-                new_capacity =  sso_capacity*2;
+                new_capacity =  std::max(new_size, sso_capacity*2);
                 ptr = new CharT[ new_capacity + 1];
                 Traits::move( ptr, m_data.sso.string, std::min(old_size, new_size) );
                 m_data.non_sso.ptr = ptr;
@@ -204,8 +220,6 @@ public:
                 m_data.non_sso.ptr = ptr;
             }
 
-//            assert( new_capacity > sso_capacity);
-//            assert( ptr != nullptr);
             Traits::assign(m_data.non_sso.ptr[new_size], static_cast<CharT>(0));
             set_non_sso_data(new_size, new_capacity);
         }
@@ -355,7 +369,7 @@ private:
 private:
     union Data {
         struct NonSSO {
-            CharT overhead[ 24 - sizeof(CharT*) - 2*sizeof(CharT*)];
+            CharT overhead[ 32 - sizeof(CharT*) - 2*sizeof(std::size_t)];
             CharT* ptr;
             std::size_t size;
             std::size_t capacity;
