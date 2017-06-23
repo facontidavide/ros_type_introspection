@@ -2,6 +2,11 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* bug fix. types where missing in conversion
+* Contributors: Davide Faconti
+
 0.6.1 (2017-06-22)
 ------------------
 * fixed a bug in resize
