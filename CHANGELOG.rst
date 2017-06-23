@@ -2,8 +2,8 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.6.2 (2017-06-23)
+------------------
 * bug fix. types where missing in conversion
 * Contributors: Davide Faconti
 
