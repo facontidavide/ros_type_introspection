@@ -206,8 +206,43 @@ void buildRosFlatType(const ROSTypeList& type_map,
 StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr), array_size(0)
 {  for (int i=0; i<7; i++) index_array[i] = 0;}
 
-SString StringTreeLeaf::toStr() const{
 
+
+// The idea comes from the talk by Alexandrescu
+// "Three Optimization Tips for C++".
+
+// much faster for numbers below 100
+inline int print_number(char* buffer, uint16_t value)
+{
+    const char DIGITS[] =
+            "00010203040506070809"
+            "10111213141516171819"
+            "20212223242526272829"
+            "30313233343536373839"
+            "40414243444546474849"
+            "50515253545556575859"
+            "60616263646566676869"
+            "70717273747576777879"
+            "80818283848586878889"
+            "90919293949596979899";
+    if (value < 10)
+    {
+        buffer[0] = static_cast<char>('0' + value);
+        return 1;
+    }
+    else if (value < 100) {
+        value *= 2;
+        buffer[0] = DIGITS[ value+1 ];
+        buffer[1] = DIGITS[ value ];
+        return 2;
+    }
+    else{
+        return sprintf( buffer,"%d", value );
+    }
+}
+
+SString StringTreeLeaf::toStr() const
+{
 
   const StringTreeNode* node = this->node_ptr;
 
@@ -240,14 +275,19 @@ SString StringTreeLeaf::toStr() const{
     if( value.size()== 1 && value.at(0) == '#' )
     {
       buffer[off-1] = '.';
-      off += sprintf( &buffer[off],"%d", this->index_array[ array_count++ ] );
+      off += print_number(&buffer[off], this->index_array[ array_count++ ] );
     }
     else{
-      off += sprintf( &buffer[off],"%s", array[index]->value().data() );
+      memcpy( &buffer[off], array[index]->value().data(), array[index]->value().size() );
+      off += array[index]->value().size();
     }
-    if( index > 0 )  off += sprintf( &buffer[off],"/");
+    if( index > 0 ){
+        buffer[off] = '/';
+        off += 1;
+    }
     index--;
   }
+  buffer[off] = '\0';
   return SString(buffer);
 }
 
