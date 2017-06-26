@@ -242,16 +242,17 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
           }
 
           //------------------------
-          SString new_identifier;
+          std::string new_identifier;
+          new_identifier.reserve(80);
 
           for (int c = concatenated_name.size()-1; c >= 0; c--)
           {
-            new_identifier.append( *concatenated_name[c] );
+            new_identifier += ( concatenated_name[c]->data() );
             if( c>0 ) new_identifier.append("/");
           }
           if( debug) std::cout << "Result: " << new_identifier << std::endl;
 
-          container->renamed_value[renamed_index].first = std::move( new_identifier );
+          container->renamed_value[renamed_index].first   = std::move( new_identifier );
           container->renamed_value[renamed_index].second  =  value_leaf.second ;
           renamed_index++;
           substituted[i] = true;
@@ -275,7 +276,8 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
     {
       const std::pair<StringTreeLeaf, VarNumber> & value_leaf = container->value[i];
 
-      container->renamed_value[renamed_index].first  = value_leaf.first.toStr();
+      auto& destination = container->renamed_value[renamed_index].first;
+      value_leaf.first.toStr( destination );
       container->renamed_value[renamed_index].second = value_leaf.second ;
       renamed_index++;
     }

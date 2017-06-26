@@ -241,45 +241,45 @@ inline int print_number(char* buffer, uint16_t value)
     }
 }
 
-SString StringTreeLeaf::toStr() const
+void StringTreeLeaf::toStr(SString& destination) const
 {
 
-  const StringTreeNode* node = this->node_ptr;
+  const StringTreeNode* leaf_node = this->node_ptr;
 
-  if( !node ) return SString();
+  if( !leaf_node ) return destination.clear();
 
-  const StringTreeNode* array[64];
+  const StringTreeNode* nodes_from_leaf_to_root[64];
   int index = 0;
 
   int char_count = 0;
 
-  while(node)
+  while(leaf_node)
   {
-    char_count += node->value().size();
-    array[index] = node;
+    char_count += leaf_node->value().size();
+    nodes_from_leaf_to_root[index] = leaf_node;
     index++;
-    node = node->parent();
+    leaf_node = leaf_node->parent();
   };
 
-  array[index] = nullptr;
+  nodes_from_leaf_to_root[index] = nullptr;
   index--;
 
   int array_count = 0;
 
-  char buffer[200];
+  char buffer[256];
   int off = 0;
 
-  while ( index >=0)
+  while ( index >=0 )
   {
-    const SString& value =  array[index]->value();
+    const SString& value =  nodes_from_leaf_to_root[index]->value();
     if( value.size()== 1 && value.at(0) == '#' )
     {
       buffer[off-1] = '.';
       off += print_number(&buffer[off], this->index_array[ array_count++ ] );
     }
     else{
-      memcpy( &buffer[off], array[index]->value().data(), array[index]->value().size() );
-      off += array[index]->value().size();
+      memcpy( &buffer[off], value.data(), value.size() );
+      off += value.size();
     }
     if( index > 0 ){
         buffer[off] = '/';
@@ -288,7 +288,7 @@ SString StringTreeLeaf::toStr() const
     index--;
   }
   buffer[off] = '\0';
-  return SString(buffer);
+  destination.assign(buffer, off);
 }
 
 

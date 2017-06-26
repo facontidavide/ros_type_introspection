@@ -72,7 +72,7 @@ struct StringTreeLeaf{
   std::array<uint16_t,7> index_array;
 
   /// Utility function to print the entire branch
-  SString toStr() const;
+  void toStr(SString &destination) const;
 };
 
 typedef struct{
@@ -134,7 +134,9 @@ void buildRosFlatType(const ROSTypeList& type_map,
 
 inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
 {
-  os << leaf.toStr();
+  SString dest;
+  leaf.toStr(dest);
+  os << dest;
   return os;
 }
 
