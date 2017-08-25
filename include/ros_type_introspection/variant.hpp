@@ -97,6 +97,7 @@ inline DST VarNumber::convert() const
 
     case INT16:  convert_impl<int16_t, DST>(*reinterpret_cast<const int16_t*>( _raw_data), target  ); break;
     case INT32:  convert_impl<int32_t, DST>(*reinterpret_cast<const int32_t*>( _raw_data), target  ); break;
+    case DURATION:
     case INT64:  convert_impl<int64_t, DST>(*reinterpret_cast<const int64_t*>( _raw_data), target  ); break;
 
     case BOOL:
@@ -105,6 +106,7 @@ inline DST VarNumber::convert() const
 
     case UINT16:  convert_impl<uint16_t, DST>(*reinterpret_cast<const uint16_t*>( _raw_data), target  ); break;
     case UINT32:  convert_impl<uint32_t, DST>(*reinterpret_cast<const uint32_t*>( _raw_data), target  ); break;
+    case TIME:
     case UINT64:  convert_impl<uint64_t, DST>(*reinterpret_cast<const uint64_t*>( _raw_data), target  ); break;
 
     case FLOAT32:  convert_impl<float, DST>(*reinterpret_cast<const float*>( _raw_data), target  ); break;
