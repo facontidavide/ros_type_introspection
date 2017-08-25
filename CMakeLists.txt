@@ -44,23 +44,27 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-  include
+## Declare a C++ library
+add_library(ros_type_introspection
+  src/parser.cpp
+  src/deserializer.cpp
+  src/renamer.cpp
+
+  include/ros_type_introspection/parser.hpp
+  include/ros_type_introspection/deserializer.hpp
+  include/ros_type_introspection/string.hpp
+  include/ros_type_introspection/renamer.hpp
+  include/ros_type_introspection/stringtree.hpp
 )
 
-## Declare a C++ library
- add_library(ros_type_introspection
-   src/parser.cpp
-   src/deserializer.cpp
-   src/renamer.cpp
-
-   include/ros_type_introspection/parser.hpp
-   include/ros_type_introspection/deserializer.hpp
-   include/ros_type_introspection/string.hpp
-   include/ros_type_introspection/renamer.hpp
-   include/ros_type_introspection/stringtree.hpp
- )
+target_include_directories(ros_type_introspection SYSTEM
+  PRIVATE
+    ${catkin_INCLUDE_DIRS}
+)
+target_include_directories(ros_type_introspection BEFORE
+  PUBLIC
+    include
+)
 
 target_link_libraries(ros_type_introspection ${catkin_LIBRARIES})
 
