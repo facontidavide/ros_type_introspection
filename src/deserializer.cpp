@@ -191,7 +191,6 @@ void buildRosFlatType(const ROSTypeList& type_map,
   flat_container_output->tree.root()->value() = prefix;
   flat_container_output->name.clear();
   flat_container_output->value.clear();
-  flat_container_output->renamed_value.clear();
 
   StringTreeLeaf rootnode;
   rootnode.node_ptr = flat_container_output->tree.root();
@@ -209,17 +208,40 @@ StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr), array_size(0)
 
 
 
-// The idea comes from the talk by Alexandrescu
-// "Three Optimization Tips for C++".
 
+bool StringTreeLeaf::toStr(SString& destination) const
+{
+  char buffer[512];
+  int offset = this->toStr(buffer);
 
+  if( offset < 0 ) {
+    destination.clear();
+    return false;
+  }
+  destination.assign(buffer, offset);
+  return true;
+}
 
-void StringTreeLeaf::toStr(SString& destination) const
+bool StringTreeLeaf::toStr(std::string& destination) const
+{
+  char buffer[512];
+  int offset = this->toStr(buffer);
+
+  if( offset < 0 ) {
+    destination.clear();
+    return false;
+  }
+  destination.assign(buffer, offset);
+  return true;
+}
+
+int StringTreeLeaf::toStr(char* buffer) const
 {
 
   const StringTreeNode* leaf_node = this->node_ptr;
-
-  if( !leaf_node ) return destination.clear();
+  if( !leaf_node ){
+    return -1;
+  }
 
   const StringTreeNode* nodes_from_leaf_to_root[64];
   int index = 0;
@@ -238,8 +260,6 @@ void StringTreeLeaf::toStr(SString& destination) const
   index--;
 
   int array_count = 0;
-
-  char buffer[256];
   int off = 0;
 
   while ( index >=0 )
@@ -261,7 +281,7 @@ void StringTreeLeaf::toStr(SString& destination) const
     index--;
   }
   buffer[off] = '\0';
-  destination.assign(buffer, off);
+  return off;  
 }
 
 

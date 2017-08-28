@@ -173,7 +173,7 @@ inline void convert_impl( const SRC& from, DST& target )
 {
     //std::cout << "float_conversion" << std::endl;
     checkTruncation<SRC,DST>(from);
-    target = static_cast<DST>( from);
+    target = static_cast<DST>( from );
 }
 
 

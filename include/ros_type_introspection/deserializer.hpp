@@ -72,8 +72,12 @@ struct StringTreeLeaf{
 
   std::array<uint16_t,7> index_array;
 
-  /// Utility function to print the entire branch
-  void toStr(SString &destination) const;
+  /// Utility functions to print the entire branch
+  bool toStr(SString &destination) const;
+  bool toStr(std::string &destination) const;
+  
+  // return string length or -1 if failed
+  int toStr(char* buffer) const;
 };
 
 typedef struct{
@@ -88,14 +92,8 @@ typedef struct{
   /// This list will be filled by the funtion buildRosFlatType.
   std::vector< std::pair<StringTreeLeaf, SString> > name;
 
-  /// This list will be filled by the funtion applyNameTransform.
-  std::vector< std::pair<SString, VarNumber> > renamed_value;
-
   // Not used yet
   std::vector< std::pair<StringTreeLeaf, std::vector<uint8_t>>> blob;
-
-  // Not used yet
-  std::vector< std::pair<SString, const std::vector<uint8_t>*>> renamed_blob;
 
 }ROSTypeFlat;
 

@@ -30,7 +30,18 @@ public:
 
     template <typename T> void assign(const T& value);
 
-    explicit operator double() const { return convert<double>(); }
+    // allow truncation of large numbers 
+    double convertToDouble() const 
+    {
+        
+        if ( getTypeID() == UINT64){
+            return static_cast<double>( extract<uint64_t>() );
+        }
+        if ( getTypeID() == INT64){
+            return static_cast<double>( extract<int64_t>() );
+        }
+        return convert<double>(); 
+    }
 
 private:
     uint8_t _raw_data[9];

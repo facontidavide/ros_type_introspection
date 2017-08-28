@@ -76,8 +76,6 @@ public:
 
     void addChild(const T& child );
 
-    std::string toStr() const;
-
     bool isLeaf() const { return _children.empty(); }
 
 private:

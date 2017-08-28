@@ -194,13 +194,13 @@ template<class M> inline
 boost::shared_ptr<M> ShapeShifter::instantiate() const
 {
   if (!typed_)
-    throw topic_tools::ShapeShifterException("Tried to instantiate message from an untyped ShapeShifter2.");
+    throw std::runtime_error("Tried to instantiate message from an untyped ShapeShifter2.");
 
   if (ros::message_traits::datatype<M>() != getDataType())
-    throw topic_tools::ShapeShifterException("Tried to instantiate message without matching datatype.");
+    throw std::runtime_error("Tried to instantiate message without matching datatype.");
 
   if (ros::message_traits::md5sum<M>() != getMD5Sum())
-    throw topic_tools::ShapeShifterException("Tried to instantiate message without matching md5sum.");
+    throw std::runtime_error("Tried to instantiate message without matching md5sum.");
 
   boost::shared_ptr<M> p(boost::make_shared<M>());
 

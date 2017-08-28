@@ -109,22 +109,23 @@ int  PatternMatchAndIndexPosition(const StringTreeLeaf& leaf,
 }
 
 
-void applyNameTransform(const std::vector<SubstitutionRule>& rules,
-                        ROSTypeFlat* container )
+void applyNameTransform(const std::vector<SubstitutionRule> &rules,
+                        const ROSTypeFlat& container,
+                        RenamedValues& renamed_value )
 {
 
   const bool debug = false ;
 
-  if( debug) std::cout << container->tree << std::endl;
+  if( debug) std::cout << container.tree << std::endl;
 
-  container->renamed_value.resize( container->value.size() );
+  renamed_value.resize( container.value.size() );
 
-  std::vector<uint8_t> substituted( container->value.size() );
+  std::vector<uint8_t> substituted( container.value.size() );
   for(auto& sub: substituted) { sub = false; }
 
   size_t renamed_index = 0;
 
-  std::vector<int> alias_array_pos( container->name.size() );
+  std::vector<int> alias_array_pos( container.name.size() );
   std::vector<SString> formatted_string;
   formatted_string.reserve(20);
 
@@ -133,23 +134,23 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
     const StringTreeNode* pattern_head = nullptr;
     const StringTreeNode* alias_head = nullptr;
 
-    FindPattern( rule.pattern(), 0, container->tree.croot(), &pattern_head );
+    FindPattern( rule.pattern(), 0, container.tree.croot(), &pattern_head );
     if( !pattern_head) continue;
 
-    FindPattern( rule.alias(),   0, container->tree.croot(), &alias_head );
+    FindPattern( rule.alias(),   0, container.tree.croot(), &alias_head );
     if(!alias_head) continue;
 
-    for (int n=0; n< container->name.size(); n++)
+    for (int n=0; n< container.name.size(); n++)
     {
-      const StringTreeLeaf& alias_leaf = container->name[n].first;
+      const StringTreeLeaf& alias_leaf = container.name[n].first;
       alias_array_pos[n] = PatternMatchAndIndexPosition(alias_leaf, alias_head);
     }
 
-    for(size_t i=0; i< container->value.size(); i++)
+    for(size_t i=0; i< container.value.size(); i++)
     {
       if( substituted[i]) continue;
 
-      const auto& value_leaf = container->value[i];
+      const auto& value_leaf = container.value[i];
 
       const StringTreeLeaf& leaf = value_leaf.first;
 
@@ -161,9 +162,9 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
 
         const SString* new_name = nullptr;
 
-        for (int n=0; n< container->name.size(); n++)
+        for (int n=0; n< container.name.size(); n++)
         {
-          const auto & it = container->name[n];
+          const auto & it = container.name[n];
           const StringTreeLeaf& alias_leaf = it.first;
 
           if( alias_array_pos[n] >= 0 ) // -1 if pattern doesn't match
@@ -253,8 +254,8 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
           }
           if( debug) std::cout << "Result: " << new_identifier << std::endl;
 
-          container->renamed_value[renamed_index].first   = std::move( new_identifier );
-          container->renamed_value[renamed_index].second  =  value_leaf.second ;
+          renamed_value[renamed_index].first   = std::move( new_identifier );
+          renamed_value[renamed_index].second  = value_leaf.second ;
           renamed_index++;
           substituted[i] = true;
           if( debug) std::cout << std::endl;
@@ -271,15 +272,15 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
 
 //  static std::map<const StringTreeLeaf*, SString> cache;
 
-  for(size_t i=0; i< container->value.size(); i++)
+  for(size_t i=0; i< container.value.size(); i++)
   {
     if( substituted[i] == false)
     {
-      const std::pair<StringTreeLeaf, VarNumber> & value_leaf = container->value[i];
+      const std::pair<StringTreeLeaf, VarNumber> & value_leaf = container.value[i];
 
-      auto& destination = container->renamed_value[renamed_index].first;
+      std::string& destination = renamed_value[renamed_index].first;
       value_leaf.first.toStr( destination );
-      container->renamed_value[renamed_index].second = value_leaf.second ;
+      renamed_value[renamed_index].second = value_leaf.second ;
       renamed_index++;
     }
   }
