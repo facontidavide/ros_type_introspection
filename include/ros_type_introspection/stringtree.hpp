@@ -39,8 +39,8 @@
 #include <deque>
 #include <iostream>
 #include <boost/container/stable_vector.hpp>
-#include <ros_type_introspection/string.hpp>
 #include <boost/noncopyable.hpp>
+#include "ros_type_introspection/string.hpp"
 
 namespace RosIntrospection {
 

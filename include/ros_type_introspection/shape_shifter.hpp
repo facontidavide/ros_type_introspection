@@ -42,8 +42,7 @@
 #include <vector>
 #include <boost/flyweight.hpp>
 #include <ros/message_traits.h>
-#include <ros_type_introspection/ros_introspection.hpp>
-#include <topic_tools/shape_shifter.h>
+#include "ros_type_introspection/ros_introspection.hpp"
 
 namespace RosIntrospection
 {

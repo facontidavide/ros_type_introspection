@@ -32,9 +32,10 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 ********************************************************************/
 
-#include <ros_type_introspection/renamer.hpp>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/utility/string_ref.hpp>
+#include "ros_type_introspection/renamer.hpp"
 
 namespace RosIntrospection{
 
@@ -194,7 +195,7 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
 
             if( isNumberPlaceholder( *value) ){
               char buffer[16];
-              sprintf( buffer,"%d", leaf.index_array[position--]);
+              print_number( buffer, leaf.index_array[position--] );
               formatted_string.push_back( std::move(SString(buffer)) );
               value = &formatted_string.back();
             }
@@ -230,7 +231,7 @@ void applyNameTransform(const std::vector<SubstitutionRule>& rules,
 
             if( isNumberPlaceholder( *value) ){
               char buffer[16];
-              sprintf( buffer,"%d", leaf.index_array[position--]);
+              print_number( buffer, leaf.index_array[position--] );
               formatted_string.push_back( std::move(SString(buffer)) );
               value = &formatted_string.back();
             }

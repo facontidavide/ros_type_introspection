@@ -39,10 +39,8 @@
 #include <map>
 #include <boost/function.hpp>
 #include <boost/utility/string_ref.hpp>
-#include <ros_type_introspection/builtin_types.hpp>
-#include <ros_type_introspection/string.hpp>
-#include <ros_type_introspection/stringtree.hpp>
-#include <ros_type_introspection/variant.hpp>
+#include "ros_type_introspection/stringtree.hpp"
+#include "ros_type_introspection/variant.hpp"
 
 namespace RosIntrospection{
 

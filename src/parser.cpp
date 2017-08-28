@@ -32,7 +32,6 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 ********************************************************************/
 
-#include <ros_type_introspection/parser.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/utility/string_ref.hpp>
 #include <boost/lexical_cast.hpp>
@@ -42,6 +41,9 @@
 #include <functional>
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/regex.hpp>
+
+#include "ros_type_introspection/parser.hpp"
+
 
 namespace RosIntrospection{
 
