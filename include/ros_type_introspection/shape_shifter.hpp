@@ -191,7 +191,7 @@ struct PreDeserialize<RosIntrospection::ShapeShifter>
 namespace RosIntrospection
 {
 
-template<class M>
+template<class M> inline 
 boost::shared_ptr<M> ShapeShifter::instantiate() const
 {
   if (!typed_)
@@ -211,13 +211,13 @@ boost::shared_ptr<M> ShapeShifter::instantiate() const
   return p;
 }
 
-template<typename Stream>
+template<typename Stream> inline 
 void ShapeShifter::write(Stream& stream) const {
   if (msgBuf_.size() > 0)
     memcpy(stream.advance(msgBuf_.size()), msgBuf_.data(), msgBuf_.size());
 }
 
-const uint8_t* ShapeShifter::raw_data() const {
+inline const uint8_t* ShapeShifter::raw_data() const {
   return msgBuf_.data();
 }
 
@@ -226,7 +226,7 @@ uint32_t ShapeShifter::size() const
   return msgBuf_.size();
 }
 
-template<typename Stream>
+template<typename Stream> inline 
 void ShapeShifter::read(Stream& stream)
 {
   //allocate enough space
@@ -235,7 +235,7 @@ void ShapeShifter::read(Stream& stream)
   memcpy(msgBuf_.data(), stream.getData(), stream.getLength());
 }
 
-template<typename Message>
+template<typename Message> inline 
 void ShapeShifter::direct_read(const Message& msg, bool do_morph)
 {
   if(do_morph)
@@ -255,29 +255,29 @@ void ShapeShifter::direct_read(const Message& msg, bool do_morph)
   ros::serialization::serialize(o_stream, msg);
 }
 
-ShapeShifter::ShapeShifter()
+inline ShapeShifter::ShapeShifter()
   :  typed_(false),
      msgBuf_()
 {
 }
 
 
-ShapeShifter::~ShapeShifter()
+inline ShapeShifter::~ShapeShifter()
 {
 
 }
 
 
-std::string const& ShapeShifter::getDataType()          const { return datatype_; }
+inline std::string const& ShapeShifter::getDataType()          const { return datatype_; }
 
 
-std::string const& ShapeShifter::getMD5Sum()            const { return md5_;   }
+inline std::string const& ShapeShifter::getMD5Sum()            const { return md5_;   }
 
 
-std::string const& ShapeShifter::getMessageDefinition() const { return msg_def_;  }
+inline std::string const& ShapeShifter::getMessageDefinition() const { return msg_def_;  }
 
 
-void ShapeShifter::morph(const std::string& _md5sum, const std::string& _datatype, const std::string& _msg_def)
+inline void ShapeShifter::morph(const std::string& _md5sum, const std::string& _datatype, const std::string& _msg_def)
 {
   md5_ = _md5sum;
   datatype_ = _datatype;
@@ -286,7 +286,7 @@ void ShapeShifter::morph(const std::string& _md5sum, const std::string& _datatyp
 }
 
 
-ros::Publisher ShapeShifter::advertise(ros::NodeHandle& nh, const std::string& topic, uint32_t queue_size, bool latch,
+inline ros::Publisher ShapeShifter::advertise(ros::NodeHandle& nh, const std::string& topic, uint32_t queue_size, bool latch,
                                        const ros::SubscriberStatusCallback &connect_cb) const
 {
   ros::AdvertiseOptions opts(topic, queue_size, getMD5Sum(), getDataType(), getMessageDefinition(), connect_cb);
