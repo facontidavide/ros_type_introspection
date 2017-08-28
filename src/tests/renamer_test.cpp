@@ -56,45 +56,45 @@ TEST(Renamer, DeserializeJointStateAndRename)
   applyNameTransform( rules, &flat_container );
 
   if(VERBOSE_TEST){
-    for(auto&it: flat_container.renamed_value) {
+    for(auto&it: renamed_value) {
       std::cout << it.first << " >> " << it.second << std::endl;
     }
   }
 
   int i = 0;
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState/hola/pos"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 11 );
+  EXPECT_EQ( renamed_value[i].first , SString("JointState/hola/pos"));
+  EXPECT_EQ( renamed_value[i++].second, 11 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState/ciao/pos"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 12 );
+  EXPECT_EQ( renamed_value[i].first , SString("JointState/ciao/pos"));
+  EXPECT_EQ( renamed_value[i++].second, 12 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState/bye/pos"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 13 );
+  EXPECT_EQ( renamed_value[i].first , SString("JointState/bye/pos"));
+  EXPECT_EQ( renamed_value[i++].second, 13 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState/hola/vel"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 21 );
+  EXPECT_EQ( renamed_value[i].first , SString("JointState/hola/vel"));
+  EXPECT_EQ( renamed_value[i++].second, 21 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState/ciao/vel"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 22 );
+  EXPECT_EQ( renamed_value[i].first , SString("JointState/ciao/vel"));
+  EXPECT_EQ( renamed_value[i++].second, 22 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState/bye/vel"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 23 );
+  EXPECT_EQ( renamed_value[i].first , SString("JointState/bye/vel"));
+  EXPECT_EQ( renamed_value[i++].second, 23 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState/hola/eff"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 31 );
+  EXPECT_EQ( renamed_value[i].first , SString("JointState/hola/eff"));
+  EXPECT_EQ( renamed_value[i++].second, 31 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState/ciao/eff"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 32 );
+  EXPECT_EQ( renamed_value[i].first , SString("JointState/ciao/eff"));
+  EXPECT_EQ( renamed_value[i++].second, 32 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState/bye/eff"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 33 );
+  EXPECT_EQ( renamed_value[i].first , SString("JointState/bye/eff"));
+  EXPECT_EQ( renamed_value[i++].second, 33 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState/header/seq"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 2016 );
+  EXPECT_EQ( renamed_value[i].first , SString("JointState/header/seq"));
+  EXPECT_EQ( renamed_value[i++].second, 2016 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState/header/stamp"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 1234.567 );
+  EXPECT_EQ( renamed_value[i].first , SString("JointState/header/stamp"));
+  EXPECT_EQ( renamed_value[i++].second, 1234.567 );
 
 }*/
 
@@ -141,50 +141,51 @@ TEST(Renamer2, DeserializeJointStateAndRename)
   ROSType main_type( DataType<sensor_msgs::JointState >::value() );
 
   ROSTypeFlat flat_container;
+  RenamedValues renamed_value;
 
   buildRosFlatType(type_map, main_type, "JointState", buffer.data(), &flat_container);
-  applyNameTransform( rules, &flat_container );
+  applyNameTransform( rules, flat_container, renamed_value );
 
   if(VERBOSE_TEST){
-    for(auto&it: flat_container.renamed_value) {
+    for(auto&it: renamed_value) {
       std::cout << it.first << " >> " << it.second.convert<double>() << std::endl;
     }
   }
 
   int i = 0;
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("myJointState/hola/pos"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 11 );
+  EXPECT_EQ( renamed_value[i].first , ("myJointState/hola/pos"));
+  EXPECT_EQ( renamed_value[i++].second, 11 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("myJointState/ciao/pos"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 12 );
+  EXPECT_EQ( renamed_value[i].first , ("myJointState/ciao/pos"));
+  EXPECT_EQ( renamed_value[i++].second, 12 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("myJointState/bye/pos"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 13 );
+  EXPECT_EQ( renamed_value[i].first , ("myJointState/bye/pos"));
+  EXPECT_EQ( renamed_value[i++].second, 13 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("myJointState/hola/vel"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 21 );
+  EXPECT_EQ( renamed_value[i].first , ("myJointState/hola/vel"));
+  EXPECT_EQ( renamed_value[i++].second, 21 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("myJointState/ciao/vel"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 22 );
+  EXPECT_EQ( renamed_value[i].first , ("myJointState/ciao/vel"));
+  EXPECT_EQ( renamed_value[i++].second, 22 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("myJointState/bye/vel"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 23 );
+  EXPECT_EQ( renamed_value[i].first , ("myJointState/bye/vel"));
+  EXPECT_EQ( renamed_value[i++].second, 23 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("myJointState/hola/eff"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 31 );
+  EXPECT_EQ( renamed_value[i].first , ("myJointState/hola/eff"));
+  EXPECT_EQ( renamed_value[i++].second, 31 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("myJointState/ciao/eff"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 32 );
+  EXPECT_EQ( renamed_value[i].first , ("myJointState/ciao/eff"));
+  EXPECT_EQ( renamed_value[i++].second, 32 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("myJointState/bye/eff"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 33 );
+  EXPECT_EQ( renamed_value[i].first , ("myJointState/bye/eff"));
+  EXPECT_EQ( renamed_value[i++].second, 33 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState/header/seq"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 2016 );
+  EXPECT_EQ( renamed_value[i].first , ("JointState/header/seq"));
+  EXPECT_EQ( renamed_value[i++].second, 2016 );
 
-  EXPECT_EQ( flat_container.renamed_value[i].first , SString("JointState/header/stamp"));
-  EXPECT_EQ( flat_container.renamed_value[i++].second, 1234.567 );
+  EXPECT_EQ( renamed_value[i].first , ("JointState/header/stamp"));
+  EXPECT_EQ( renamed_value[i++].second, 1234.567 );
 
 }
 
