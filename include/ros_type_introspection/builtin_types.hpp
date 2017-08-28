@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <string>
+#include <ros/ros.h>
 
 namespace RosIntrospection{
 
@@ -63,6 +64,9 @@ template <> inline BuiltinType getType<float>()  {  return FLOAT32; }
 template <> inline BuiltinType getType<double>() {  return FLOAT64; }
 
 template <> inline BuiltinType getType<std::string>() {  return STRING; }
+
+template <> inline BuiltinType getType<ros::Time>()     {  return TIME; }
+template <> inline BuiltinType getType<ros::Duration>() {  return DURATION; }
 
 }
 

@@ -130,34 +130,37 @@ inline void checkUpperLimit(const From& from)
 template <typename From, typename To>
 inline void checkUpperLimitFloat(const From& from)
 {
-    if (from > std::numeric_limits<To>::max())
-        throw RangeException("Value too large.");
+  if (from > std::numeric_limits<To>::max()){
+    throw RangeException("Value too large.");
+  }
 }
 
 template <typename From, typename To>
 inline void checkLowerLimitFloat(const From& from)
 {
-    if (from < -std::numeric_limits<To>::max())
+    if (from < -std::numeric_limits<To>::max()){
         throw RangeException("Value too small.");
+    }
 }
 
 template <typename From, typename To>
 inline void checkLowerLimit(const From& from)
 {
-    if (from < std::numeric_limits<To>::min())
-        throw RangeException("Value too small.");
+  if (from < std::numeric_limits<To>::min()){
+    throw RangeException("Value too small.");
+  }
 }
 
 template <typename From, typename To>
 inline void checkTruncation(const From& from)
 {
-    if( from != static_cast<From>(static_cast<To>( from)))
-        throw RangeException("Floating point truncated");
+  if( from != static_cast<From>(static_cast<To>( from))){
+    throw RangeException("Floating point truncated");
+  }
 }
 
 
 //----------------------- Implementation ----------------------------------------------
-
 
 template<typename SRC,typename DST,
          typename details::EnableIf< details::is_safe_integer_conversion<SRC, DST>>* = nullptr >

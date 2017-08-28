@@ -96,7 +96,8 @@ TEST(Renamer, DeserializeJointStateAndRename)
   EXPECT_EQ( renamed_value[i].first , SString("JointState/header/stamp"));
   EXPECT_EQ( renamed_value[i++].second, 1234.567 );
 
-}*/
+}
+*/
 
 TEST(Renamer2, DeserializeJointStateAndRename)
 {

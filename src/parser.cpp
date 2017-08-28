@@ -194,17 +194,19 @@ ROSType::ROSType(const std::string &name):
     else if(_msg_name.compare( "time" ) == 0 ) {
         _id = RosIntrospection::TIME;
         _deserialize_impl = [](uint8_t** buffer) {
-            const uint32_t sec  = ReadFromBuffer<uint32_t>(buffer);
-            const uint32_t nsec = ReadFromBuffer<uint32_t>(buffer);
-            return static_cast<uint64_t>(sec * 1000000000ull + nsec);
+            ros::Time tmp;
+            tmp.sec  = ReadFromBuffer<uint32_t>(buffer);
+            tmp.nsec = ReadFromBuffer<uint32_t>(buffer);
+            return tmp;
         };
     }
     else if(_msg_name.compare( "duration" ) == 0 ) {
         _id = RosIntrospection::DURATION;
         _deserialize_impl = [](uint8_t** buffer) {
-            const int32_t sec  = ReadFromBuffer<int32_t>(buffer);
-            const int32_t nsec = ReadFromBuffer<int32_t>(buffer);
-            return static_cast<uint64_t>(sec * 1000000000ll + nsec);
+            ros::Time tmp;
+            tmp.sec  = ReadFromBuffer<int32_t>(buffer);
+            tmp.nsec = ReadFromBuffer<int32_t>(buffer);
+            return tmp;
         };
     }
     else if(_msg_name.compare( "string" ) == 0 ) {

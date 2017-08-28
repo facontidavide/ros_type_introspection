@@ -1,7 +1,7 @@
-	#include "config.h"
+#include "config.h"
 #include <gtest/gtest.h>
 
-#include <ros_type_introspection/deserializer.hpp>
+#include "ros_type_introspection/deserializer.hpp"
 #include <sensor_msgs/JointState.h>
 #include <sensor_msgs/NavSatStatus.h>
 #include <sensor_msgs/Imu.h>
@@ -68,7 +68,8 @@ TEST(Deserialize, JointState)
   EXPECT_EQ( flat_container.value[0].first.toStdString() , ("JointState/header/seq"));
   EXPECT_EQ( flat_container.value[0].second, 2016 );
   EXPECT_EQ( flat_container.value[1].first.toStdString() , ("JointState/header/stamp"));
-  EXPECT_EQ( flat_container.value[1].second, 1234.567 );
+  EXPECT_EQ( flat_container.value[1].second.convert<double>(),   double(1234.567)  );
+  EXPECT_EQ( flat_container.value[1].second.convert<ros::Time>(), joint_state.header.stamp  );
 
   EXPECT_EQ( flat_container.value[2].first.toStdString() , ("JointState/position.0"));
   EXPECT_EQ( flat_container.value[2].second, 11 );
@@ -205,7 +206,8 @@ TEST( Deserialize, DeserializeIMU)
   EXPECT_EQ( flat_container.value[index].second, 2016 );
   index++;
   EXPECT_EQ( flat_container.value[index].first.toStdString() , ("imu/header/stamp"));
-  EXPECT_EQ( flat_container.value[index].second, 1234.567 );
+  EXPECT_EQ( flat_container.value[index].second.convert<double>(),   double(1234.567)  );
+  EXPECT_EQ( flat_container.value[index].second.convert<ros::Time>(), imu.header.stamp  );
   index++;
   EXPECT_EQ( flat_container.value[index].first.toStdString() , ("imu/orientation/x"));
   EXPECT_EQ( flat_container.value[index].second, 11 );
