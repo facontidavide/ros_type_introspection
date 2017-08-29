@@ -2,6 +2,16 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* ros Time and Duration fixed
+* tests fixed
+* important API Change
+* might fix issue reported in `#5 <https://github.com/facontidavide/ros_type_introspection/issues/5>`_. print_number made public
+* adding inline to fix compilation error `#4 <https://github.com/facontidavide/ros_type_introspection/issues/4>`_
+* maintain nanosecond precision for time/duration
+* Contributors: Davide Faconti, Ian Taylor
+
 0.6.3 (2017-06-26)
 ------------------
 * speed up
