@@ -144,7 +144,7 @@ TEST(Renamer2, DeserializeJointStateAndRename)
   ROSTypeFlat flat_container;
   RenamedValues renamed_value;
 
-  buildRosFlatType(type_map, main_type, "JointState", buffer.data(), &flat_container);
+  buildRosFlatType(type_map, main_type, "JointState", buffer.data(), &flat_container, 100);
   applyNameTransform( rules, flat_container, renamed_value );
 
   if(VERBOSE_TEST){

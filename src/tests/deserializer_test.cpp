@@ -53,7 +53,8 @@ TEST(Deserialize, JointState)
                    main_type,
                    "JointState",
                    buffer.data(),
-                   &flat_container);
+                   &flat_container,
+                   100);
 
   if(VERBOSE_TEST){
     for(auto&it: flat_container.value) {
@@ -128,7 +129,7 @@ TEST( Deserialize, NavSatStatus)
                    main_type,
                    "nav_stat",
                    buffer.data(),
-                   &flat_container);
+                   &flat_container, 100);
 
   if(VERBOSE_TEST){ std::cout << " -------------------- " << std::endl;
 
@@ -190,7 +191,7 @@ TEST( Deserialize, DeserializeIMU)
                    main_type,
                    "imu",
                    buffer.data(),
-                   &flat_container);
+                   &flat_container, 100);
 
   if(VERBOSE_TEST){
 
@@ -301,7 +302,7 @@ TEST( Deserialize, Int16MultiArrayDeserialize)
                    main_type,
                    "multi_array",
                    buffer.data(),
-                   &flat_container);
+                   &flat_container, 100);
 
   if(VERBOSE_TEST){
     std::cout << " -------------------- " << std::endl;
