@@ -132,7 +132,7 @@ void buildRosFlatType(const ROSTypeList& type_map,
                       SString prefix,
                       uint8_t *buffer_ptr,
                       ROSTypeFlat* flat_container_output,
-                      uint16_t max_array_size = 1000);
+                      const uint32_t max_array_size );
 
 
 inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )

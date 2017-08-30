@@ -17,8 +17,7 @@ enum BuiltinType {
   STRING, OTHER
 };
 
-
-inline std::ostream& operator<<(std::ostream& os, const BuiltinType& c)
+inline const char* toStr(const BuiltinType& c)
 {
   static const char* names[] =
   {
@@ -30,7 +29,12 @@ inline std::ostream& operator<<(std::ostream& os, const BuiltinType& c)
     "STRING", "OTHER"
   };
 
-  os << names[ static_cast<int>(c) ];
+  return names[ static_cast<int>(c) ];
+}
+
+inline std::ostream& operator<<(std::ostream& os, const BuiltinType& c)
+{
+  os << toStr(c);
   return os;
 }
 

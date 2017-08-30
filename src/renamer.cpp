@@ -270,7 +270,7 @@ void applyNameTransform(const std::vector<SubstitutionRule> &rules,
     } // end for values
   } // end for rules
 
-//  static std::map<const StringTreeLeaf*, SString> cache;
+  //  static std::map<const StringTreeLeaf*, SString> cache;
 
   for(size_t i=0; i< container.value.size(); i++)
   {

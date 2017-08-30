@@ -39,27 +39,13 @@
 namespace RosIntrospection{
 
 
-inline void SkipBytesInBuffer( uint8_t** buffer, int vector_size, const BuiltinType& type )
-{
-  if( type == STRING)
-  {
-    for (int i=0; i<vector_size; i++){
-      int32_t string_size = ReadFromBuffer<int32_t>( buffer );
-      *buffer += string_size;
-    }
-  }
-  else{
-    *buffer += vector_size * BuiltinTypeSize[ static_cast<int>(type) ];
-  }
-}
-
-
 void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                           const ROSType &type,
                           StringTreeLeaf tree_node, // easier to use copy instead of reference or pointer
                           uint8_t** buffer_ptr,
                           ROSTypeFlat* flat_container,
-                          uint16_t max_array_size )
+                          const uint32_t max_array_size,
+                          bool do_store)
 {
   int array_size = type.arraySize();
   if( array_size == -1)
@@ -67,94 +53,128 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
     array_size = ReadFromBuffer<int32_t>( buffer_ptr );
   }
 
- // std::cout << type.msgName() << " type: " <<  type.typeID() << " size: " << array_size << std::endl;
+  // std::cout << type.msgName() << " type: " <<  type.typeID() << " size: " << array_size << std::endl;
 
-  std::function<void(StringTreeLeaf)> deserializeAndStore;
+  std::function<void(StringTreeLeaf, bool)> deserializeAndStore;
 
   if( type.typeID() == STRING )
   {
-      deserializeAndStore = [&](StringTreeLeaf tree_node)
-      {
-        size_t string_size = (size_t) ReadFromBuffer<int32_t>( buffer_ptr );
-        SString id( (const char*)(*buffer_ptr), string_size );
-        (*buffer_ptr) += string_size;
-        flat_container->name.push_back( std::make_pair( std::move(tree_node), id ) );
-      };
+    deserializeAndStore = [&flat_container, &buffer_ptr](StringTreeLeaf tree_node, bool store)
+    {
+      size_t string_size = (size_t) ReadFromBuffer<int32_t>( buffer_ptr );
+      SString id( (const char*)(*buffer_ptr), string_size );
+      (*buffer_ptr) += string_size;
+      if( store ) flat_container->name.push_back( std::make_pair( std::move(tree_node), id ) );
+    };
   }
   else if( type.isBuiltin())
   {
-      deserializeAndStore = [&](StringTreeLeaf tree_node){
-        flat_container->value.push_back( std::make_pair( std::move(tree_node), type.deserializeFromBuffer(buffer_ptr) ) );
-      };
+    deserializeAndStore = [&flat_container, &buffer_ptr, type](StringTreeLeaf tree_node, bool store)
+    {
+      auto p = std::make_pair( std::move(tree_node), type.deserializeFromBuffer(buffer_ptr) );
+      if( store ) flat_container->value.push_back( p );
+    };
   }
   else if( type.typeID() == OTHER)
   {
-    deserializeAndStore = [&](StringTreeLeaf tree_node)
+    const ROSMessage* mg_definition = nullptr;
+
+    for(const ROSMessage& msg: type_list) // find in the list
     {
-      bool done = false;
+      if( msg.type().msgName() == type.msgName() &&
+          msg.type().pkgName() == type.pkgName()  )
+      {
+        mg_definition = &msg;
+        break;
+      }
+    }
+    if( !mg_definition )
+    {
+      std::string output( "can't deserialize this stuff: ");
+      output +=  type.baseName().toStdString() + "\n\n";
+      output +=  "Available types are: \n\n";
       for(const ROSMessage& msg: type_list) // find in the list
       {
-        if( msg.type().msgName() == type.msgName() &&
-            msg.type().pkgName() == type.pkgName()  )
+        output += "   " +msg.type().baseName().toStdString() + "\n";
+      }
+      throw std::runtime_error( output );
+    }
+
+    deserializeAndStore = [&flat_container, &buffer_ptr, mg_definition, &type_list, max_array_size]
+        (StringTreeLeaf tree_node, bool STORE_RESULT)
+    {
+      if( STORE_RESULT == false)
+      {
+        for (const ROSField& field : mg_definition->fields() )
         {
-          auto& children_nodes = tree_node.node_ptr->children();
-
-          bool to_add = false;
-          if( children_nodes.empty() )
-          {
-            children_nodes.reserve( msg.fields().size() );
-            to_add = true;
-          }
-
-          size_t index = 0;
-
-          for (const ROSField& field : msg.fields() )
-          {
-              if(field.isConstant() == false) {
-
-              if( to_add){
-                 SString node_name( field.name() )  ;
-                 tree_node.node_ptr->addChild( node_name );
-              }
-              auto new_tree_node = tree_node;
-              new_tree_node.node_ptr = &children_nodes[index++];
-
-              // note: this is not invalidated only because we reserved space in the vector
-              //  tree_node.element_ptr = &children_nodes[index++];
-
-              buildRosFlatTypeImpl(type_list,
-                                   field.type(),
-                                   (new_tree_node),
-                                   buffer_ptr,
-                                   flat_container,
-                                   max_array_size);
-            }
-          }
-          done = true;
-          break;
+          buildRosFlatTypeImpl(type_list,
+                               field.type(),
+                               (tree_node),
+                               buffer_ptr,
+                               flat_container,
+                               max_array_size,
+                               false);
         }
       }
-      if( !done ){
-          std::string output( "can't deserialize this stuff: ");
-          output +=  type.baseName().toStdString() + "\n\n";
-          output +=  "Available types are: \n\n";
-          for(const ROSMessage& msg: type_list) // find in the list
-          {
-            output += "   " +msg.type().baseName().toStdString() + "\n";
-          }
-        throw std::runtime_error( output );
-      }
-    };
+      else{
+        auto& children_nodes = tree_node.node_ptr->children();
+
+        bool to_add = false;
+        if( children_nodes.empty() )
+        {
+          children_nodes.reserve( mg_definition->fields().size() );
+          to_add = true;
+        }
+
+        size_t index = 0;
+
+        for (const ROSField& field : mg_definition->fields() )
+        {
+          if(field.isConstant() == false) {
+
+            if( to_add ){
+              SString node_name( field.name() )  ;
+              tree_node.node_ptr->addChild( node_name );
+            }
+            auto new_tree_node = tree_node;
+            new_tree_node.node_ptr = &children_nodes[index++];
+
+            buildRosFlatTypeImpl(type_list,
+                                 field.type(),
+                                 (new_tree_node),
+                                 buffer_ptr,
+                                 flat_container,
+                                 max_array_size,
+                                 true);
+
+          } //end of field.isConstant()
+        } // end of for
+      } // end of STORE_RESULTS == true
+    };//end of lambda
   }
   else {
-      throw std::runtime_error( "can't deserialize this stuff");
+    throw std::runtime_error( "can't deserialize this stuff");
   }
 
-  if( array_size < max_array_size )
-  {
-    StringTreeNode* node = tree_node.node_ptr;
+  const bool STORE = ( do_store ) && ( array_size <= max_array_size );
 
-    if( type.isArray()  )
+  if( array_size > max_array_size && do_store)
+  {
+    std::cout << "Warning: skipped a vector of type "
+              << type.baseName() << " and size "
+              << array_size << " because max_array_size = "
+              << max_array_size << "\n";
+  }
+
+  StringTreeNode* node = tree_node.node_ptr;
+
+  if( type.isArray() == false  )
+  {
+    deserializeAndStore( tree_node, STORE );
+  }
+  else
+  {
+    if(STORE)
     {
       node->children().reserve(1);
       node->addChild( "#" );
@@ -163,27 +183,31 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
 
       for (int v=0; v<array_size; v++)
       {
-        tree_node.index_array[ tree_node.array_size-1 ] = v;
-        deserializeAndStore( (tree_node) );
+        tree_node.index_array[ tree_node.array_size-1 ] = static_cast<uint16_t>(v);
+        deserializeAndStore( tree_node, STORE );
       }
     }
     else{
-      deserializeAndStore( (tree_node) );
+      size_t previous_size = flat_container->value.size();
+      for (int v=0; v<array_size; v++)
+      {
+        deserializeAndStore( tree_node, STORE );
+      }
+      size_t new_size = flat_container->value.size();
+      if( new_size > previous_size)
+      {
+        throw std::runtime_error("something wrong when STORE == false");
+      }
     }
-
-  }
-  else{
-    SkipBytesInBuffer( buffer_ptr, array_size, type.typeID() );
   }
 }
 
-
 void buildRosFlatType(const ROSTypeList& type_map,
-                             ROSType type,
-                             SString prefix,
-                             uint8_t *buffer_ptr,
-                             ROSTypeFlat* flat_container_output,
-                             uint16_t max_array_size)
+                      ROSType type,
+                      SString prefix,
+                      uint8_t *buffer_ptr,
+                      ROSTypeFlat* flat_container_output,
+                      const uint32_t max_array_size )
 {
   uint8_t** buffer = &buffer_ptr;
 
@@ -200,7 +224,8 @@ void buildRosFlatType(const ROSTypeList& type_map,
                         rootnode,
                         buffer,
                         flat_container_output,
-                        max_array_size );
+                        max_array_size,
+                        true);
 }
 
 StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr), array_size(0)
@@ -211,7 +236,7 @@ StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr), array_size(0)
 
 bool StringTreeLeaf::toStr(SString& destination) const
 {
-  char buffer[512];
+  char buffer[1024];
   int offset = this->toStr(buffer);
 
   if( offset < 0 ) {
@@ -275,13 +300,13 @@ int StringTreeLeaf::toStr(char* buffer) const
       off += value.size();
     }
     if( index > 0 ){
-        buffer[off] = '/';
-        off += 1;
+      buffer[off] = '/';
+      off += 1;
     }
     index--;
   }
   buffer[off] = '\0';
-  return off;  
+  return off;
 }
 
 
