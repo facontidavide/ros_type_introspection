@@ -57,17 +57,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
 
   std::function<void(StringTreeLeaf, bool)> deserializeAndStore;
 
-  if( type.typeID() == STRING )
-  {
-    deserializeAndStore = [&flat_container, &buffer_ptr](StringTreeLeaf tree_node, bool store)
-    {
-      size_t string_size = (size_t) ReadFromBuffer<int32_t>( buffer_ptr );
-      SString id( (const char*)(*buffer_ptr), string_size );
-      (*buffer_ptr) += string_size;
-      if( store ) flat_container->name.push_back( std::make_pair( std::move(tree_node), id ) );
-    };
-  }
-  else if( type.isBuiltin())
+  if( type.isBuiltin())
   {
     deserializeAndStore = [&flat_container, &buffer_ptr, type](StringTreeLeaf tree_node, bool store)
     {

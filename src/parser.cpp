@@ -211,6 +211,11 @@ ROSType::ROSType(const std::string &name):
   }
   else if(_msg_name.compare( "string" ) == 0 ) {
     _id = RosIntrospection::STRING;
+    _deserialize_impl = [](uint8_t** buffer) {
+      size_t string_size = (size_t) ReadFromBuffer<int32_t>(buffer);
+      SString id( (const char*)(*buffer), string_size );
+      return id;
+    };
   }
 }
 

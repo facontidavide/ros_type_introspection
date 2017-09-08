@@ -124,7 +124,7 @@ private:
 
 typedef std::map< std::string, std::vector< RosIntrospection::SubstitutionRule > > SubstitutionRuleMap;
 
-typedef std::vector< std::pair<std::string, VarNumber>> RenamedValues;
+typedef std::vector< std::pair<std::string, Variant>> RenamedValues;
 
 void applyNameTransform(const std::vector<SubstitutionRule> &rules,
                         const ROSTypeFlat& container_source,
