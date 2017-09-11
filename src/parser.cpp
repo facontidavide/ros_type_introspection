@@ -214,6 +214,7 @@ ROSType::ROSType(const std::string &name):
     _deserialize_impl = [](uint8_t** buffer) {
       size_t string_size = (size_t) ReadFromBuffer<int32_t>(buffer);
       SString id( (const char*)(*buffer), string_size );
+      (*buffer) += string_size;
       return id;
     };
   }
