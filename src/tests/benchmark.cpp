@@ -74,12 +74,12 @@ int main( int argc, char** argv)
     ROSType main_type (DataType<sensor_msgs::JointState>::value());
 
     auto rules = Rules();
-
+    RenamedValues renamed_values;
     ROSTypeFlat flat_container;
     for (int i=0; i<100*1000;i++)
     {
-        buildRosFlatType(type_map,main_type, "joint_state", buffer.data(), &flat_container);
-        applyNameTransform( rules , &flat_container );
+        buildRosFlatType(type_map,main_type, "joint_state", buffer.data(), &flat_container, 100);
+        applyNameTransform( rules , flat_container , renamed_values);
     }
 
     auto end = std::chrono::high_resolution_clock::now();
