@@ -180,7 +180,7 @@ template<> inline ros::Time VarNumber::convert() const
 
 template<> inline ros::Duration VarNumber::convert() const
 {
-  if(  _raw_data[8] != TIME )
+  if(  _raw_data[8] != DURATION )
   {
      throw TypeException("VarNumber::convert -> cannot convert ros::Duration");
   }
