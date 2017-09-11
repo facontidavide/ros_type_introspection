@@ -88,12 +88,11 @@ typedef struct{
   /// Tree that the StringTreeLeaf(s) refer to.
   StringTree tree;
 
-  /// List of all those parsed fields that can be represented by a builtin value different from "string".
+  /// List of all those parsed fields, contains both numerical values and strings.
   /// This list will be filled by the funtion buildRosFlatType.
-  std::vector< std::pair<StringTreeLeaf, VarNumber> > value;
+  std::vector< std::pair<StringTreeLeaf, Variant> > value;
 
-  /// Ñist of all those parsed fields that can be represented by a builtin value equal to "string".
-  /// This list will be filled by the funtion buildRosFlatType.
+  /// This is not used anymore, was not removed yet to to renamer.cpp still depending on it
   std::vector< std::pair<StringTreeLeaf, SString> > name;
 
   // Not used yet

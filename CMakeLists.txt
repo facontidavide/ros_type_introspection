@@ -65,15 +65,15 @@ include_directories(
 target_link_libraries(ros_type_introspection ${catkin_LIBRARIES})
 
 ## Declare a C++ executable
-#add_executable(ros_introspection_benchmark src/benchmark.cpp)
-#add_dependencies(ros_introspection_benchmark
-#    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-#    ${catkin_EXPORTED_TARGETS})
+add_executable(ros_introspection_benchmark src/tests/benchmark.cpp)
+add_dependencies(ros_introspection_benchmark
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS})
 
-#target_link_libraries(ros_introspection_benchmark
-# ${catkin_LIBRARIES}
-#  ros_type_introspection
-#)
+target_link_libraries(ros_introspection_benchmark
+ ${catkin_LIBRARIES}
+  ros_type_introspection
+)
 
 
 #############
@@ -91,7 +91,11 @@ install(TARGETS ros_type_introspection
    RUNTIME DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
  )
 
-
+install(TARGETS ros_introspection_benchmark 
+   ARCHIVE DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+ )
+ 
 ## Mark cpp header files for installation
 install(DIRECTORY include/${PROJECT_NAME}/
    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}

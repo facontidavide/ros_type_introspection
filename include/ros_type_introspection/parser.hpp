@@ -102,9 +102,9 @@ public:
     return this->baseName() < other.baseName();
   }
 
-  VarNumber deserializeFromBuffer(uint8_t** buffer) const
+  Variant deserializeFromBuffer(uint8_t** buffer) const
   {
-      if(!_deserialize_impl){ return VarNumber(); }
+      if(!_deserialize_impl){ return Variant(); }
       else{
           return _deserialize_impl(buffer);
       }
@@ -117,7 +117,7 @@ protected:
   SString _base_name;
   SString _msg_name;
   SString _pkg_name;
-  boost::function<VarNumber(uint8_t** buffer)> _deserialize_impl;
+  boost::function<Variant(uint8_t** buffer)> _deserialize_impl;
 
 };
 

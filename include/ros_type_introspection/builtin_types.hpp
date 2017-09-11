@@ -5,6 +5,14 @@
 #include <string>
 #include <ros/ros.h>
 
+#if 1
+// Faster, but might need more testing
+typedef ssoX::basic_string<char> SString;
+#else
+// slightly slower but safer option. More convenient during debug
+typedef std::string SString;
+#endif
+
 namespace RosIntrospection{
 
 
@@ -68,6 +76,7 @@ template <> inline BuiltinType getType<float>()  {  return FLOAT32; }
 template <> inline BuiltinType getType<double>() {  return FLOAT64; }
 
 template <> inline BuiltinType getType<std::string>() {  return STRING; }
+template <> inline BuiltinType getType<SString>() {  return STRING; }
 
 template <> inline BuiltinType getType<ros::Time>()     {  return TIME; }
 template <> inline BuiltinType getType<ros::Duration>() {  return DURATION; }
