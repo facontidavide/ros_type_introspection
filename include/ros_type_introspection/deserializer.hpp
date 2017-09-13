@@ -130,7 +130,7 @@ typedef struct{
 void buildRosFlatType(const ROSTypeList& type_map,
                       ROSType type,
                       SString prefix,
-                      uint8_t *buffer_ptr,
+                      const std::vector<uint8_t>& buffer,
                       ROSTypeFlat* flat_container_output,
                       const uint32_t max_array_size );
 

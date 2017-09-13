@@ -102,7 +102,7 @@ public:
     return this->baseName() < other.baseName();
   }
 
-  VarNumber deserializeFromBuffer(uint8_t** buffer) const
+  VarNumber deserializeFromBuffer(const uint8_t* buffer) const
   {
       if(!_deserialize_impl){ return VarNumber(); }
       else{
@@ -117,17 +117,37 @@ protected:
   SString _base_name;
   SString _msg_name;
   SString _pkg_name;
-  boost::function<VarNumber(uint8_t** buffer)> _deserialize_impl;
+  boost::function<VarNumber(const uint8_t* buffer)> _deserialize_impl;
 
 };
 
 // helper function to deserialize raw memory
-template <typename T> inline T ReadFromBuffer( uint8_t** buffer)
+template <typename T> inline void ReadFromBuffer( const std::vector<uint8_t>& buffer, size_t& offset, T& destination)
 {
-  T destination =  (*( reinterpret_cast<T*>( *buffer ) ) );
-  *buffer +=  sizeof(T);
-  return (destination);
+  if ( offset + sizeof(T) > buffer.size() )
+  {
+    throw std::runtime_error("Buffer overrun in RosIntrospection::ReadFromBuffer");
+  }
+  destination =  (*( reinterpret_cast<const T*>( &(buffer.data()[offset]) ) ) );
+  offset += sizeof(T);
 }
+
+template <> inline void ReadFromBuffer( const std::vector<uint8_t>& buffer, size_t& offset, SString& destination)
+{
+  int32_t string_size = 0;
+  ReadFromBuffer( buffer, offset, string_size );
+
+  if( offset + string_size > buffer.size())
+  {
+    throw std::runtime_error("Buffer overrun in RosIntrospection::ReadFromBuffer");
+  }
+
+  const char* buffer_ptr = reinterpret_cast<const char*>( &buffer[offset] );
+  offset += string_size;
+
+  destination = SString( buffer_ptr, string_size );
+}
+
 
 
 /**
