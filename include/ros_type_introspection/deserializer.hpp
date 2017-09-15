@@ -120,12 +120,12 @@ typedef struct{
  * It would require a ridicoulous amount of memory and, franckly, make little sense.
  * For this reason the argument max_array_size is used.
  *
- * @param type_map    list of all the ROSMessage already known by the application (built using buildROSTypeMapFromDefinition)
- * @param type        The main type that correspond to this serialized data.
- * @param prefix      prefix to add to the name (actually, the root of StringTree).
- * @param buffer_ptr  Pointer to the first element of the serialized data.
- * @param flat_container_output  output. It is recommended to reuse the same object if possible to reduce the amount of memory allocation.
- * @param max_array_size all the vectors that contains more elements than max_array_size will be discarted.
+ * @param type_map               List of all the ROSMessage already known by the application (built using buildROSTypeMapFromDefinition)
+ * @param type                   The main type that correspond to this serialized data.
+ * @param prefix                 Prefix to add to the name (actually, the root of StringTree).
+ * @param buffer                 The raw buffer to be parsed
+ * @param flat_container_output  It is recommended to reuse the same object if possible to reduce the amount of memory allocation.
+ * @param max_array_size         All the vectors that contains more elements than max_array_size will be discarted.
  */
 
 void buildRosFlatType(const ROSTypeList& type_map,
@@ -134,21 +134,28 @@ void buildRosFlatType(const ROSTypeList& type_map,
                       const nonstd::VectorView<uint8_t>& buffer,
                       ROSTypeFlat* flat_container_output,
                       const uint32_t max_array_size );
-/**
-* VectoLikeContainer type must implement the method size() data() and operator[].
-* Valid types are std::vector, std::deque, std::array, nonstd::VectorView, etc.
-*/
-template < typename VectoLikeContainer>
+
+inline
 void buildRosFlatType(const ROSTypeList& type_map,
                       ROSType type,
                       SString prefix,
-                      const VectoLikeContainer& buffer,
+                      const std::vector<uint8_t>& buffer,
                       ROSTypeFlat* flat_container_output,
                       const uint32_t max_array_size )
 {
-  static_assert(std::is_same<uint8_t, typename VectoLikeContainer::value_type>::value,
-                "mast pass a vector like (std::vector, std::deque, std::array, etc.) container with type uint8_t");
+  buildRosFlatType(type_map, type, prefix,
+                   nonstd::VectorView<uint8_t>(buffer.data(), buffer.size()),
+                   flat_container_output, max_array_size);
+}
 
+template<size_t SIZE>
+void buildRosFlatType(const ROSTypeList& type_map,
+                      ROSType type,
+                      SString prefix,
+                      const std::array<uint8_t, SIZE>& buffer,
+                      ROSTypeFlat* flat_container_output,
+                      const uint32_t max_array_size )
+{
   buildRosFlatType(type_map, type, prefix,
                    nonstd::VectorView<uint8_t>(buffer.data(), buffer.size()),
                    flat_container_output, max_array_size);
@@ -165,7 +172,7 @@ inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
 
 
 //-------------------- UTILITY function ------------------
-// much faster for numbers below 100
+// Brutally faster for numbers below 100
 inline int print_number(char* buffer, uint16_t value)
 {
     const char DIGITS[] =
