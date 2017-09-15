@@ -41,7 +41,7 @@
 #include <boost/utility/string_ref.hpp>
 #include "ros_type_introspection/stringtree.hpp"
 #include "ros_type_introspection/variant.hpp"
-#include "ros_type_introspection/string_view.hpp"
+#include "ros_type_introspection/vector_view.hpp"
 
 namespace RosIntrospection{
 

@@ -135,33 +135,6 @@ void buildRosFlatType(const ROSTypeList& type_map,
                       ROSTypeFlat* flat_container_output,
                       const uint32_t max_array_size );
 
-inline
-void buildRosFlatType(const ROSTypeList& type_map,
-                      ROSType type,
-                      SString prefix,
-                      const std::vector<uint8_t>& buffer,
-                      ROSTypeFlat* flat_container_output,
-                      const uint32_t max_array_size )
-{
-  buildRosFlatType(type_map, type, prefix,
-                   nonstd::VectorView<uint8_t>(buffer.data(), buffer.size()),
-                   flat_container_output, max_array_size);
-}
-
-template<size_t SIZE>
-void buildRosFlatType(const ROSTypeList& type_map,
-                      ROSType type,
-                      SString prefix,
-                      const std::array<uint8_t, SIZE>& buffer,
-                      ROSTypeFlat* flat_container_output,
-                      const uint32_t max_array_size )
-{
-  buildRosFlatType(type_map, type, prefix,
-                   nonstd::VectorView<uint8_t>(buffer.data(), buffer.size()),
-                   flat_container_output, max_array_size);
-}
-
-
 inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
 {
   SString dest;
