@@ -8,12 +8,13 @@
 namespace nonstd{
 
 // helper container to store the pointer to a contiguous array
-template < typename T> class VectorView{
-
+template < typename T, typename S = size_t>
+class VectorView
+{
 public:
 
-  typedef T	      value_type;
-  typedef size_t	size_type;
+  typedef T	  value_type;
+  typedef S 	size_type;
 
   VectorView(const T* data, size_type size): data_(data), size_(size) { }
 
@@ -39,11 +40,22 @@ public:
 
   size_type size() const { return size_; }
 
-private:
+protected:
   const value_type* data_;
   const size_type   size_;
 };
 
-}
+//--------------------------------------------------
+
+class StringView: public VectorView<char>
+{
+public:
+  StringView(const char* data, size_type size): VectorView(data, size) { }
+  StringView(const StringView& other):          VectorView(other.data(), other.size()) { }
+  StringView( const std::string& other ):       VectorView(other.data(), other.size()) { }
+
+};
+
+} //end namspace
 
 #endif // VECTOR_VIEW_HPP
