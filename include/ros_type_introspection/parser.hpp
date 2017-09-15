@@ -41,6 +41,7 @@
 #include <boost/utility/string_ref.hpp>
 #include "ros_type_introspection/stringtree.hpp"
 #include "ros_type_introspection/variant.hpp"
+#include "ros_type_introspection/string_view.hpp"
 
 namespace RosIntrospection{
 
@@ -122,7 +123,7 @@ protected:
 };
 
 // helper function to deserialize raw memory
-template <typename T> inline void ReadFromBuffer( const std::vector<uint8_t>& buffer, size_t& offset, T& destination)
+template <typename T> inline void ReadFromBuffer( const nonstd::VectorView<uint8_t>& buffer, size_t& offset, T& destination)
 {
   if ( offset + sizeof(T) > buffer.size() )
   {
@@ -132,7 +133,7 @@ template <typename T> inline void ReadFromBuffer( const std::vector<uint8_t>& bu
   offset += sizeof(T);
 }
 
-template <> inline void ReadFromBuffer( const std::vector<uint8_t>& buffer, size_t& offset, SString& destination)
+template <> inline void ReadFromBuffer( const nonstd::VectorView<uint8_t>& buffer, size_t& offset, SString& destination)
 {
   int32_t string_size = 0;
   ReadFromBuffer( buffer, offset, string_size );

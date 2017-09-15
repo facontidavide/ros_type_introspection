@@ -52,7 +52,7 @@ TEST(Deserialize, JointState)
   buildRosFlatType(type_map,
                    main_type,
                    "JointState",
-                   buffer.data(),
+                   buffer,
                    &flat_container,
                    100);
 
@@ -128,7 +128,7 @@ TEST( Deserialize, NavSatStatus)
   buildRosFlatType(type_map,
                    main_type,
                    "nav_stat",
-                   buffer.data(),
+                   buffer,
                    &flat_container, 100);
 
   if(VERBOSE_TEST){ std::cout << " -------------------- " << std::endl;
@@ -190,7 +190,7 @@ TEST( Deserialize, DeserializeIMU)
   buildRosFlatType(type_map,
                    main_type,
                    "imu",
-                   buffer.data(),
+                   buffer,
                    &flat_container, 100);
 
   if(VERBOSE_TEST){
@@ -301,7 +301,7 @@ TEST( Deserialize, Int16MultiArrayDeserialize)
   buildRosFlatType(type_map,
                    main_type,
                    "multi_array",
-                   buffer.data(),
+                   buffer,
                    &flat_container, 100);
 
   if(VERBOSE_TEST){

@@ -42,12 +42,13 @@ namespace RosIntrospection{
 void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                           const ROSType &type,
                           StringTreeLeaf tree_node, // easier to use copy instead of reference or pointer
-                          const std::vector<uint8_t>& buffer,
+                          const nonstd::VectorView<uint8_t>& buffer,
                           size_t& buffer_offset,
                           ROSTypeFlat* flat_container,
                           const uint32_t max_array_size,
                           bool do_store)
 {
+
   int32_t array_size = type.arraySize();
   if( array_size == -1)
   {
@@ -214,7 +215,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
 void buildRosFlatType(const ROSTypeList& type_map,
                       ROSType type,
                       SString prefix,
-                      const std::vector<uint8_t>& buffer,
+                      const nonstd::VectorView<uint8_t>& buffer,
                       ROSTypeFlat* flat_container_output,
                       const uint32_t max_array_size )
 {

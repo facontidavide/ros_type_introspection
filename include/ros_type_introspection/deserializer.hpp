@@ -127,12 +127,32 @@ typedef struct{
  * @param flat_container_output  output. It is recommended to reuse the same object if possible to reduce the amount of memory allocation.
  * @param max_array_size all the vectors that contains more elements than max_array_size will be discarted.
  */
+
 void buildRosFlatType(const ROSTypeList& type_map,
                       ROSType type,
                       SString prefix,
-                      const std::vector<uint8_t>& buffer,
+                      const nonstd::VectorView<uint8_t>& buffer,
                       ROSTypeFlat* flat_container_output,
                       const uint32_t max_array_size );
+/**
+* VectoLikeContainer type must implement the method size() data() and operator[].
+* Valid types are std::vector, std::deque, std::array, nonstd::VectorView, etc.
+*/
+template < typename VectoLikeContainer>
+void buildRosFlatType(const ROSTypeList& type_map,
+                      ROSType type,
+                      SString prefix,
+                      const VectoLikeContainer& buffer,
+                      ROSTypeFlat* flat_container_output,
+                      const uint32_t max_array_size )
+{
+  static_assert(std::is_same<uint8_t, typename VectoLikeContainer::value_type>::value,
+                "mast pass a vector like (std::vector, std::deque, std::array, etc.) container with type uint8_t");
+
+  buildRosFlatType(type_map, type, prefix,
+                   nonstd::VectorView<uint8_t>(buffer.data(), buffer.size()),
+                   flat_container_output, max_array_size);
+}
 
 
 inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
