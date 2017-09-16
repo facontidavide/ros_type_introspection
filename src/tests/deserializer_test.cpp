@@ -1,7 +1,7 @@
 #include "config.h"
 #include <gtest/gtest.h>
 
-#include "ros_type_introspection/deserializer.hpp"
+#include "ros_type_introspection/ros_introspection.hpp"
 #include <sensor_msgs/JointState.h>
 #include <sensor_msgs/NavSatStatus.h>
 #include <sensor_msgs/Imu.h>
@@ -115,7 +115,7 @@ TEST(Deserialize, JointState)
   EXPECT_EQ(header.seq,        joint_state.header.seq);
   EXPECT_EQ(header.stamp.sec,  joint_state.header.stamp.sec);
   EXPECT_EQ(header.stamp.nsec, joint_state.header.stamp.nsec);
-
+  EXPECT_EQ(header.frame_id,   joint_state.header.frame_id);
 }
 
 TEST( Deserialize, NavSatStatus)
@@ -300,6 +300,7 @@ TEST( Deserialize, DeserializeIMU)
   EXPECT_EQ(header.seq,        imu.header.seq);
   EXPECT_EQ(header.stamp.sec,  imu.header.stamp.sec);
   EXPECT_EQ(header.stamp.nsec, imu.header.stamp.nsec);
+  EXPECT_EQ(header.frame_id,   imu.header.frame_id);
 
   ExtractSpecificROSMessages(type_map,  main_type,
                               "imu", buffer,
