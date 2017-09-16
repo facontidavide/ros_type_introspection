@@ -45,14 +45,16 @@
 
 namespace RosIntrospection{
 
-
-#if 1
-// Faster, but might need more testing
-typedef ssoX::basic_string<char> SString;
-#else
-// slightly slower but safer option. More convenient during debug
-typedef std::string SString;
-#endif
+/**
+ * @brief SetWarningsOutput global function to set where warnings are streamed. By default is std::err.
+ * You can disable it as follows:
+ *
+ *     std::ostream null_stream(nullptr);
+ *     SetWarningsOutput(&null_stream);
+ *
+ * @param stream
+ */
+void SetWarningsOutput(std::ostream *stream);
 
 typedef details::TreeElement<SString> StringTreeNode;
 typedef details::Tree<SString> StringTree;

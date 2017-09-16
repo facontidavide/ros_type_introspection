@@ -447,6 +447,14 @@ ROSField::ROSField(const std::string &definition)
   _value = value;
 }
 
+std::ostream* _global_warnings_stream_ = &( std::cerr );
+
+
+void SetWarningsOutput(std::ostream* stream)
+{
+  _global_warnings_stream_ = stream;
+}
+
 
 
 

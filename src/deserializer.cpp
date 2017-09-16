@@ -38,6 +38,8 @@
 
 namespace RosIntrospection{
 
+extern std::ostream* _global_warnings_stream_;
+
 
 void buildRosFlatTypeImpl(const ROSTypeList& type_list,
                           const ROSType &type,
@@ -168,10 +170,10 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
 
   if( array_size > max_array_size && do_store)
   {
-    std::cout << "Warning: skipped a vector of type "
-              << type.baseName() << " and size "
-              << array_size << " because max_array_size = "
-              << max_array_size << "\n";
+    (*_global_warnings_stream_) << "Warning: skipped a vector of type "
+                                << type.baseName() << " and size "
+                                << array_size << " because max_array_size = "
+                                << max_array_size << "\n";
   }
 
   StringTreeNode* node = tree_node.node_ptr;
