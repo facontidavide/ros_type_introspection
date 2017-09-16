@@ -75,12 +75,12 @@ struct StringTreeLeaf{
   /// Utility functions to print the entire branch
   bool toStr(SString &destination) const;
   bool toStr(std::string &destination) const;
-  
+
   // return string length or -1 if failed
   int toStr(char* buffer) const;
-  
+
   SString toSString() { SString out; toStr(out); return out; }
-  
+
   std::string toStdString() { std::string out; toStr(out); return out; }
 };
 
@@ -128,7 +128,7 @@ typedef struct{
  * @param max_array_size         All the vectors that contains more elements than max_array_size will be discarted.
  */
 
-void buildRosFlatType(const ROSTypeList& type_map,
+void BuildRosFlatType(const ROSTypeList& type_map,
                       ROSType type,
                       SString prefix,
                       const nonstd::VectorView<uint8_t>& buffer,
@@ -148,31 +148,156 @@ inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
 // Brutally faster for numbers below 100
 inline int print_number(char* buffer, uint16_t value)
 {
-    const char DIGITS[] =
-            "00010203040506070809"
-            "10111213141516171819"
-            "20212223242526272829"
-            "30313233343536373839"
-            "40414243444546474849"
-            "50515253545556575859"
-            "60616263646566676869"
-            "70717273747576777879"
-            "80818283848586878889"
-            "90919293949596979899";
-    if (value < 10)
+  const char DIGITS[] =
+      "00010203040506070809"
+      "10111213141516171819"
+      "20212223242526272829"
+      "30313233343536373839"
+      "40414243444546474849"
+      "50515253545556575859"
+      "60616263646566676869"
+      "70717273747576777879"
+      "80818283848586878889"
+      "90919293949596979899";
+  if (value < 10)
+  {
+    buffer[0] = static_cast<char>('0' + value);
+    return 1;
+  }
+  else if (value < 100) {
+    value *= 2;
+    buffer[0] = DIGITS[ value+1 ];
+    buffer[1] = DIGITS[ value ];
+    return 2;
+  }
+  else{
+    return sprintf( buffer,"%d", value );
+  }
+}
+//------------------------------------------
+
+template <typename RM> inline
+void extractSpecificROSMessagesImpl(const ROSTypeList& type_list,
+                                ROSType type,
+                                const SString& prefix,
+                                const nonstd::VectorView<uint8_t>& buffer,
+                                size_t& buffer_offset,
+                                std::vector< std::pair<SString,RM> >& destination)
+{
+  static_assert( ros::message_traits::IsMessage<RM>::value,
+                 "The template type must be a ROS message");
+
+  int32_t array_size = type.arraySize();
+  if( array_size == -1)
+  {
+    ReadFromBuffer( buffer, buffer_offset, array_size );
+  }
+
+  //---------------------------------------------------------------------------
+  // we store in a function pointer the operation to be done later
+  // This operation is different according to the typeID
+  for (int v=0; v<array_size; v++)
+  {
+    if( strcmp( type.baseName().data(), ros::message_traits::DataType<RM>::value()) == 0)
     {
-        buffer[0] = static_cast<char>('0' + value);
-        return 1;
+      RM msg;
+      ros::serialization::IStream s( (uint8_t*)&buffer[buffer_offset], buffer.size() - buffer_offset );
+      ros::serialization::deserialize(s, msg);
+      buffer_offset += ros::serialization::serializationLength(msg);
+      destination.push_back( std::make_pair(prefix, std::move(msg) ) );
     }
-    else if (value < 100) {
-        value *= 2;
-        buffer[0] = DIGITS[ value+1 ];
-        buffer[1] = DIGITS[ value ];
-        return 2;
+    else if( type.isBuiltin())
+    {
+      // must do this even if STORE_RESULT==false to increment buffer_offset
+      type.deserializeFromBuffer(buffer, buffer_offset);
     }
-    else{
-        return sprintf( buffer,"%d", value );
+    else if( type.typeID() == OTHER)
+    {
+      const ROSMessage* mg_definition = nullptr;
+
+      for(const ROSMessage& msg: type_list) // find in the list
+      {
+        if( msg.type().msgName() == type.msgName() &&
+            msg.type().pkgName() == type.pkgName()  )
+        {
+          mg_definition = &msg;
+          break;
+        }
+      }
+      if( !mg_definition )
+      {
+        std::string output( "can't deserialize this stuff: ");
+        output +=  type.baseName().toStdString() + "\n\n";
+        output +=  "Available types are: \n\n";
+        for(const ROSMessage& msg: type_list) // find in the list
+        {
+          output += "   " +msg.type().baseName().toStdString() + "\n";
+        }
+        throw std::runtime_error( output );
+      }
+
+      for (const ROSField& field : mg_definition->fields() )
+      {
+        if(field.isConstant() == false)
+        {
+          SString new_prefix(prefix);
+          new_prefix.append("/",1).append( field.name() ) ;
+          extractSpecificROSMessagesImpl(type_list,  field.type(),
+                                     new_prefix ,
+                                     buffer, buffer_offset,
+                                     destination);
+        }
+      }
     }
+    else {
+      throw std::runtime_error( "can't deserialize this stuff");
+    }
+  }
+}
+
+/**
+ * This is a less generic version of buildRosFlatType which extract only part of the message
+ * In particular those parts which match the typename RM
+ *
+ * Example usage:
+ *
+ *   std::vector< std::pair<SString,std_msgs::Header>> headers;
+ *
+ *   ExtractSpecificROSMessages(type_map,  // map obtained using buildROSTypeMapFromDefinition
+ *                              main_type, // ROSType obtained from sensor_msgs::JointState
+ *                              "JointState",
+ *                              buffer,    //buffer with the raw version of a message of type sensor_msgs::JointState
+ *                              headers);  // output vector
+ *
+ *  // headers will contain one element. All the other fields in sensor_msgs::JointState
+ */
+template <typename RM> inline
+void ExtractSpecificROSMessages(const ROSTypeList& type_list,
+                                ROSType type,
+                                const SString& prefix,
+                                const nonstd::VectorView<uint8_t>& buffer,
+                                std::vector< std::pair<SString,RM> >& destination)
+{
+  bool found = false;
+  for(const ROSMessage& msg: type_list) // find in the list
+  {
+    if( strcmp( msg.type().baseName().data(), ros::message_traits::DataType<RM>::value()) == 0)
+    {
+      found = true;
+      break;
+    }
+  }
+  if(!found){
+    throw std::runtime_error("extractSpecificROSMessages: ROSTypeList does not contain the type you are trying to extract");
+  }
+
+  size_t offset = 0;
+  extractSpecificROSMessagesImpl(type_list, type, prefix,
+                                 buffer, offset, destination);
+  if( offset != buffer.size() )
+  {
+    throw std::runtime_error("extractSpecificROSMessages: There was an error parsing the buffer" );
+  }
 }
 
 

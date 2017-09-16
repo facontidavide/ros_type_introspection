@@ -226,7 +226,7 @@ ROSType::ROSType(const std::string &name):
 }
 
 
-ROSTypeList buildROSTypeMapFromDefinition(
+ROSTypeList BuildROSTypeMapFromDefinition(
     const std::string & type_name,
     const std::string & msg_definition)
 {

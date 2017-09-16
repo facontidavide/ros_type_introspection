@@ -235,7 +235,7 @@ public:
         return append( string, std::strlen(string) );
     }
 
-    basic_string& append(CharT const* string,size_t length)
+    basic_string& append(CharT const* string, size_t length)
     {
         size_t old_size = this->size();
         size_t new_size = old_size + length ;

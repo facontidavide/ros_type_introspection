@@ -109,7 +109,7 @@ int  PatternMatchAndIndexPosition(const StringTreeLeaf& leaf,
 }
 
 
-void applyNameTransform(const std::vector<SubstitutionRule> &rules,
+void ApplyNameTransform(const std::vector<SubstitutionRule> &rules,
                         const ROSTypeFlat& container,
                         RenamedValues& renamed_value )
 {

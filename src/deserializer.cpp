@@ -119,11 +119,14 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
         // must do this even if STORE_RESULT==false to increment buffer_offset
         for (const ROSField& field : mg_definition->fields() )
         {
-          buildRosFlatTypeImpl(type_list,  field.type(),
-                               (tree_node),
-                               buffer, buffer_offset,
-                               flat_container,
-                               max_array_size, false);
+          if(field.isConstant() == false)
+          {
+            buildRosFlatTypeImpl(type_list, field.type(),
+                                 (tree_node),
+                                 buffer, buffer_offset,
+                                 flat_container,
+                                 max_array_size, false);
+          }
         }
       }
       else{
@@ -149,7 +152,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
             auto new_tree_node = tree_node;
             new_tree_node.node_ptr = &children_nodes[index++];
 
-            buildRosFlatTypeImpl(type_list,field.type(),
+            buildRosFlatTypeImpl(type_list, field.type(),
                                  (new_tree_node),
                                  buffer, buffer_offset,
                                  flat_container,
@@ -206,7 +209,7 @@ void buildRosFlatTypeImpl(const ROSTypeList& type_list,
   }
 }
 
-void buildRosFlatType(const ROSTypeList& type_map,
+void BuildRosFlatType(const ROSTypeList& type_map,
                       ROSType type,
                       SString prefix,
                       const nonstd::VectorView<uint8_t>& buffer,
@@ -229,6 +232,10 @@ void buildRosFlatType(const ROSTypeList& type_map,
                         buffer, offset,
                         flat_container_output,
                         max_array_size, true);
+  if( offset != buffer.size() )
+  {
+    throw std::runtime_error("buildRosFlatType: There was an error parsing the buffer" );
+  }
 }
 
 StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr), array_size(0)

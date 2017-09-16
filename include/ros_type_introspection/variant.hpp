@@ -72,7 +72,8 @@ bool operator ==(const T& num, const Variant& var)
 
 
 template<typename T>
-inline Variant::Variant(const T& value)
+inline Variant::Variant(const T& value):
+  _type(OTHER)
 {
   static_assert (std::numeric_limits<T>::is_specialized ||
                  std::is_same<T, ros::Time>::value ||
@@ -85,8 +86,9 @@ inline Variant::Variant(const T& value)
   assign(value);
 }
 
-inline Variant::Variant(const char* buffer, size_t length)
+inline Variant::Variant(const char* buffer, size_t length):_type(OTHER)
 {
+  _storage.raw_string = (nullptr);
   assign(buffer,length);
 }
 

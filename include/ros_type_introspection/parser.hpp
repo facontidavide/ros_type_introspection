@@ -266,7 +266,7 @@ inline const ROSField* ROSMessage::field(const SString &name) const
  *
  * @return list od ROSMessages extracted by the main type its dependencies.
  */
-ROSTypeList buildROSTypeMapFromDefinition(
+ROSTypeList BuildROSTypeMapFromDefinition(
     const std::string& type_name,
     const std::string& msg_definition);
 

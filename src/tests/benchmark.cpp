@@ -37,7 +37,7 @@ std::vector<SubstitutionRule> Rules()
 int main( int argc, char** argv)
 {
 
-    ROSTypeList type_map =  buildROSTypeMapFromDefinition(
+    ROSTypeList type_map =  BuildROSTypeMapFromDefinition(
                 DataType<sensor_msgs::JointState >::value(),
                 Definition<sensor_msgs::JointState>::value() );
 
@@ -80,8 +80,8 @@ int main( int argc, char** argv)
 
     for (int i=0; i<100*1000;i++)
     {
-        buildRosFlatType(type_map,main_type, "joint_state", buffer, &flat_container, 100);
-        applyNameTransform( rules , flat_container, renamed_values );
+        BuildRosFlatType(type_map,main_type, "joint_state", buffer, &flat_container, 100);
+        ApplyNameTransform( rules , flat_container, renamed_values );
     }
 
     auto end = std::chrono::high_resolution_clock::now();

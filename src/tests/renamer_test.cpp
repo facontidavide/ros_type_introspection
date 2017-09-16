@@ -106,7 +106,7 @@ TEST(Renamer2, DeserializeJointStateAndRename)
   rules.push_back( SubstitutionRule("JointState/velocity.#", "JointState/name.#", "myJointState/@/vel") );
   rules.push_back( SubstitutionRule("JointState/effort.#",   "JointState/name.#", "myJointState/@/eff") );
 
-  ROSTypeList type_map = buildROSTypeMapFromDefinition(
+  ROSTypeList type_map = BuildROSTypeMapFromDefinition(
         DataType<sensor_msgs::JointState >::value(),
         Definition<sensor_msgs::JointState >::value() );
 
@@ -135,7 +135,7 @@ TEST(Renamer2, DeserializeJointStateAndRename)
     joint_state.effort[i]= 31+i;
   }
 
-  std::vector<uint8_t> buffer(64*1024);
+  std::vector<uint8_t> buffer( ros::serialization::serializationLength(joint_state) );
   ros::serialization::OStream stream(buffer.data(), buffer.size());
   ros::serialization::Serializer<sensor_msgs::JointState>::write(stream, joint_state);
 
@@ -144,8 +144,8 @@ TEST(Renamer2, DeserializeJointStateAndRename)
   ROSTypeFlat flat_container;
   RenamedValues renamed_value;
 
-  buildRosFlatType(type_map, main_type, "JointState", buffer, &flat_container, 100);
-  applyNameTransform( rules, flat_container, renamed_value );
+  BuildRosFlatType(type_map, main_type, "JointState", buffer, &flat_container, 100);
+  ApplyNameTransform( rules, flat_container, renamed_value );
 
   if(VERBOSE_TEST){
     for(auto&it: renamed_value) {
