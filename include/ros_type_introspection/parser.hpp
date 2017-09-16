@@ -103,11 +103,11 @@ public:
     return this->baseName() < other.baseName();
   }
 
-  VarNumber deserializeFromBuffer(const uint8_t* buffer) const
+  VarNumber deserializeFromBuffer(const nonstd::VectorView<uint8_t>& buffer, size_t& offset) const
   {
       if(!_deserialize_impl){ return VarNumber(); }
       else{
-          return _deserialize_impl(buffer);
+          return _deserialize_impl(buffer, offset);
       }
   }
 
@@ -118,7 +118,7 @@ protected:
   SString _base_name;
   SString _msg_name;
   SString _pkg_name;
-  boost::function<VarNumber(const uint8_t* buffer)> _deserialize_impl;
+  boost::function<VarNumber(const nonstd::VectorView<uint8_t>& buffer, size_t& offset)> _deserialize_impl;
 
 };
 
@@ -147,6 +147,13 @@ template <> inline void ReadFromBuffer( const nonstd::VectorView<uint8_t>& buffe
   offset += string_size;
 
   destination = SString( buffer_ptr, string_size );
+}
+
+template <typename T> inline VarNumber ReadFromBuffer( const nonstd::VectorView<uint8_t>& buffer, size_t& offset)
+{
+  T destination;
+  ReadFromBuffer(buffer, offset, destination);
+  return VarNumber(destination);
 }
 
 
