@@ -103,9 +103,9 @@ public:
     return this->baseName() < other.baseName();
   }
 
-  VarNumber deserializeFromBuffer(const nonstd::VectorView<uint8_t>& buffer, size_t& offset) const
+  Variant deserializeFromBuffer(const nonstd::VectorView<uint8_t>& buffer, size_t& offset) const
   {
-      if(!_deserialize_impl){ return VarNumber(); }
+      if(!_deserialize_impl){ return Variant(); }
       else{
           return _deserialize_impl(buffer, offset);
       }
@@ -118,7 +118,7 @@ protected:
   SString _base_name;
   SString _msg_name;
   SString _pkg_name;
-  boost::function<VarNumber(const nonstd::VectorView<uint8_t>& buffer, size_t& offset)> _deserialize_impl;
+  boost::function<Variant(const nonstd::VectorView<uint8_t>& buffer, size_t& offset)> _deserialize_impl;
 
 };
 
@@ -135,7 +135,7 @@ template <typename T> inline void ReadFromBuffer( const nonstd::VectorView<uint8
 
 template <> inline void ReadFromBuffer( const nonstd::VectorView<uint8_t>& buffer, size_t& offset, SString& destination)
 {
-  int32_t string_size = 0;
+  uint32_t string_size = 0;
   ReadFromBuffer( buffer, offset, string_size );
 
   if( offset + string_size > buffer.size())
@@ -149,11 +149,11 @@ template <> inline void ReadFromBuffer( const nonstd::VectorView<uint8_t>& buffe
   destination = SString( buffer_ptr, string_size );
 }
 
-template <typename T> inline VarNumber ReadFromBuffer( const nonstd::VectorView<uint8_t>& buffer, size_t& offset)
+template <typename T> inline Variant ReadFromBuffer( const nonstd::VectorView<uint8_t>& buffer, size_t& offset)
 {
   T destination;
   ReadFromBuffer(buffer, offset, destination);
-  return VarNumber(destination);
+  return Variant(destination);
 }
 
 

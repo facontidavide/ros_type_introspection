@@ -211,6 +211,17 @@ ROSType::ROSType(const std::string &name):
   }
   else if(_msg_name.compare( "string" ) == 0 ) {
     _id = RosIntrospection::STRING;
+    _deserialize_impl = [](const nonstd::VectorView<uint8_t>& buffer, size_t& offset) {
+      uint32_t string_size = 0;
+      ReadFromBuffer( buffer, offset, string_size );
+      if( offset + string_size > buffer.size())
+      {
+        throw std::runtime_error("Buffer overrun");
+      }
+      Variant string(reinterpret_cast<const char*>( &buffer[offset] ), string_size  );
+      offset += string_size;
+      return string;
+    };
   }
 }
 

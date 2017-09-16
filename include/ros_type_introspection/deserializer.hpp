@@ -90,7 +90,7 @@ typedef struct{
 
   /// List of all those parsed fields that can be represented by a builtin value different from "string".
   /// This list will be filled by the funtion buildRosFlatType.
-  std::vector< std::pair<StringTreeLeaf, VarNumber> > value;
+  std::vector< std::pair<StringTreeLeaf, Variant> > value;
 
   /// Ñist of all those parsed fields that can be represented by a builtin value equal to "string".
   /// This list will be filled by the funtion buildRosFlatType.
