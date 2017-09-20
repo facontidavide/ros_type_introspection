@@ -65,7 +65,7 @@ int main( int argc, char** argv)
         js_msg.effort[i]    = 30 +i;
     }
 
-    std::vector<uint8_t> buffer(64*1024);
+    std::vector<uint8_t> buffer( ros::serialization::serializationLength(js_msg) );
 
     auto start = std::chrono::high_resolution_clock::now();
 

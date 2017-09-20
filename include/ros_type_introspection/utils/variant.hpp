@@ -27,9 +27,55 @@ public:
 
   Variant() {
     _type = OTHER;
+    _storage.raw_string = nullptr;
   }
 
   ~Variant();
+
+  Variant(const Variant& other): _type(OTHER)
+  {
+    if( other._type == STRING)
+    {
+      const char* raw = other._storage.raw_string;
+      const uint32_t size = *(reinterpret_cast<const uint32_t*>( &raw[0] ));
+      const char* data = (&raw[4]);
+      assign( data, size );
+    }
+    else{
+      _type = other._type;
+      _storage.raw_data = other._storage.raw_data;
+    }
+  }
+
+  Variant(Variant&& other): _type(OTHER)
+  {
+    if( other._type == STRING)
+    {
+      _storage.raw_string = nullptr;
+      std::swap( _storage.raw_string,  other._storage.raw_string);
+      std::swap( _type, other._type);
+    }
+    else{
+      _type = other._type;
+      _storage.raw_data = other._storage.raw_data;
+    }
+  }
+
+  Variant& operator = (const Variant& other)
+  {
+    if( other._type == STRING)
+    {
+      const char* raw = other._storage.raw_string;
+      const uint32_t size = *(reinterpret_cast<const uint32_t*>( &raw[0] ));
+      const char* data = (&raw[4]);
+      assign( data, size );
+    }
+    else{
+      _type = other._type;
+      _storage.raw_data = other._storage.raw_data;
+    }
+    return *this;
+  }
 
   template<typename T> Variant(const T& value);
 
@@ -52,6 +98,8 @@ private:
     std::array<uint8_t,8> raw_data;
     char* raw_string;
   }_storage;
+
+  void clearStringIfNecessary();
 
   BuiltinType _type;
 };
@@ -94,10 +142,7 @@ inline Variant::Variant(const char* buffer, size_t length):_type(OTHER)
 
 inline Variant::~Variant()
 {
-  if( _storage.raw_string && _type == STRING)
-  {
-    delete [] _storage.raw_string;
-  }
+  clearStringIfNecessary();
 }
 
 //-------------------------------------
@@ -152,60 +197,41 @@ template <typename T> inline void Variant::assign(const T& value)
                  std::is_same<T, ros::Duration>::value
                  , "not a valid type");
 
-  if( _storage.raw_string && _type == STRING)
-  {
-    delete [] _storage.raw_string;
-    _storage.raw_string = nullptr;
-  }
-
+  clearStringIfNecessary();
   _type = RosIntrospection::getType<T>() ;
   *reinterpret_cast<T *>( &_storage.raw_data[0] ) =  value;
 }
 
-inline void Variant::assign(const char* buffer, size_t size)
+inline void Variant::clearStringIfNecessary()
 {
   if( _storage.raw_string && _type == STRING)
   {
     delete [] _storage.raw_string;
     _storage.raw_string = nullptr;
   }
+}
 
+inline void Variant::assign(const char* buffer, size_t size)
+{
+  clearStringIfNecessary();
   _type = STRING;
 
   _storage.raw_string = new char[size+5];
   *reinterpret_cast<uint32_t *>( &_storage.raw_string[0] ) = size;
   memcpy(&_storage.raw_string[4] , buffer, size );
-  _storage.raw_string[size-1] = '\0';
+  _storage.raw_string[size+4] = '\0';
 }
+
 
 
 template <> inline void Variant::assign(const SString& value)
 {
-  if( _storage.raw_string && _type == STRING)
-  {
-    delete [] _storage.raw_string;
-    _storage.raw_string = nullptr;
-  }
-  _type = STRING;
-  const uint32_t size = static_cast<uint32_t>(value.size());
-  _storage.raw_string = new char[size+5];
-  *reinterpret_cast<uint32_t *>( &_storage.raw_string[0] ) = size;
-  memcpy(&_storage.raw_string[4] , value.data(), size );
-  _storage.raw_string[size-1] = '\0';
+  assign( value.data(), value.size() );
 }
 
 template <> inline void Variant::assign(const std::string& value)
 {
-  if( _storage.raw_string && _type == STRING)
-  {
-    delete [] _storage.raw_string;
-    _storage.raw_string = nullptr;
-  }
-  _type = STRING;
-  const uint32_t size = static_cast<uint32_t>(value.size());
-  _storage.raw_string = new char[size+4];
-  *reinterpret_cast<uint32_t *>( &_storage.raw_string[0] ) = size;
-  memcpy(&_storage.raw_string[4] , value.data(), size );
+  assign( value.data(), value.size() );
 }
 
 //-------------------------------------

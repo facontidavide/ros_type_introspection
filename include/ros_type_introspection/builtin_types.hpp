@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <string>
 #include <ros/ros.h>
+#include <unordered_map>
 
 namespace RosIntrospection{
 
@@ -17,19 +18,53 @@ enum BuiltinType {
   STRING, OTHER
 };
 
+//---------------------------------------------------------
+
+inline int BuiltinSize(const BuiltinType c) {
+  switch (c) {
+  case BOOL:
+  case BYTE:
+  case INT8:
+  case CHAR:
+  case UINT8:    return 1;
+  case UINT16:
+  case INT16:    return 2;
+  case UINT32:
+  case INT32:
+  case FLOAT32:  return 4;
+  case UINT64:
+  case INT64:
+  case FLOAT64:
+  case TIME:
+  case DURATION: return 8;
+  case STRING:
+  case OTHER: return -1;
+  }
+  throw std::runtime_error( "unsupported builtin type value");
+}
+
 inline const char* toStr(const BuiltinType& c)
 {
-  static const char* names[] =
-  {
-    "BOOL" , "BYTE", "CHAR",
-    "UINT8", "UINT16", "UINT32", "UINT64",
-    "INT8", "INT16", "INT32", "INT64",
-    "FLOAT32", "FLOAT64",
-    "TIME", "DURATION",
-    "STRING", "OTHER"
-  };
-
-  return names[ static_cast<int>(c) ];
+  switch (c) {
+  case BOOL:     return "BOOL";
+  case BYTE:     return "BYTE";
+  case INT8:     return "INT8";
+  case CHAR:     return "CHAR";
+  case UINT8:    return "UINT8";
+  case UINT16:   return "UINT16";
+  case UINT32:   return "UINT32";
+  case UINT64:   return "UINT64";
+  case INT16:    return "INT16";
+  case INT32:    return "INT32";
+  case INT64:    return "INT64";
+  case FLOAT32:  return "FLOAT32";
+  case FLOAT64:  return "FLOAT64";
+  case TIME:     return "TIME";
+  case DURATION: return "DURATION";
+  case STRING:   return "STRING";
+  case OTHER:    return "OTHER";
+  }
+  throw std::runtime_error( "unsupported builtin type value");
 }
 
 inline std::ostream& operator<<(std::ostream& os, const BuiltinType& c)
@@ -38,14 +73,35 @@ inline std::ostream& operator<<(std::ostream& os, const BuiltinType& c)
   return os;
 }
 
-const int BuiltinTypeSize[OTHER] = {
-  1, 1, 1,
-  1, 2, 4, 8,
-  1, 2, 4, 8,
-  4, 8,
-  8, 8,
-  -1
-};
+//inline const char* toStr(const BuiltinType& c)
+//{
+//  static const char* names[] =
+//  {
+//    "BOOL" , "BYTE", "CHAR",
+//    "UINT8", "UINT16", "UINT32", "UINT64",
+//    "INT8", "INT16", "INT32", "INT64",
+//    "FLOAT32", "FLOAT64",
+//    "TIME", "DURATION",
+//    "STRING", "OTHER"
+//  };
+
+//  return names[ static_cast<int>(c) ];
+//}
+
+//inline std::ostream& operator<<(std::ostream& os, const BuiltinType& c)
+//{
+//  os << toStr(c);
+//  return os;
+//}
+
+//const int BuiltinTypeSize[OTHER] = {
+//  1, 1, 1,
+//  1, 2, 4, 8,
+//  1, 2, 4, 8,
+//  4, 8,
+//  8, 8,
+//  -1
+//};
 
 template <typename T> BuiltinType getType()
 {
