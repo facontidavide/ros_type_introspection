@@ -38,14 +38,19 @@ inline std::ostream& operator<<(std::ostream& os, const BuiltinType& c)
   return os;
 }
 
-const int BuiltinTypeSize[OTHER] = {
-  1, 1, 1,
-  1, 2, 4, 8,
-  1, 2, 4, 8,
-  4, 8,
-  8, 8,
-  -1
-};
+inline int BuiltinSize( BuiltinType t)
+{
+  const int BuiltinTypeSize[OTHER] = {
+    1, 1, 1,
+    1, 2, 4, 8,
+    1, 2, 4, 8,
+    4, 8,
+    8, 8,
+    -1
+  };
+
+  return BuiltinTypeSize[ static_cast<int>(t) ];
+}
 
 template <typename T> BuiltinType getType()
 {

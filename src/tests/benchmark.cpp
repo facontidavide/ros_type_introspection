@@ -53,7 +53,7 @@ int main( int argc, char** argv)
 
     const char* suffix[6] = { "_A", "_B", "_C", "_D" , "_E", "_F"};
 
-    for (int i=0; i< js_msg.name.size() ; i++)
+    for (size_t i=0; i< js_msg.name.size() ; i++)
     {
         js_msg.header.seq = 100+i;
         js_msg.header.stamp.sec = 1234;
@@ -65,7 +65,7 @@ int main( int argc, char** argv)
         js_msg.effort[i]    = 30 +i;
     }
 
-    std::vector<uint8_t> buffer(64*1024);
+    std::vector<uint8_t> buffer( ros::serialization::serializationLength(js_msg) );
 
     auto start = std::chrono::high_resolution_clock::now();
 
