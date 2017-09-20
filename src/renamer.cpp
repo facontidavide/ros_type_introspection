@@ -109,7 +109,7 @@ int  PatternMatchAndIndexPosition(const StringTreeLeaf& leaf,
 }
 
 
-void applyNameTransform(const std::vector<SubstitutionRule> &rules,
+void ApplyNameTransform(const std::vector<SubstitutionRule> &rules,
                         const ROSTypeFlat& container,
                         RenamedValues& renamed_value )
 {
@@ -276,7 +276,7 @@ void applyNameTransform(const std::vector<SubstitutionRule> &rules,
   {
     if( substituted[i] == false)
     {
-      const std::pair<StringTreeLeaf, VarNumber> & value_leaf = container.value[i];
+      const std::pair<StringTreeLeaf, Variant> & value_leaf = container.value[i];
 
       std::string& destination = renamed_value[renamed_index].first;
       value_leaf.first.toStr( destination );

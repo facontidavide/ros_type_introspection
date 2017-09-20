@@ -39,19 +39,22 @@
 #include <map>
 #include <boost/function.hpp>
 #include <boost/utility/string_ref.hpp>
-#include "ros_type_introspection/stringtree.hpp"
-#include "ros_type_introspection/variant.hpp"
+#include "ros_type_introspection/utils/stringtree.hpp"
+#include "ros_type_introspection/utils/variant.hpp"
+#include "ros_type_introspection/utils/vector_view.hpp"
 
 namespace RosIntrospection{
 
-
-#if 1
-// Faster, but might need more testing
-typedef ssoX::basic_string<char> SString;
-#else
-// slightly slower but safer option. More convenient during debug
-typedef std::string SString;
-#endif
+/**
+ * @brief SetWarningsOutput global function to set where warnings are streamed. By default is std::err.
+ * You can disable it as follows:
+ *
+ *     std::ostream null_stream(nullptr);
+ *     SetWarningsOutput(&null_stream);
+ *
+ * @param stream
+ */
+void SetWarningsOutput(std::ostream *stream);
 
 typedef details::TreeElement<SString> StringTreeNode;
 typedef details::Tree<SString> StringTree;
@@ -102,11 +105,11 @@ public:
     return this->baseName() < other.baseName();
   }
 
-  VarNumber deserializeFromBuffer(uint8_t** buffer) const
+  Variant deserializeFromBuffer(const nonstd::VectorView<uint8_t>& buffer, size_t& offset) const
   {
-      if(!_deserialize_impl){ return VarNumber(); }
+      if(!_deserialize_impl){ return Variant(); }
       else{
-          return _deserialize_impl(buffer);
+          return _deserialize_impl(buffer, offset);
       }
   }
 
@@ -117,17 +120,91 @@ protected:
   SString _base_name;
   SString _msg_name;
   SString _pkg_name;
-  boost::function<VarNumber(uint8_t** buffer)> _deserialize_impl;
+  boost::function<Variant(const nonstd::VectorView<uint8_t>& buffer, size_t& offset)> _deserialize_impl;
 
 };
 
 // helper function to deserialize raw memory
-template <typename T> inline T ReadFromBuffer( uint8_t** buffer)
+template <typename T> inline void ReadFromBuffer( const nonstd::VectorView<uint8_t>& buffer, size_t& offset, T& destination)
 {
-  T destination =  (*( reinterpret_cast<T*>( *buffer ) ) );
-  *buffer +=  sizeof(T);
-  return (destination);
+  if ( offset + sizeof(T) > buffer.size() )
+  {
+    throw std::runtime_error("Buffer overrun in RosIntrospection::ReadFromBuffer");
+  }
+  destination =  (*( reinterpret_cast<const T*>( &(buffer.data()[offset]) ) ) );
+  offset += sizeof(T);
 }
+
+template <> inline void ReadFromBuffer( const nonstd::VectorView<uint8_t>& buffer, size_t& offset, SString& destination)
+{
+  uint32_t string_size = 0;
+  ReadFromBuffer( buffer, offset, string_size );
+
+  if( offset + string_size > buffer.size())
+  {
+    throw std::runtime_error("Buffer overrun in RosIntrospection::ReadFromBuffer");
+  }
+
+  const char* buffer_ptr = reinterpret_cast<const char*>( &buffer[offset] );
+  offset += string_size;
+
+  destination = SString( buffer_ptr, string_size );
+}
+
+template <typename T> inline Variant ReadFromBuffer( const nonstd::VectorView<uint8_t>& buffer, size_t& offset)
+{
+  T destination;
+  ReadFromBuffer(buffer, offset, destination);
+  return Variant(destination);
+}
+
+inline Variant ReadFromBuffer(BuiltinType id, const nonstd::VectorView<uint8_t>& buffer, size_t& offset)
+{
+  switch(id)
+  {
+  case BOOL: return ReadFromBuffer<bool>(buffer,offset);
+  case BYTE:
+  case UINT8:  return ReadFromBuffer<uint8_t>(buffer,offset);
+  case UINT16: return ReadFromBuffer<uint16_t>(buffer,offset);
+  case UINT32: return ReadFromBuffer<uint32_t>(buffer,offset);
+  case UINT64: return ReadFromBuffer<uint64_t>(buffer,offset);
+
+  case INT8:   return ReadFromBuffer<int8_t>(buffer,offset);
+  case INT16:  return ReadFromBuffer<int16_t>(buffer,offset);
+  case INT32:  return ReadFromBuffer<int32_t>(buffer,offset);
+  case INT64:  return ReadFromBuffer<int64_t>(buffer,offset);
+
+  case FLOAT32:  return ReadFromBuffer<float>(buffer,offset);
+  case FLOAT64:  return ReadFromBuffer<double>(buffer,offset);
+
+  case TIME: {
+    ros::Time tmp;
+    ReadFromBuffer( buffer, offset, tmp.sec );
+    ReadFromBuffer( buffer, offset, tmp.nsec );
+    return tmp;
+  }
+  case DURATION: {
+    ros::Duration tmp;
+    ReadFromBuffer( buffer, offset, tmp.sec );
+    ReadFromBuffer( buffer, offset, tmp.nsec );
+    return tmp;
+  }
+
+  case STRING: {
+    uint32_t string_size = 0;
+    ReadFromBuffer( buffer, offset, string_size );
+    if( offset + string_size > buffer.size()) {
+      throw std::runtime_error("Buffer overrun");
+    }
+    Variant var_string(reinterpret_cast<const char*>( &buffer[offset] ), string_size  );
+    offset += string_size;
+    return var_string;
+  }
+  case OTHER: return -1;
+  }
+  throw std::runtime_error( "unsupported builtin type value");
+}
+
 
 
 /**
@@ -210,7 +287,7 @@ private:
 
 inline const ROSField* ROSMessage::field(const SString &name) const
 {
-  for(int i=0; i<_fields.size(); i++ )  {
+  for(size_t i=0; i<_fields.size(); i++ )  {
     if(  name ==_fields[i].name() ) {
       return &_fields[i];
     }
@@ -218,6 +295,29 @@ inline const ROSField* ROSMessage::field(const SString &name) const
   return nullptr;
 }
 
+
+inline BuiltinType toBuiltinType(const SString& s) {
+  static std::map<SString, BuiltinType> string_to_builtin_map {
+    { "bool", BOOL },
+    { "byte", BYTE },
+    { "char", CHAR },
+    { "uint8", UINT8 },
+    { "uint16", UINT16 },
+    { "uint32", UINT32 },
+    { "uint64", UINT64 },
+    { "int8", INT8 },
+    { "int16", INT16 },
+    { "int32", INT32 },
+    { "int64", INT64 },
+    { "float32", FLOAT32 },
+    { "float64", FLOAT64 },
+    { "time", TIME },
+    { "duration", DURATION },
+    { "string", STRING },
+  };
+  const auto it = string_to_builtin_map.find(s);
+  return (it != string_to_builtin_map.cend()) ? it->second : OTHER;
+}
 
 //------------------------------
 
@@ -236,11 +336,13 @@ inline const ROSField* ROSMessage::field(const SString &name) const
  *
  * @return list od ROSMessages extracted by the main type its dependencies.
  */
-ROSTypeList buildROSTypeMapFromDefinition(
+ROSTypeList BuildROSTypeMapFromDefinition(
     const std::string& type_name,
     const std::string& msg_definition);
 
 std::ostream& operator<<(std::ostream& s, const ROSTypeList& c);
+
+
 
 
 } // end namespace

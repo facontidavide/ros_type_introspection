@@ -171,11 +171,11 @@ TEST(ROSMessageFields, ConstantComments )
 }
 
 
-TEST(buildROSTypeMapFromDefinition,  PoseParsing )
+TEST(BuildROSTypeMapFromDefinition,  PoseParsing )
 {
   RosIntrospection::ROSTypeList rmap;
 
-  rmap = buildROSTypeMapFromDefinition(
+  rmap = BuildROSTypeMapFromDefinition(
         DataType<geometry_msgs::Pose >::value(),
         Definition<geometry_msgs::Pose >::value());
 
@@ -212,11 +212,11 @@ TEST(buildROSTypeMapFromDefinition,  PoseParsing )
   EXPECT_EQ( msg.field(3).name(),  "w" );
 }
 
-TEST(buildROSTypeMapFromDefinition,  IMUparsing )
+TEST(BuildROSTypeMapFromDefinition,  IMUparsing )
 {
   RosIntrospection::ROSTypeList rmap;
 
-  rmap = buildROSTypeMapFromDefinition(
+  rmap = BuildROSTypeMapFromDefinition(
         DataType<sensor_msgs::Imu >::value(),
         Definition<sensor_msgs::Imu >::value());
 
@@ -284,7 +284,7 @@ TEST(buildROSTypeMapFromDefinition,  IMUparsing )
   EXPECT_EQ( msg.field(2).name(),  "z" );
 }
 
-TEST(buildROSTypeMapFromDefinition,  Int16MultiArrayParsing )
+TEST(BuildROSTypeMapFromDefinition,  Int16MultiArrayParsing )
 {
   // this test case was added because it previously failed to detect nested
   // arrays of custom types. In this case:
@@ -292,7 +292,7 @@ TEST(buildROSTypeMapFromDefinition,  Int16MultiArrayParsing )
 
   RosIntrospection::ROSTypeList rmap;
 
-  rmap = buildROSTypeMapFromDefinition(
+  rmap = BuildROSTypeMapFromDefinition(
         DataType<std_msgs::Int16MultiArray >::value(),
         Definition<std_msgs::Int16MultiArray >::value());
 

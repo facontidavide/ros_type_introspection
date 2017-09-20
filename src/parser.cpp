@@ -111,111 +111,15 @@ ROSType::ROSType(const std::string &name):
     _array_size = 1;
   }
   //------------------------------
-  _id = RosIntrospection::OTHER;
+  _id = toBuiltinType( _msg_name );
 
-  if( _msg_name.compare( "bool" ) == 0 ) {
-    _id = RosIntrospection::BOOL;
-    _deserialize_impl = [](uint8_t** buffer) {
-      return ReadFromBuffer<bool>(buffer);
-    };
-  }
-  else if(_msg_name.compare( "byte" ) == 0 ) {
-    _id = RosIntrospection::BYTE;
-    _deserialize_impl = [](uint8_t** buffer) {
-      return ReadFromBuffer<int8_t>(buffer);
-    };
-  }
-  else if(_msg_name.compare( "char" ) == 0 ) {
-    _id = RosIntrospection::CHAR;
-    _deserialize_impl = [](uint8_t** buffer) {
-      return ReadFromBuffer<char>(buffer);
-    };
-  }
-  else if(_msg_name.compare( "uint8" ) == 0 ) {
-    _id = RosIntrospection::UINT8;
-    _deserialize_impl = [](uint8_t** buffer) {
-      return ReadFromBuffer<uint8_t>(buffer);
-    };
-  }
-  else if(_msg_name.compare( "uint16" ) == 0 ) {
-    _id = RosIntrospection::UINT16;
-    _deserialize_impl = [](uint8_t** buffer) {
-      return ReadFromBuffer<uint16_t>(buffer);
-    };
-  }
-  else if(_msg_name.compare( "uint32" ) == 0 ) {
-    _id = RosIntrospection::UINT32;
-    _deserialize_impl = [](uint8_t** buffer) {
-      return ReadFromBuffer<uint32_t>(buffer);
-    };
-  }
-  else if(_msg_name.compare( "uint64" ) == 0 ) {
-    _id = RosIntrospection::UINT64;
-    _deserialize_impl = [](uint8_t** buffer) {
-      return ReadFromBuffer<uint64_t>(buffer);
-    };
-  }
-  else if(_msg_name.compare( "int8" ) == 0 ) {
-    _id = RosIntrospection::INT8;
-    _deserialize_impl = [](uint8_t** buffer) {
-      return ReadFromBuffer<int8_t>(buffer);
-    };
-  }
-  else if(_msg_name.compare( "int16" ) == 0 ) {
-    _id = RosIntrospection::INT16;
-    _deserialize_impl = [](uint8_t** buffer) {
-      return ReadFromBuffer<int16_t>(buffer);
-    };
-  }
-  else if(_msg_name.compare( "int32" ) == 0 ) {
-    _id = RosIntrospection::INT32;
-    _deserialize_impl = [](uint8_t** buffer) {
-      return ReadFromBuffer<int32_t>(buffer);
-    };
-  }
-  else if(_msg_name.compare( "int64" ) == 0 ) {
-    _id = RosIntrospection::INT64;
-    _deserialize_impl = [](uint8_t** buffer) {
-      return ReadFromBuffer<int64_t>(buffer);
-    };
-  }
-  else if(_msg_name.compare( "float32" ) == 0 ) {
-    _id = RosIntrospection::FLOAT32;
-    _deserialize_impl = [](uint8_t** buffer) {
-      return ReadFromBuffer<float>(buffer);
-    };
-  }
-  else if(_msg_name.compare( "float64" ) == 0 ) {
-    _id = RosIntrospection::FLOAT64;
-    _deserialize_impl = [](uint8_t** buffer) {
-      return ReadFromBuffer<double>(buffer);
-    };
-  }
-  else if(_msg_name.compare( "time" ) == 0 ) {
-    _id = RosIntrospection::TIME;
-    _deserialize_impl = [](uint8_t** buffer) {
-      ros::Time tmp;
-      tmp.sec  = ReadFromBuffer<uint32_t>(buffer);
-      tmp.nsec = ReadFromBuffer<uint32_t>(buffer);
-      return tmp;
-    };
-  }
-  else if(_msg_name.compare( "duration" ) == 0 ) {
-    _id = RosIntrospection::DURATION;
-    _deserialize_impl = [](uint8_t** buffer) {
-      ros::Time tmp;
-      tmp.sec  = ReadFromBuffer<int32_t>(buffer);
-      tmp.nsec = ReadFromBuffer<int32_t>(buffer);
-      return tmp;
-    };
-  }
-  else if(_msg_name.compare( "string" ) == 0 ) {
-    _id = RosIntrospection::STRING;
-  }
+  _deserialize_impl = [id =_id](const nonstd::VectorView<uint8_t>& buffer, size_t& offset) {
+    return ReadFromBuffer(id, buffer, offset);
+  };
 }
 
 
-ROSTypeList buildROSTypeMapFromDefinition(
+ROSTypeList BuildROSTypeMapFromDefinition(
     const std::string & type_name,
     const std::string & msg_definition)
 {
@@ -304,13 +208,7 @@ int ROSType::arraySize() const
 
 int ROSType::typeSize() const
 {
-  const int sizes[] = {1, 1, 1,
-                       1, 2, 4, 8,
-                       1, 2, 4, 8,
-                       4, 8,
-                       8, 8,
-                       -1, -1};
-  return sizes[ _id ];
+  return builtinSize( _id );
 }
 
 BuiltinType ROSType::typeID() const
@@ -434,6 +332,14 @@ ROSField::ROSField(const std::string &definition)
   _type  = ROSType( type );
   _name  = fieldname;
   _value = value;
+}
+
+std::ostream* _global_warnings_stream_ = &( std::cerr );
+
+
+void SetWarningsOutput(std::ostream* stream)
+{
+  _global_warnings_stream_ = stream;
 }
 
 

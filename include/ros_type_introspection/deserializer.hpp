@@ -38,8 +38,8 @@
 #include <array>
 #include <sstream>
 #include "ros_type_introspection/parser.hpp"
-#include "ros_type_introspection/stringtree.hpp"
-#include "ros_type_introspection/variant.hpp"
+#include "ros_type_introspection/utils/stringtree.hpp"
+#include "ros_type_introspection/utils/variant.hpp"
 
 
 namespace RosIntrospection{
@@ -75,12 +75,12 @@ struct StringTreeLeaf{
   /// Utility functions to print the entire branch
   bool toStr(SString &destination) const;
   bool toStr(std::string &destination) const;
-  
+
   // return string length or -1 if failed
   int toStr(char* buffer) const;
-  
+
   SString toSString() { SString out; toStr(out); return out; }
-  
+
   std::string toStdString() { std::string out; toStr(out); return out; }
 };
 
@@ -90,7 +90,7 @@ typedef struct{
 
   /// List of all those parsed fields that can be represented by a builtin value different from "string".
   /// This list will be filled by the funtion buildRosFlatType.
-  std::vector< std::pair<StringTreeLeaf, VarNumber> > value;
+  std::vector< std::pair<StringTreeLeaf, Variant> > value;
 
   /// Ñist of all those parsed fields that can be represented by a builtin value equal to "string".
   /// This list will be filled by the funtion buildRosFlatType.
@@ -120,20 +120,20 @@ typedef struct{
  * It would require a ridicoulous amount of memory and, franckly, make little sense.
  * For this reason the argument max_array_size is used.
  *
- * @param type_map    list of all the ROSMessage already known by the application (built using buildROSTypeMapFromDefinition)
- * @param type        The main type that correspond to this serialized data.
- * @param prefix      prefix to add to the name (actually, the root of StringTree).
- * @param buffer_ptr  Pointer to the first element of the serialized data.
- * @param flat_container_output  output. It is recommended to reuse the same object if possible to reduce the amount of memory allocation.
- * @param max_array_size all the vectors that contains more elements than max_array_size will be discarted.
+ * @param type_map               List of all the ROSMessage already known by the application (built using buildROSTypeMapFromDefinition)
+ * @param type                   The main type that correspond to this serialized data.
+ * @param prefix                 Prefix to add to the name (actually, the root of StringTree).
+ * @param buffer                 The raw buffer to be parsed
+ * @param flat_container_output  It is recommended to reuse the same object if possible to reduce the amount of memory allocation.
+ * @param max_array_size         All the vectors that contains more elements than max_array_size will be discarted.
  */
-void buildRosFlatType(const ROSTypeList& type_map,
+
+void BuildRosFlatType(const ROSTypeList& type_map,
                       ROSType type,
                       SString prefix,
-                      uint8_t *buffer_ptr,
+                      const nonstd::VectorView<uint8_t>& buffer,
                       ROSTypeFlat* flat_container_output,
                       const uint32_t max_array_size );
-
 
 inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
 {
@@ -145,36 +145,35 @@ inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
 
 
 //-------------------- UTILITY function ------------------
-// much faster for numbers below 100
+// Brutally faster for numbers below 100
 inline int print_number(char* buffer, uint16_t value)
 {
-    const char DIGITS[] =
-            "00010203040506070809"
-            "10111213141516171819"
-            "20212223242526272829"
-            "30313233343536373839"
-            "40414243444546474849"
-            "50515253545556575859"
-            "60616263646566676869"
-            "70717273747576777879"
-            "80818283848586878889"
-            "90919293949596979899";
-    if (value < 10)
-    {
-        buffer[0] = static_cast<char>('0' + value);
-        return 1;
-    }
-    else if (value < 100) {
-        value *= 2;
-        buffer[0] = DIGITS[ value+1 ];
-        buffer[1] = DIGITS[ value ];
-        return 2;
-    }
-    else{
-        return sprintf( buffer,"%d", value );
-    }
+  const char DIGITS[] =
+      "00010203040506070809"
+      "10111213141516171819"
+      "20212223242526272829"
+      "30313233343536373839"
+      "40414243444546474849"
+      "50515253545556575859"
+      "60616263646566676869"
+      "70717273747576777879"
+      "80818283848586878889"
+      "90919293949596979899";
+  if (value < 10)
+  {
+    buffer[0] = static_cast<char>('0' + value);
+    return 1;
+  }
+  else if (value < 100) {
+    value *= 2;
+    buffer[0] = DIGITS[ value+1 ];
+    buffer[1] = DIGITS[ value ];
+    return 2;
+  }
+  else{
+    return sprintf( buffer,"%d", value );
+  }
 }
-
 
 } //end namespace
 

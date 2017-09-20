@@ -37,7 +37,7 @@ std::vector<SubstitutionRule> Rules()
 int main( int argc, char** argv)
 {
 
-    ROSTypeList type_map =  buildROSTypeMapFromDefinition(
+    ROSTypeList type_map =  BuildROSTypeMapFromDefinition(
                 DataType<sensor_msgs::JointState >::value(),
                 Definition<sensor_msgs::JointState>::value() );
 
@@ -53,7 +53,7 @@ int main( int argc, char** argv)
 
     const char* suffix[6] = { "_A", "_B", "_C", "_D" , "_E", "_F"};
 
-    for (int i=0; i< js_msg.name.size() ; i++)
+    for (size_t i=0; i< js_msg.name.size() ; i++)
     {
         js_msg.header.seq = 100+i;
         js_msg.header.stamp.sec = 1234;
@@ -65,7 +65,7 @@ int main( int argc, char** argv)
         js_msg.effort[i]    = 30 +i;
     }
 
-    std::vector<uint8_t> buffer(64*1024);
+    std::vector<uint8_t> buffer( ros::serialization::serializationLength(js_msg) );
 
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -76,10 +76,12 @@ int main( int argc, char** argv)
     auto rules = Rules();
 
     ROSTypeFlat flat_container;
+    RenamedValues renamed_values;
+
     for (int i=0; i<100*1000;i++)
     {
-        buildRosFlatType(type_map,main_type, "joint_state", buffer.data(), &flat_container);
-        applyNameTransform( rules , &flat_container );
+        BuildRosFlatType(type_map,main_type, "joint_state", buffer, &flat_container, 100);
+        ApplyNameTransform( rules , flat_container, renamed_values );
     }
 
     auto end = std::chrono::high_resolution_clock::now();
