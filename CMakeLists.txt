@@ -54,12 +54,6 @@ include_directories(
    src/parser.cpp
    src/deserializer.cpp
    src/renamer.cpp
-
-   include/ros_type_introspection/parser.hpp
-   include/ros_type_introspection/deserializer.hpp
-   include/ros_type_introspection/string.hpp
-   include/ros_type_introspection/renamer.hpp
-   include/ros_type_introspection/stringtree.hpp
  )
 
 target_link_libraries(ros_type_introspection ${catkin_LIBRARIES})
