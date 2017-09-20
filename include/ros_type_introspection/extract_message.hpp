@@ -74,7 +74,7 @@ void extractSpecificROSMessagesImpl(const ROSTypeList& type_list,
     else if( type.isBuiltin())
     {
       // must do this even if STORE_RESULT==false to increment buffer_offset
-      type.deserializeFromBuffer(buffer, buffer_offset);
+      Variant temp = type.deserializeFromBuffer(buffer, buffer_offset);
     }
     else if( type.typeID() == OTHER)
     {
