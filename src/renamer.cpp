@@ -53,7 +53,7 @@ inline bool FindPattern( const std::vector<SString>& pattern,  size_t index,
                          const StringTreeNode* tail,
                          const  StringTreeNode** head )
 {
-  if(  tail->value()  == pattern[index])
+  if(  tail->value() == pattern[index])
   {
     index++;
   }
@@ -125,16 +125,15 @@ void ApplyNameTransform(const std::vector<SubstitutionRule> &rules,
 
   static std::vector<int> alias_array_pos;
   static std::vector<SString> formatted_string;
-  static std::vector<uint8_t> substituted;
+  static std::vector<bool> substituted;
 
   alias_array_pos.reserve( num_names );
   alias_array_pos.clear();
   formatted_string.reserve( num_values );
   formatted_string.clear();
-  substituted.resize( num_values );
-  substituted.clear();
 
-  for(auto& sub: substituted) { sub = false; }
+  substituted.resize( num_values );
+  for(size_t i=0; i<num_values; i++) { substituted[i] = false; }
 
   size_t renamed_index = 0;
 
@@ -149,13 +148,13 @@ void ApplyNameTransform(const std::vector<SubstitutionRule> &rules,
     FindPattern( rule.alias(),   0, container.tree.croot(), &alias_head );
     if( !alias_head ) continue;
 
-    for (size_t n=0; n< num_names; n++)
+    for (size_t n=0; n<num_names; n++)
     {
       const StringTreeLeaf& alias_leaf = container.name[n].first;
       alias_array_pos[n] = PatternMatchAndIndexPosition(alias_leaf, alias_head);
     }
 
-    for(size_t i=0; i< num_values; i++)
+    for(size_t i=0; i<num_values; i++)
     {
       if( substituted[i]) continue;
 
@@ -285,7 +284,7 @@ void ApplyNameTransform(const std::vector<SubstitutionRule> &rules,
 
   for(size_t i=0; i< container.value.size(); i++)
   {
-    if( substituted[i] == false)
+    if( !substituted[i] )
     {
       const std::pair<StringTreeLeaf, Variant> & value_leaf = container.value[i];
 
