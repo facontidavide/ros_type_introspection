@@ -118,16 +118,25 @@ void ApplyNameTransform(const std::vector<SubstitutionRule> &rules,
 
   if( debug) std::cout << container.tree << std::endl;
 
+  const size_t num_values = container.value.size();
+  const size_t num_names  = container.name.size();
+
   renamed_value.resize( container.value.size() );
 
-  std::vector<uint8_t> substituted( container.value.size() );
+  static std::vector<int> alias_array_pos;
+  static std::vector<SString> formatted_string;
+  static std::vector<uint8_t> substituted;
+
+  alias_array_pos.reserve( num_names );
+  alias_array_pos.clear();
+  formatted_string.reserve( num_values );
+  formatted_string.clear();
+  substituted.resize( num_values );
+  substituted.clear();
+
   for(auto& sub: substituted) { sub = false; }
 
   size_t renamed_index = 0;
-
-  std::vector<int> alias_array_pos( container.name.size() );
-  std::vector<SString> formatted_string;
-  formatted_string.reserve(20);
 
   for(const auto& rule: rules)
   {
@@ -135,18 +144,18 @@ void ApplyNameTransform(const std::vector<SubstitutionRule> &rules,
     const StringTreeNode* alias_head = nullptr;
 
     FindPattern( rule.pattern(), 0, container.tree.croot(), &pattern_head );
-    if( !pattern_head) continue;
+    if( !pattern_head ) continue;
 
     FindPattern( rule.alias(),   0, container.tree.croot(), &alias_head );
-    if(!alias_head) continue;
+    if( !alias_head ) continue;
 
-    for (int n=0; n< container.name.size(); n++)
+    for (size_t n=0; n< num_names; n++)
     {
       const StringTreeLeaf& alias_leaf = container.name[n].first;
       alias_array_pos[n] = PatternMatchAndIndexPosition(alias_leaf, alias_head);
     }
 
-    for(size_t i=0; i< container.value.size(); i++)
+    for(size_t i=0; i< num_values; i++)
     {
       if( substituted[i]) continue;
 
@@ -162,7 +171,7 @@ void ApplyNameTransform(const std::vector<SubstitutionRule> &rules,
 
         const SString* new_name = nullptr;
 
-        for (int n=0; n< container.name.size(); n++)
+        for (size_t n=0; n < num_names; n++)
         {
           const auto & it = container.name[n];
           const StringTreeLeaf& alias_leaf = it.first;
@@ -183,8 +192,9 @@ void ApplyNameTransform(const std::vector<SubstitutionRule> &rules,
         if( new_name )
         {
           int char_count = 0;
-          std::vector<const SString*> concatenated_name;
+          static std::vector<const SString*> concatenated_name;
           concatenated_name.reserve( 10 );
+          concatenated_name.clear();
 
           const StringTreeNode* node_ptr = leaf.node_ptr;
 
@@ -197,7 +207,7 @@ void ApplyNameTransform(const std::vector<SubstitutionRule> &rules,
             if( isNumberPlaceholder( *value) ){
               char buffer[16];
               print_number( buffer, leaf.index_array[position--] );
-              formatted_string.push_back( std::move(SString(buffer)) );
+              formatted_string.push_back( SString(buffer) );
               value = &formatted_string.back();
             }
 
@@ -221,7 +231,7 @@ void ApplyNameTransform(const std::vector<SubstitutionRule> &rules,
             concatenated_name.push_back( std::move(value) );
           }
 
-          for (int p = 0; p < rule.pattern().size() && node_ptr; p++)
+          for (size_t p = 0; p < rule.pattern().size() && node_ptr; p++)
           {
             node_ptr = node_ptr->parent();
           }
@@ -233,7 +243,7 @@ void ApplyNameTransform(const std::vector<SubstitutionRule> &rules,
             if( isNumberPlaceholder( *value) ){
               char buffer[16];
               print_number( buffer, leaf.index_array[position--] );
-              formatted_string.push_back( std::move(SString(buffer)) );
+              formatted_string.push_back( SString(buffer) );
               value = &formatted_string.back();
             }
 
@@ -244,8 +254,9 @@ void ApplyNameTransform(const std::vector<SubstitutionRule> &rules,
           }
 
           //------------------------
-          std::string new_identifier;
+          static std::string new_identifier;
           new_identifier.reserve(80);
+          new_identifier.clear();
 
           for (int c = concatenated_name.size()-1; c >= 0; c--)
           {
