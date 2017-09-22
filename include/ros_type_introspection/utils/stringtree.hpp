@@ -58,11 +58,11 @@ template <typename T> class TreeElement
 {
 
 public:
-#if !STATIC_TREE
-    typedef boost::container::stable_vector<TreeElement> ChildrenVector;
-#else
-    typedef std::vector<TreeElement> ChildrenVector; // dangerous because of pointer invalidation (but faster)
-#endif
+//#if !STATIC_TREE
+ //   typedef boost::container::stable_vector<TreeElement> ChildrenVector;
+//#else
+   typedef std::vector<TreeElement> ChildrenVector; // dangerous because of pointer invalidation (but faster)
+//#endif
 
     TreeElement(const TreeElement* parent, const T& value );
 
@@ -74,7 +74,7 @@ public:
     const ChildrenVector& children()const   { return _children; }
     ChildrenVector& children()              { return _children; }
 
-    void addChild(const T& child );
+    TreeElement *addChild(const T& child );
 
     bool isLeaf() const { return _children.empty(); }
 
@@ -85,7 +85,7 @@ private:
 };
 
 
-template <typename T> class Tree : boost::noncopyable
+template <typename T> class Tree
 {
 public:
     Tree(): _root(nullptr,"root") {}
@@ -114,13 +114,13 @@ public:
 
 
     friend std::ostream& operator<<(std::ostream& os, const Tree& _this){
-        _this.print_impl(os, (_this._root.children()), 0);
+        _this.print_impl(os, _this.croot() , 0);
         return os;
     }
 
 private:
 
-    void print_impl(std::ostream& os, const typename TreeElement<T>::ChildrenVector& children, int indent ) const;
+    void print_impl(std::ostream& os, const TreeElement<T> *node, int indent ) const;
 
     TreeElement<T> _root;
 };
@@ -160,18 +160,19 @@ std::ostream& operator<<(std::ostream &os, const std::pair<const TreeElement<T>*
 }
 
 template <typename T> inline
-void Tree<T>::print_impl(std::ostream &os, const typename TreeElement<T>::ChildrenVector& children, int indent) const
+void Tree<T>::print_impl(std::ostream &os, const TreeElement<T>* node, int indent) const
 {
-    for (const auto& child: children)
-    {
-        for (int i=0; i<indent; i++) os << " ";
-        os << child.value();
-        if( child.parent())
-          std::cout << "("<< child.parent()->value() << ")" << std::endl;
-        else
-          std::cout << "(null)" << std::endl;
-        print_impl(os, child.children(), indent+3);
-    }
+  for (int i=0; i<indent; i++) os << " ";
+  os << node->value();
+  if( node->parent())
+    os << "("<< node->parent()->value() << ")" << std::endl;
+  else
+    os << "(null)" << std::endl;
+
+  for (const auto& child: node->children() )
+  {
+    print_impl(os, &child, indent+3);
+  }
 }
 
 template <typename T> inline
@@ -182,18 +183,19 @@ TreeElement<T>::TreeElement(const TreeElement *parent, const T& value):
 }
 
 template <typename T> inline
-void TreeElement<T>::addChild(const T& value)
+TreeElement<T> *TreeElement<T>::addChild(const T& value)
 {
-    //skip existing child
-    for (int i=0; i< _children.size(); i++){
-      if( value == _children[i].value() ){
-        return;
-      }
-    }
+//    //skip existing child
+//    for (int i=0; i< _children.size(); i++){
+//      if( value == _children[i].value() ){
+//        return &_children[i];
+//      }
+//    }
 #if STATIC_TREE
    assert(_children.capacity() > _children.size() );
 #endif
     _children.push_back( TreeElement<T>(this, value));
+    return &_children.back();
 }
 
 #if !STATIC_TREE

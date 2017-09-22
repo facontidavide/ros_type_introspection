@@ -213,8 +213,6 @@ inline Variant ReadFromBuffer(BuiltinType id, const nonstd::VectorView<uint8_t>&
  */
 class ROSField {
 public:
-  ROSField(const std::string& name, const ROSType& type ):
-    _name( name ), _type( type ) {}
 
   ROSField(const std::string& definition );
 
@@ -238,10 +236,6 @@ protected:
   SString _value;
 };
 
-class ROSMessage;
-typedef std::vector<ROSMessage> ROSTypeList;
-
-
 
 class ROSMessage{
 public:
@@ -249,20 +243,6 @@ public:
   /// This constructor does most of the work in terms of parsing.
   /// It uses the message definition to extract fields and types.
   ROSMessage(const std::string& msg_def );
-
-  /**
-   Sometimes the whole type information is incomplete, in particular
-   ROSTYPE::pkgName(). This method helps the application to "fill the blancks".
-   Used internally by buildROSTypeMapFromDefinition, the user should probably
-   ignore it.
-   */
-  void updateTypes(const std::vector<ROSType> &all_types);
-
-  /**
-   * @brief Get field by name.
-   * it uses linear search, so you should use it for debug only.
-   */
-  const ROSField* field(const SString& name) const;
 
   /**
    * @brief Get field by index.
@@ -279,22 +259,19 @@ public:
 
   void mutateType(const ROSType& new_type ) { _type = new_type; }
 
+  void updateMissingPkgNames(const std::vector<const ROSType *> &all_types);
+
 private:
+
   ROSType _type;
   std::vector<ROSField> _fields;
 };
 
-
-inline const ROSField* ROSMessage::field(const SString &name) const
+struct ROSMessageInfo
 {
-  for(size_t i=0; i<_fields.size(); i++ )  {
-    if(  name ==_fields[i].name() ) {
-      return &_fields[i];
-    }
-  }
-  return nullptr;
-}
-
+  StringTree tree;
+  std::vector<ROSMessage> type_list;
+};
 
 inline BuiltinType toBuiltinType(const SString& s) {
   static std::map<SString, BuiltinType> string_to_builtin_map {
@@ -318,31 +295,6 @@ inline BuiltinType toBuiltinType(const SString& s) {
   const auto it = string_to_builtin_map.find(s);
   return (it != string_to_builtin_map.cend()) ? it->second : OTHER;
 }
-
-//------------------------------
-
-/**
- * @brief A single message definition will (most probably) generate myltiple ROSMessage(s).
- * In fact the "child" ROSTypes are parsed as well in a recursive and hierarchical way.
- * To make an example, given as input the [geometry_msgs/Pose](http://docs.ros.org/kinetic/api/geometry_msgs/html/msg/Pose.html)
- * the result will be a ROSTypeList containing Pose, Point and Quaternion.
- *
- * @param type_name name to give to the main type to be extracted.
- *
- * @param msg_definition text obtained by either:
- *                       - topic_tools::ShapeShifter::getMessageDefinition()
- *                       - rosbag::MessageInstance::getMessageDefinition()
- *                       - ros::message_traits::Definition< __your_type__ >::value()
- *
- * @return list od ROSMessages extracted by the main type its dependencies.
- */
-ROSTypeList BuildROSTypeMapFromDefinition(
-    const std::string& type_name,
-    const std::string& msg_definition);
-
-std::ostream& operator<<(std::ostream& s, const ROSTypeList& c);
-
-
 
 
 } // end namespace
