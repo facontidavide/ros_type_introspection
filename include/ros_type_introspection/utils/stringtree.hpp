@@ -64,7 +64,7 @@ public:
    typedef std::vector<TreeElement> ChildrenVector; // dangerous because of pointer invalidation (but faster)
 //#endif
 
-    TreeElement(const TreeElement* parent, const T& value );
+    TreeElement(const TreeElement* parent, const T& value = 0 );
 
     const TreeElement* parent() const       { return _parent; }
 
@@ -74,21 +74,24 @@ public:
     const ChildrenVector& children()const   { return _children; }
     ChildrenVector& children()              { return _children; }
 
+    const TreeElement* child(size_t index) const { return &(_children[index]); }
+    TreeElement* child(size_t index) { return &(_children[index]); }
+
     TreeElement *addChild(const T& child );
 
     bool isLeaf() const { return _children.empty(); }
 
 private:
     const TreeElement*   _parent;
-    T              _value;
-    ChildrenVector _children;
+    T                    _value;
+    ChildrenVector       _children;
 };
 
 
 template <typename T> class Tree
 {
 public:
-    Tree(): _root(nullptr,"root") {}
+    Tree(): _root(nullptr) {}
 
 #if !STATIC_TREE // this operation is illegal in a static tree
     /**

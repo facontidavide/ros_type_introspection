@@ -52,7 +52,7 @@ include_directories(
 ## Declare a C++ library
  add_library(ros_type_introspection
    src/parser.cpp
-#   src/deserializer.cpp
+   src/deserializer.cpp
 #   src/renamer.cpp
     src/ros_introspection.cpp
  )

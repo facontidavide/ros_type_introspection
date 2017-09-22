@@ -66,14 +66,11 @@ struct StringTreeLeaf{
 
   StringTreeLeaf();
 
-  StringTreeNode* node_ptr;
+  const StringTreeNode* node_ptr;
 
   uint8_t array_size;
 
-  std::array<uint16_t,7> index_array;
-
-  // this prefix is used instead of the value of the root of the tree, during the creation of the string.
-  SString tree_prefix;
+  std::array<uint16_t,8> index_array;
 
   /// Utility functions to print the entire branch
   bool toStr(SString &destination) const;

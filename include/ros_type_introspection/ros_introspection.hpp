@@ -11,7 +11,7 @@ namespace RosIntrospection{
 class Parser{
 
 public:
-  Parser() {}
+  Parser(): _global_warnings(&std::cerr) {}
 
   /**
    * @brief A single message definition will (most probably) generate myltiple ROSMessage(s).
@@ -42,7 +42,18 @@ public:
 
     std::map<std::string,ROSMessageInfo> _registred_messages;
 
-    void createStringTree(ROSMessageInfo &info, const std::string &type_name);
+    void createTrees(ROSMessageInfo &info, const std::string &type_name);
+
+    void deserializeImpl(const ROSMessageInfo & info,
+                         const ROSType *type,
+                         StringTreeLeaf tree_leaf, // copy, not reference
+                         const nonstd::VectorView<uint8_t>& buffer,
+                         size_t& buffer_offset,
+                         ROSTypeFlat* flat_container,
+                         const uint32_t max_array_size,
+                         bool do_store);
+
+    std::ostream* _global_warnings;
 };
 
 }
