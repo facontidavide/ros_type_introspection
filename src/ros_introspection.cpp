@@ -9,39 +9,8 @@
 
 namespace RosIntrospection {
 
-void Parser::registerMessageDefinition(const std::string &type_name, const std::string &definition)
+void Parser::createStringTree(ROSMessageInfo& info, const std::string &type_name)
 {
-  const boost::regex msg_separation_regex("^=+\\n+");
-
-  static std::vector<std::string> split;
-  split.clear();
-  static std::vector<const ROSType*> all_types;
-  all_types.clear();
-
-
-  boost::split_regex(split, definition, msg_separation_regex);
-
-  ROSMessageInfo info;
-  info.type_list.reserve( split.size() );
-
-  for (size_t i = 0; i < split.size(); ++i)
-  {
-    ROSMessage msg( split[i] );
-    if( i == 0)
-    {
-      msg.mutateType( ROSType(type_name) );
-    }
-
-    info.type_list.push_back( std::move(msg) );
-    all_types.push_back( &(info.type_list.back().type()) );
-  }
-
-  for( ROSMessage& msg: info.type_list )
-  {
-    msg.updateMissingPkgNames( all_types );
-  }
-  //------------------------------
-
   std::function<void(const ROSType& type, StringTreeNode* node_ptr)> recursiveTreeCreator;
 
   recursiveTreeCreator = [&](const ROSType& type, StringTreeNode* node_ptr)
@@ -108,15 +77,53 @@ void Parser::registerMessageDefinition(const std::string &type_name, const std::
   info.tree.root()->value() = type_name;
   // start recursion
   recursiveTreeCreator( info.type_list.front().type(), info.tree.root() );
+}
+
+void Parser::registerMessageDefinition(const std::string &message_identifier,
+                                       const ROSType &main_type,
+                                       const std::string &definition)
+{
+  const boost::regex msg_separation_regex("^=+\\n+");
+
+  static std::vector<std::string> split;
+  split.clear();
+  static std::vector<const ROSType*> all_types;
+  all_types.clear();
+
+
+  boost::split_regex(split, definition, msg_separation_regex);
+
+  ROSMessageInfo info;
+  info.type_list.reserve( split.size() );
+
+  for (size_t i = 0; i < split.size(); ++i)
+  {
+    ROSMessage msg( split[i] );
+    if( i == 0)
+    {
+      msg.mutateType( main_type );
+    }
+
+    info.type_list.push_back( std::move(msg) );
+    all_types.push_back( &(info.type_list.back().type()) );
+  }
+
+  for( ROSMessage& msg: info.type_list )
+  {
+    msg.updateMissingPkgNames( all_types );
+  }
+  //------------------------------
+
+  createStringTree(info, message_identifier);
 
   std::cout << info.tree << std::endl;
 
-  _registred_messages.insert( std::make_pair(type_name, std::move(info) ) );
+  _registred_messages.insert( std::make_pair(message_identifier, std::move(info) ) );
 }
 
-const ROSMessageInfo *Parser::getMessageInfo(const std::string &type_name)
+const ROSMessageInfo *Parser::getMessageInfo(const std::string &msg_identifier)
 {
-  auto it = _registred_messages.find(type_name);
+  auto it = _registred_messages.find(msg_identifier);
   if( it != _registred_messages.end() )
   {
     return &(it->second);
@@ -124,11 +131,10 @@ const ROSMessageInfo *Parser::getMessageInfo(const std::string &type_name)
   return nullptr;
 }
 
-void Parser::deserializeIntoFlatContainer(const ROSType& type,
-                                          const SString& prefix,
-                                          const nonstd::VectorView<uint8_t> &buffer,
-                                          ROSTypeFlat *flat_container_output,
-                                          const uint32_t max_array_size)
+void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
+                                          const nonstd::VectorView<uint8_t>& buffer,
+                                          ROSTypeFlat* flat_container_output,
+                                          const uint32_t max_array_size )
 {
 //    tree->root()->value() = prefix;
 //    flat_container_output->name.clear();

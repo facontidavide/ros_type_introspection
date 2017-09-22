@@ -176,10 +176,11 @@ TEST(BuildROSTypeMapFromDefinition,  PoseParsing )
   RosIntrospection::Parser parser;
 
   parser.registerMessageDefinition(
-        DataType<geometry_msgs::Pose >::value(),
+        "pose",
+        ROSType(DataType<geometry_msgs::Pose >::value()),
         Definition<geometry_msgs::Pose >::value());
 
-  const ROSMessageInfo* info = parser.getMessageInfo(DataType<geometry_msgs::Pose >::value());
+  const ROSMessageInfo* info = parser.getMessageInfo("pose");
   const ROSMessage* msg = &(info->type_list[0]);
 
   EXPECT_EQ( msg->type().baseName(),  "geometry_msgs/Pose" );
@@ -217,10 +218,11 @@ TEST(BuildROSTypeMapFromDefinition,  IMUparsing )
   RosIntrospection::Parser parser;
 
   parser.registerMessageDefinition(
-        DataType<sensor_msgs::Imu >::value(),
+        "imu",
+        ROSType(DataType<sensor_msgs::Imu >::value()),
         Definition<sensor_msgs::Imu >::value());
 
-  const ROSMessageInfo* info = parser.getMessageInfo(DataType<sensor_msgs::Imu>::value());
+  const ROSMessageInfo* info = parser.getMessageInfo("imu");
   const ROSMessage* msg = &info->type_list[0];
   EXPECT_EQ( ("sensor_msgs/Imu"),  msg->type().baseName() );
   EXPECT_EQ( msg->fields().size(),  7);
@@ -291,8 +293,8 @@ TEST(BuildROSTypeMapFromDefinition,  Int16MultiArrayParsing )
 
   RosIntrospection::Parser parser;
 
-  parser.registerMessageDefinition(
-        DataType<std_msgs::Int16MultiArray >::value(),
+  parser.registerMessageDefinition( "multiarray",
+        ROSType(DataType<std_msgs::Int16MultiArray >::value()),
         Definition<std_msgs::Int16MultiArray >::value());
 
 
@@ -309,7 +311,7 @@ TEST(BuildROSTypeMapFromDefinition,  Int16MultiArrayParsing )
           size : uint32
           stride : uint32*/
 
-  const ROSMessageInfo* info = parser.getMessageInfo(DataType<std_msgs::Int16MultiArray>::value());
+  const ROSMessageInfo* info = parser.getMessageInfo("multiarray");
   const ROSMessage* msg = &info->type_list[0];
 
   EXPECT_EQ( ("std_msgs/Int16MultiArray"),  msg->type().baseName() );
