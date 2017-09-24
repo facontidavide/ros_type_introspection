@@ -19,14 +19,14 @@ std::vector<SubstitutionRule> Rules()
 {
   std::vector<SubstitutionRule> rules;
 
-  /*
+
     rules.push_back( SubstitutionRule( "transforms.#.transform",
                                        "transforms.#.header.frame_id",
                                        "transforms.#" ));
 
     rules.push_back( SubstitutionRule( "transforms.#.header",
                                        "transforms.#.header.frame_id",
-                                       "transforms.#.header" ));*/
+                                       "transforms.#.header" ));
 
   rules.push_back( SubstitutionRule( "position.#", "name.#", "@.position" ));
   rules.push_back( SubstitutionRule( "velocity.#", "name.#", "@.velocity" ));
@@ -44,6 +44,7 @@ int main( int argc, char** argv)
         ROSType(DataType<sensor_msgs::JointState>::value()),
         Definition<sensor_msgs::JointState>::value());
 
+  parser.registerRenamingRules( "joint_state", Rules() );
   std::cout << "------------------------------"  << std::endl;
 
   sensor_msgs::JointState js_msg;
@@ -74,15 +75,13 @@ int main( int argc, char** argv)
   ros::serialization::OStream stream(buffer.data(), buffer.size());
   ros::serialization::Serializer<sensor_msgs::JointState>::write(stream, js_msg);
 
-  auto rules = Rules();
-
   ROSTypeFlat flat_container;
   RenamedValues renamed_values;
 
   for (int i=0; i<100*1000;i++)
   {
     parser.deserializeIntoFlatContainer("joint_state",  buffer,  &flat_container,100);
-    ApplyNameTransform( rules , flat_container, renamed_values );
+    parser.applyNameTransform("joint_state", flat_container, &renamed_values );
   }
 
   auto end = std::chrono::high_resolution_clock::now();

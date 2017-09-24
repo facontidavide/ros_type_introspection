@@ -54,7 +54,7 @@ include_directories(
    src/parser.cpp
    src/deserializer.cpp
    src/renamer.cpp
-    src/ros_introspection.cpp
+   src/ros_introspection.cpp
  )
 
 target_link_libraries(ros_type_introspection ${catkin_LIBRARIES})
@@ -101,9 +101,9 @@ install(DIRECTORY include/${PROJECT_NAME}/
 if(CATKIN_ENABLE_TESTING)
 
  catkin_add_gtest(ros_introspection_test
-#     src/tests/parser_test.cpp
+     src/tests/parser_test.cpp
      src/tests/deserializer_test.cpp
-  #   src/tests/renamer_test.cpp
+     src/tests/renamer_test.cpp
      )
 
  target_link_libraries(ros_introspection_test

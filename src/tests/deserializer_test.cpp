@@ -192,8 +192,6 @@ TEST( Deserialize, DeserializeIMU)
   ros::serialization::OStream stream(buffer.data(), buffer.size());
   ros::serialization::Serializer<sensor_msgs::Imu>::write(stream, imu);
 
-  ROSType main_type( DataType<sensor_msgs::Imu >::value() );
-
   ROSTypeFlat flat_container;
   parser.deserializeIntoFlatContainer("imu",  buffer,  &flat_container,100);
 

@@ -1,7 +1,7 @@
 #ifndef ROS_INTROSPECTION_HPP
 #define ROS_INTROSPECTION_HPP
 
-//#include <ros_type_introspection/renamer.hpp>
+#include <ros_type_introspection/renamer.hpp>
 #include <ros_type_introspection/deserializer.hpp>
 #include <ros_type_introspection/parser.hpp>
 #include <set>
@@ -30,6 +30,9 @@ public:
                                  const ROSType &main_type,
                                  const std::string& definition);
 
+  void registerRenamingRules(const std::string& message_identifier,
+                             const std::vector<SubstitutionRule> &rules );
+
   const ROSMessageInfo* getMessageInfo(const std::string& msg_identifier);
 
   const ROSMessage *getMessageByType(const ROSType& type, const ROSMessageInfo &info);
@@ -39,23 +42,37 @@ public:
                                     ROSTypeFlat* flat_container_output,
                                     const uint32_t max_array_size );
 
+  void applyNameTransform(const std::string& msg_identifier,
+                          const ROSTypeFlat& container,
+                          RenamedValues* renamed_value );
 
-  private:
+private:
 
-    std::map<std::string,ROSMessageInfo> _registred_messages;
+  std::map<std::string,ROSMessageInfo> _registred_messages;
 
-    void createTrees(ROSMessageInfo &info, const std::string &type_name);
+  struct RulesCache{
+    RulesCache( const SubstitutionRule& other):
+      rule(other), pattern_head(nullptr), alias_head(nullptr)
+    {}
+    SubstitutionRule rule;
+    const StringTreeNode* pattern_head;
+    const StringTreeNode* alias_head;
+  };
 
-    void deserializeImpl(const ROSMessageInfo & info,
-                         const MessageTreeNode *msg_node,
-                         StringTreeLeaf tree_leaf, // copy, not reference
-                         const nonstd::VectorView<uint8_t>& buffer,
-                         size_t& buffer_offset,
-                         ROSTypeFlat* flat_container,
-                         const uint32_t max_array_size,
-                         bool do_store);
+  std::map<std::string, std::vector<RulesCache>> _registered_rules;
 
-    std::ostream* _global_warnings;
+  void createTrees(ROSMessageInfo &info, const std::string &type_name);
+
+  void deserializeImpl(const ROSMessageInfo & info,
+                       const MessageTreeNode *msg_node,
+                       StringTreeLeaf tree_leaf, // copy, not reference
+                       const nonstd::VectorView<uint8_t>& buffer,
+                       size_t& buffer_offset,
+                       ROSTypeFlat* flat_container,
+                       const uint32_t max_array_size,
+                       bool do_store);
+
+  std::ostream* _global_warnings;
 };
 
 }
