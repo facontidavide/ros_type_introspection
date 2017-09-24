@@ -73,7 +73,7 @@ TEST(ROSMessageFields, ParseComments) {
           "float64 x # I'm an end of line comment float64 y\n"
           "float64 z\n"
           );
-  ROSMessageDefinition mt(def);
+  ROSMessage mt(def);
   EXPECT_EQ( mt.type().baseName(),  "geometry_msgs/Quaternion" );
 
   EXPECT_EQ( mt.fields().size(),  2);
@@ -88,7 +88,7 @@ TEST(ROSMessageFields, ParseComments) {
 
 TEST(ROSMessageFields, constant_uint8)
 {
-  ROSMessageDefinition msg("uint8 a = 66\n");
+  ROSMessage msg("uint8 a = 66\n");
 
   EXPECT_EQ(msg.fields().size(),  1);
   EXPECT_EQ( msg.field(0).name(),  "a" );
@@ -99,7 +99,7 @@ TEST(ROSMessageFields, constant_uint8)
 
 TEST(ROSMessageFields, ConstantNavstatus )
 {
-  ROSMessageDefinition msg( Definition<sensor_msgs::NavSatStatus >::value() );
+  ROSMessage msg( Definition<sensor_msgs::NavSatStatus >::value() );
 
   EXPECT_EQ( msg.fields().size(),  10);
 
@@ -147,7 +147,7 @@ TEST(ROSMessageFields, ConstantNavstatus )
 
 TEST(ROSMessageFields, ConstantComments )
 {
-  ROSMessageDefinition msg(
+  ROSMessage msg(
         "string strA=  this string has a # comment in it  \n"
         "string strB = this string has \"quotes\" and \\slashes\\ in it\n"
         "float64 a=64.0 # numeric comment\n");
@@ -181,7 +181,7 @@ TEST(BuildROSTypeMapFromDefinition,  PoseParsing )
         Definition<geometry_msgs::Pose >::value());
 
   const ROSMessageInfo* info = parser.getMessageInfo("pose");
-  const ROSMessageDefinition* msg = &(info->type_list[0]);
+  const ROSMessage* msg = &(info->type_list[0]);
 
   EXPECT_EQ( msg->type().baseName(),  "geometry_msgs/Pose" );
   EXPECT_EQ( msg->fields().size(),  2);
@@ -223,7 +223,7 @@ TEST(BuildROSTypeMapFromDefinition,  IMUparsing )
         Definition<sensor_msgs::Imu >::value());
 
   const ROSMessageInfo* info = parser.getMessageInfo("imu");
-  const ROSMessageDefinition* msg = &info->type_list[0];
+  const ROSMessage* msg = &info->type_list[0];
   EXPECT_EQ( ("sensor_msgs/Imu"),  msg->type().baseName() );
   EXPECT_EQ( msg->fields().size(),  7);
   EXPECT_EQ( ("std_msgs/Header" ),  msg->field(0).type().baseName() );
@@ -312,7 +312,7 @@ TEST(BuildROSTypeMapFromDefinition,  Int16MultiArrayParsing )
           stride : uint32*/
 
   const ROSMessageInfo* info = parser.getMessageInfo("multiarray");
-  const ROSMessageDefinition* msg = &info->type_list[0];
+  const ROSMessage* msg = &info->type_list[0];
 
   EXPECT_EQ( ("std_msgs/Int16MultiArray"),  msg->type().baseName() );
   EXPECT_EQ( msg->fields().size(),  2);
@@ -354,9 +354,5 @@ TEST(BuildROSTypeMapFromDefinition,  Int16MultiArrayParsing )
 
 }
 
-// Run all the tests that were declared with TEST()
-int main(int argc, char **argv){
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+
 

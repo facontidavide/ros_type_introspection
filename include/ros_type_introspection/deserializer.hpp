@@ -86,7 +86,7 @@ struct StringTreeLeaf{
 
 struct ROSTypeFlat {
 
-  ROSTypeFlat(const StringTree* tree_): tree(tree_) {}
+  //ROSTypeFlat(const StringTree* tree_): tree(tree_) {}
 
   /// Tree that the StringTreeLeaf(s) refer to.
   const StringTree* tree;

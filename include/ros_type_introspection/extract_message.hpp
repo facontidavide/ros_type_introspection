@@ -78,9 +78,9 @@ void extractSpecificROSMessagesImpl(const ROSTypeList& type_list,
     }
     else if( type.typeID() == OTHER)
     {
-      const ROSMessageDefinition* mg_definition = nullptr;
+      const ROSMessage* mg_definition = nullptr;
 
-      for(const ROSMessageDefinition& msg: type_list) // find in the list
+      for(const ROSMessage& msg: type_list) // find in the list
       {
         if( msg.type().msgName() == type.msgName() &&
             msg.type().pkgName() == type.pkgName()  )
@@ -94,7 +94,7 @@ void extractSpecificROSMessagesImpl(const ROSTypeList& type_list,
         std::string output( "can't deserialize this stuff: ");
         output +=  type.baseName().toStdString() + "\n\n";
         output +=  "Available types are: \n\n";
-        for(const ROSMessageDefinition& msg: type_list) // find in the list
+        for(const ROSMessage& msg: type_list) // find in the list
         {
           output += "   " +msg.type().baseName().toStdString() + "\n";
         }
@@ -144,7 +144,7 @@ void ExtractSpecificROSMessages(const ROSTypeList& type_list,
                                 std::vector< std::pair<SString,RM> >& destination)
 {
   bool found = false;
-  for(const ROSMessageDefinition& msg: type_list) // find in the list
+  for(const ROSMessage& msg: type_list) // find in the list
   {
     if( strcmp( msg.type().baseName().data(), ros::message_traits::DataType<RM>::value()) == 0)
     {

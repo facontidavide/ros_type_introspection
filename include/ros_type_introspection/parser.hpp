@@ -56,7 +56,7 @@ namespace RosIntrospection{
  */
 void SetWarningsOutput(std::ostream *stream);
 
-typedef details::TreeElement<SString> StringTreeNode;
+typedef details::TreeNode<SString> StringTreeNode;
 typedef details::Tree<SString> StringTree;
 
 /**
@@ -124,8 +124,12 @@ protected:
 
 };
 
-typedef details::TreeElement<const ROSType*> TypeTreeNode;
-typedef details::Tree<const ROSType*> TypeTree;
+inline std::ostream& operator<<(std::ostream &os, const ROSType& t )
+{
+  os << t.baseName();
+  return os;
+}
+
 
 // helper function to deserialize raw memory
 template <typename T> inline void ReadFromBuffer( const nonstd::VectorView<uint8_t>& buffer, size_t& offset, T& destination)
@@ -231,7 +235,7 @@ public:
   /// If constant, value of field, else undefined
   const SString& value() const   { return _value; }
 
-  friend class ROSMessageDefinition;
+  friend class ROSMessage;
 
 protected:
   SString _name;
@@ -240,12 +244,12 @@ protected:
 };
 
 
-class ROSMessageDefinition{
+class ROSMessage{
 public:
 
   /// This constructor does most of the work in terms of parsing.
   /// It uses the message definition to extract fields and types.
-  ROSMessageDefinition(const std::string& msg_def );
+  ROSMessage(const std::string& msg_def );
 
   /**
    * @brief Get field by index.
@@ -270,11 +274,26 @@ private:
   std::vector<ROSField> _fields;
 };
 
+inline std::ostream& operator<<(std::ostream &os, const ROSMessage& msg )
+{
+  os << msg.type();
+  return os;
+}
+
+inline std::ostream& operator<<(std::ostream &os, const ROSMessage* msg )
+{
+  os << msg->type();
+  return os;
+}
+
+typedef details::TreeNode<const ROSMessage*> MessageTreeNode;
+typedef details::Tree<const ROSMessage*> MessageTree;
+
 struct ROSMessageInfo
 {
-  StringTree string_tree;
-  TypeTree   type_tree;
-  std::vector<ROSMessageDefinition> type_list;
+  StringTree  string_tree;
+  MessageTree message_tree;
+  std::vector<ROSMessage> type_list;
 };
 
 inline BuiltinType toBuiltinType(const SString& s) {

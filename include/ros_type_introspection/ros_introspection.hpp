@@ -32,6 +32,8 @@ public:
 
   const ROSMessageInfo* getMessageInfo(const std::string& msg_identifier);
 
+  const ROSMessage *getMessageByType(const ROSType& type, const ROSMessageInfo &info);
+
   void deserializeIntoFlatContainer(const std::string& msg_identifier,
                                     const nonstd::VectorView<uint8_t>& buffer,
                                     ROSTypeFlat* flat_container_output,
@@ -45,7 +47,7 @@ public:
     void createTrees(ROSMessageInfo &info, const std::string &type_name);
 
     void deserializeImpl(const ROSMessageInfo & info,
-                         const ROSType *type,
+                         const MessageTreeNode *msg_node,
                          StringTreeLeaf tree_leaf, // copy, not reference
                          const nonstd::VectorView<uint8_t>& buffer,
                          size_t& buffer_offset,

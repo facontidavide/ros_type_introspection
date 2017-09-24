@@ -53,22 +53,22 @@ include_directories(
  add_library(ros_type_introspection
    src/parser.cpp
    src/deserializer.cpp
-#   src/renamer.cpp
+   src/renamer.cpp
     src/ros_introspection.cpp
  )
 
 target_link_libraries(ros_type_introspection ${catkin_LIBRARIES})
 
 ## Declare a C++ executable
-#add_executable(ros_introspection_benchmark src/tests/benchmark.cpp)
-#add_dependencies(ros_introspection_benchmark
-#    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-#    ${catkin_EXPORTED_TARGETS})
+add_executable(ros_introspection_benchmark src/tests/benchmark.cpp)
+add_dependencies(ros_introspection_benchmark
+    ${${PROJECT_NAME}_EXPORTED_TARGETS}
+    ${catkin_EXPORTED_TARGETS})
 
-#target_link_libraries(ros_introspection_benchmark
-# ${catkin_LIBRARIES}
-#  ros_type_introspection
-#)
+target_link_libraries(ros_introspection_benchmark
+ ${catkin_LIBRARIES}
+  ros_type_introspection
+)
 
 
 #############
@@ -101,8 +101,8 @@ install(DIRECTORY include/${PROJECT_NAME}/
 if(CATKIN_ENABLE_TESTING)
 
  catkin_add_gtest(ros_introspection_test
-     src/tests/parser_test.cpp
-  #   src/tests/deserializer_test.cpp
+#     src/tests/parser_test.cpp
+     src/tests/deserializer_test.cpp
   #   src/tests/renamer_test.cpp
      )
 

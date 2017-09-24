@@ -187,7 +187,7 @@ BuiltinType ROSType::typeID() const
 
 
 
-ROSMessageDefinition::ROSMessageDefinition(const std::string &msg_def)
+ROSMessage::ROSMessage(const std::string &msg_def)
 {
   std::istringstream messageDescriptor(msg_def);
   boost::match_results<std::string::const_iterator> what;
@@ -215,7 +215,7 @@ ROSMessageDefinition::ROSMessageDefinition(const std::string &msg_def)
   }
 }
 
-void ROSMessageDefinition::updateMissingPkgNames(const std::vector<const ROSType*> &all_types)
+void ROSMessage::updateMissingPkgNames(const std::vector<const ROSType*> &all_types)
 {
   for (ROSField& field: _fields)
   {

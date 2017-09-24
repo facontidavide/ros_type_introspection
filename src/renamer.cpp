@@ -142,10 +142,10 @@ void ApplyNameTransform(const std::vector<SubstitutionRule> &rules,
     const StringTreeNode* pattern_head = nullptr;
     const StringTreeNode* alias_head = nullptr;
 
-    FindPattern( rule.pattern(), 0, container.tree.croot(), &pattern_head );
+    FindPattern( rule.pattern(), 0, container.tree->croot(), &pattern_head );
     if( !pattern_head ) continue;
 
-    FindPattern( rule.alias(),   0, container.tree.croot(), &alias_head );
+    FindPattern( rule.alias(),   0, container.tree->croot(), &alias_head );
     if( !alias_head ) continue;
 
     for (size_t n=0; n<num_names; n++)

@@ -54,44 +54,44 @@ namespace details{
 /**
  * @brief Element of the tree. it has a single parent and N >= 0 children.
  */
-template <typename T> class TreeElement
+template <typename T> class TreeNode
 {
 
 public:
 //#if !STATIC_TREE
- //   typedef boost::container::stable_vector<TreeElement> ChildrenVector;
+ //   typedef boost::container::stable_vector<TreeNode> ChildrenVector;
 //#else
-   typedef std::vector<TreeElement> ChildrenVector; // dangerous because of pointer invalidation (but faster)
+   typedef std::vector<TreeNode> ChildrenVector; // dangerous because of pointer invalidation (but faster)
 //#endif
 
-    TreeElement(const TreeElement* parent, const T& value = 0 );
+    TreeNode(const TreeNode* parent );
 
-    const TreeElement* parent() const       { return _parent; }
+    const TreeNode* parent() const  { return _parent; }
 
-    const T& value() const                  { return _value; }
-    T& value()                              { return _value; }
+    const T& value() const          { return _value; }
+    void setValue( const T& value)  { _value = value; }
 
     const ChildrenVector& children()const   { return _children; }
     ChildrenVector& children()              { return _children; }
 
-    const TreeElement* child(size_t index) const { return &(_children[index]); }
-    TreeElement* child(size_t index) { return &(_children[index]); }
+    const TreeNode* child(size_t index) const { return &(_children[index]); }
+    TreeNode* child(size_t index) { return &(_children[index]); }
 
-    TreeElement *addChild(const T& child );
+    TreeNode *addChild(const T& child );
 
     bool isLeaf() const { return _children.empty(); }
 
 private:
-    const TreeElement*   _parent;
-    T                    _value;
-    ChildrenVector       _children;
+    const TreeNode*   _parent;
+    T                 _value;
+    ChildrenVector    _children;
 };
 
 
 template <typename T> class Tree
 {
 public:
-    Tree(): _root(nullptr) {}
+    Tree(): _root( new TreeNode<T>(nullptr) ) {}
 
 #if !STATIC_TREE // this operation is illegal in a static tree
     /**
@@ -107,13 +107,13 @@ public:
      * The first element of the concatenated_values should be a root of the Tree.
      * The leaf corresponds to the last element of concatenated_values in the Tree.
      */
-    template<typename Vect> const TreeElement<T>* find( const Vect& concatenated_values, bool partial_allowed = false);
+    template<typename Vect> const TreeNode<T>* find( const Vect& concatenated_values, bool partial_allowed = false);
 
     /// Constant pointer to the root of the tree.
-    const TreeElement<T>* croot() const { return &_root; }
+    const TreeNode<T>* croot() const { return _root.get(); }
 
     /// Mutable pointer to the root of the tree.
-    TreeElement<T>* root() { return &_root; }
+    TreeNode<T>* root() { return _root.get(); }
 
 
     friend std::ostream& operator<<(std::ostream& os, const Tree& _this){
@@ -123,23 +123,23 @@ public:
 
 private:
 
-    void print_impl(std::ostream& os, const TreeElement<T> *node, int indent ) const;
+    void print_impl(std::ostream& os, const TreeNode<T> *node, int indent ) const;
 
-    TreeElement<T> _root;
+    std::unique_ptr<TreeNode<T>> _root;
 };
 
 //-----------------------------------------
 
 
 template <typename T> inline
-std::ostream& operator<<(std::ostream &os, const std::pair<const TreeElement<T>*, const TreeElement<T>* >& tail_head )
+std::ostream& operator<<(std::ostream &os, const std::pair<const TreeNode<T>*, const TreeNode<T>* >& tail_head )
 {
-    const TreeElement<T>* tail = tail_head.first;
-    const TreeElement<T>* head = tail_head.second;
+    const TreeNode<T>* tail = tail_head.first;
+    const TreeNode<T>* head = tail_head.second;
 
     if( !head ) return os;
 
-    const TreeElement<T>* array[64];
+    const TreeNode<T>* array[64];
     int index = 0;
     array[index++] = head;
 
@@ -163,14 +163,10 @@ std::ostream& operator<<(std::ostream &os, const std::pair<const TreeElement<T>*
 }
 
 template <typename T> inline
-void Tree<T>::print_impl(std::ostream &os, const TreeElement<T>* node, int indent) const
+void Tree<T>::print_impl(std::ostream &os, const TreeNode<T>* node, int indent) const
 {
   for (int i=0; i<indent; i++) os << " ";
-  os << node->value();
-  if( node->parent())
-    os << "("<< node->parent()->value() << ")" << std::endl;
-  else
-    os << "(null)" << std::endl;
+  os << node->value() << std::endl;
 
   for (const auto& child: node->children() )
   {
@@ -179,14 +175,14 @@ void Tree<T>::print_impl(std::ostream &os, const TreeElement<T>* node, int inden
 }
 
 template <typename T> inline
-TreeElement<T>::TreeElement(const TreeElement *parent, const T& value):
-    _parent(parent), _value(value)
+TreeNode<T>::TreeNode(const TreeNode *parent):
+    _parent(parent)
 {
 
 }
 
 template <typename T> inline
-TreeElement<T> *TreeElement<T>::addChild(const T& value)
+TreeNode<T> *TreeNode<T>::addChild(const T& value)
 {
 //    //skip existing child
 //    for (int i=0; i< _children.size(); i++){
@@ -197,7 +193,8 @@ TreeElement<T> *TreeElement<T>::addChild(const T& value)
 #if STATIC_TREE
    assert(_children.capacity() > _children.size() );
 #endif
-    _children.push_back( TreeElement<T>(this, value));
+    _children.push_back( TreeNode<T>(this) );
+    _children.back().setValue( value );
     return &_children.back();
 }
 
@@ -205,7 +202,7 @@ TreeElement<T> *TreeElement<T>::addChild(const T& value)
 template <typename T> template<typename Vect> inline
 void Tree<T>::insert(const Vect &concatenated_values)
 {
-    TreeElement<T>* node = &_root;
+    TreeNode<T>* node = &_root;
 
     for (const auto& value: concatenated_values)
     {
@@ -228,9 +225,9 @@ void Tree<T>::insert(const Vect &concatenated_values)
 #endif
 
 template <typename T> template<typename Vect> inline
-const TreeElement<T> *Tree<T>::find(const Vect& concatenated_values, bool partial_allowed )
+const TreeNode<T> *Tree<T>::find(const Vect& concatenated_values, bool partial_allowed )
 {
-    TreeElement<T>* node = &_root;
+    TreeNode<T>* node = &_root;
 
     for (const auto& value: concatenated_values)
     {

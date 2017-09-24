@@ -236,7 +236,7 @@ namespace RosIntrospection{
 //}
 
 StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr), array_size(0)
-{  for (int i=0; i<7; i++) index_array[i] = 0;}
+{  for (int i=0; i<8; i++) index_array[i] = 0;}
 
 
 bool StringTreeLeaf::toStr(SString& destination) const
@@ -267,7 +267,6 @@ bool StringTreeLeaf::toStr(std::string& destination) const
 
 int StringTreeLeaf::toStr(char* buffer) const
 {
-
   const StringTreeNode* leaf_node = this->node_ptr;
   if( !leaf_node ){
     return -1;
@@ -279,7 +278,7 @@ int StringTreeLeaf::toStr(char* buffer) const
   int char_count = 0;
 
   while(leaf_node)
- {
+  {
     const SString& str = leaf_node->value();
 
     char_count += str.size();
