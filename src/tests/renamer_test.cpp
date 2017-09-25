@@ -104,16 +104,17 @@ TEST(Renamer2, DeserializeJointStateAndRename)
   RosIntrospection::Parser parser;
 
   std::vector<SubstitutionRule> rules;
-  rules.push_back( SubstitutionRule("JointState/position.#", "JointState/name.#", "JointState/@/pos") );
-  rules.push_back( SubstitutionRule("JointState/velocity.#", "JointState/name.#", "JointState/@/vel") );
-  rules.push_back( SubstitutionRule("JointState/effort.#",   "JointState/name.#", "JointState/@/eff") );
+  rules.push_back( SubstitutionRule("position.#", "name.#", "@/pos") );
+  rules.push_back( SubstitutionRule("velocity.#", "name.#", "@/vel") );
+  rules.push_back( SubstitutionRule("effort.#",   "name.#", "@/eff") );
+
+  ROSType main_type( DataType<sensor_msgs::JointState>::value() );
 
   parser.registerMessageDefinition(
-        "JointState",
-        ROSType(DataType<sensor_msgs::JointState>::value()),
+        "JointState", main_type,
         Definition<sensor_msgs::JointState>::value());
 
-  parser.registerRenamingRules( "JointState", rules);
+  parser.registerRenamingRules( main_type, rules);
 
   sensor_msgs::JointState joint_state;
 

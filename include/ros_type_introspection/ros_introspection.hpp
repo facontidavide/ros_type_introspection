@@ -30,7 +30,7 @@ public:
                                  const ROSType &main_type,
                                  const std::string& definition);
 
-  void registerRenamingRules(const std::string& message_identifier,
+  void registerRenamingRules(const ROSType& type,
                              const std::vector<SubstitutionRule> &rules );
 
   const ROSMessageInfo* getMessageInfo(const std::string& msg_identifier);

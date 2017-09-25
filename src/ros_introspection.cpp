@@ -92,6 +92,9 @@ void Parser::registerMessageDefinition(const std::string &message_identifier,
   //------------------------------
 
   createTrees(info, message_identifier);
+
+//  std::cout << info.string_tree << std::endl;
+//  std::cout << info.message_tree << std::endl;
   _registred_messages.insert( std::make_pair(message_identifier, std::move(info) ) );
 }
 
@@ -115,16 +118,6 @@ const ROSMessage* Parser::getMessageByType(const ROSType &type, const ROSMessage
       return &msg;
     }
   }
-
-  std::string output( "can't deserialize this stuff: ");
-  output +=  type.baseName().toStdString() + "\n\n";
-  output +=  "Available types are: \n\n";
-  for(const ROSMessage& msg: info.type_list) // find in the list
-  {
-    output += "   " +msg.type().baseName().toStdString() + "\n";
-  }
-  throw std::runtime_error( output );
-
   return nullptr;
 }
 
@@ -140,7 +133,6 @@ void Parser::deserializeImpl(const ROSMessageInfo& info,
 {
 
   const ROSMessage* msg_definition = msg_node->value();
-
   size_t index_s = 0;
   size_t index_m = 0;
 
@@ -191,16 +183,20 @@ void Parser::deserializeImpl(const ROSMessageInfo& info,
           flat_container->value.push_back( std::make_pair( new_tree_leaf, std::move(var) ) );
         }
       }
-      else{ // type.typeID() == OTHER
+      else{ // field_type.typeID() == OTHER
 
         deserializeImpl(info, msg_node->child(index_m),
                         new_tree_leaf,
                         buffer,buffer_offset,
                         flat_container,
                         max_array_size, DO_STORE);
-        index_m++;
       }
     } // end for array_size
+
+    if( field_type.typeID() == OTHER )
+    {
+       index_m++;
+    }
     index_s++;
   } // end for fields
 }

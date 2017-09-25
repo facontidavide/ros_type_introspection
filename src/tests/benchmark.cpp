@@ -39,12 +39,14 @@ int main( int argc, char** argv)
 {
   RosIntrospection::Parser parser;
 
+  ROSType main_type(DataType<sensor_msgs::JointState>::value());
+
   parser.registerMessageDefinition(
         "joint_state",
-        ROSType(DataType<sensor_msgs::JointState>::value()),
+        main_type,
         Definition<sensor_msgs::JointState>::value());
 
-  parser.registerRenamingRules( "joint_state", Rules() );
+  parser.registerRenamingRules( main_type, Rules() );
   std::cout << "------------------------------"  << std::endl;
 
   sensor_msgs::JointState js_msg;

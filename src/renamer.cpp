@@ -308,29 +308,27 @@ inline bool FindPattern(const std::vector<SString> &pattern,
 }
 
 
-void Parser::registerRenamingRules(const std::string &message_identifier,
-                                   const std::vector<SubstitutionRule> &rules)
+void Parser::registerRenamingRules(const ROSType &type, const std::vector<SubstitutionRule> &rules)
 {
-  auto it = _registred_messages.find(message_identifier);
-  if( it == _registred_messages.end())
+  for(const auto& it: _registred_messages)
   {
-    throw std::runtime_error("To register a SubstitutionRule you must first register its definition" );
-  }
-  const ROSMessageInfo& msg_info = it->second;
-
-  std::vector<RulesCache> cache_vector;
-  for(const auto& rule: rules )
-  {
-    RulesCache cache(rule);
-    FindPattern( cache.rule.pattern(), 0, msg_info.string_tree.croot(), &cache.pattern_head );
-    FindPattern( cache.rule.alias(),   0, msg_info.string_tree.croot(), &cache.alias_head );
-
-    if( cache.pattern_head && cache.alias_head)
+    const std::string& msg_identifier = it.first;
+    const ROSMessageInfo& msg_info    = it.second;
+    if( getMessageByType(type, msg_info) )
     {
-      cache_vector.push_back( std::move(cache) );
+      std::vector<RulesCache>&  cache_vector = _registered_rules[msg_identifier];
+      for(const auto& rule: rules )
+      {
+        RulesCache cache(rule);
+        FindPattern( cache.rule.pattern(), 0, msg_info.string_tree.croot(), &cache.pattern_head );
+        FindPattern( cache.rule.alias(),   0, msg_info.string_tree.croot(), &cache.alias_head );
+        if( cache.pattern_head && cache.alias_head)
+        {
+          cache_vector.push_back( std::move(cache) );
+        }
+      }
     }
   }
-  _registered_rules.insert( std::make_pair(it->first, std::move(cache_vector) ) );
 }
 
 
