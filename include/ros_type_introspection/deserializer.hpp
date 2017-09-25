@@ -66,11 +66,11 @@ struct StringTreeLeaf{
 
   StringTreeLeaf();
 
-  StringTreeNode* node_ptr;
+  const StringTreeNode* node_ptr;
 
   uint8_t array_size;
 
-  std::array<uint16_t,7> index_array;
+  std::array<uint16_t,8> index_array;
 
   /// Utility functions to print the entire branch
   bool toStr(SString &destination) const;
@@ -84,9 +84,12 @@ struct StringTreeLeaf{
   std::string toStdString() { std::string out; toStr(out); return out; }
 };
 
-typedef struct{
+struct ROSTypeFlat {
+
+  //ROSTypeFlat(const StringTree* tree_): tree(tree_) {}
+
   /// Tree that the StringTreeLeaf(s) refer to.
-  StringTree tree;
+  const StringTree* tree;
 
   /// List of all those parsed fields that can be represented by a builtin value different from "string".
   /// This list will be filled by the funtion buildRosFlatType.
@@ -99,7 +102,7 @@ typedef struct{
   // Not used yet
   std::vector< std::pair<StringTreeLeaf, std::vector<uint8_t>>> blob;
 
-}ROSTypeFlat;
+};
 
 
 /**
@@ -128,12 +131,12 @@ typedef struct{
  * @param max_array_size         All the vectors that contains more elements than max_array_size will be discarted.
  */
 
-void BuildRosFlatType(const ROSTypeList& type_map,
-                      ROSType type,
-                      SString prefix,
-                      const nonstd::VectorView<uint8_t>& buffer,
-                      ROSTypeFlat* flat_container_output,
-                      const uint32_t max_array_size );
+//void BuildRosFlatType(const ROSTypeList& type_map,
+//                      ROSType type,
+//                      SString prefix,
+//                      const nonstd::VectorView<uint8_t>& buffer,
+//                      ROSTypeFlat* flat_container_output,
+//                      const uint32_t max_array_size );
 
 inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
 {

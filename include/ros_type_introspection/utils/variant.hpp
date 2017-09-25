@@ -12,13 +12,7 @@
 namespace RosIntrospection
 {
 
-#if 1
-// Faster, but might need more testing
 typedef ssoX::basic_string<char> SString;
-#else
-// slightly slower but safer option. More convenient during debug
-typedef std::string SString;
-#endif
 
 class Variant
 {

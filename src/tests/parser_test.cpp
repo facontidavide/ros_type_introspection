@@ -5,7 +5,7 @@
 #include <sensor_msgs/NavSatStatus.h>
 #include <sensor_msgs/Imu.h>
 #include <std_msgs/Int16MultiArray.h>
-#include <ros_type_introspection/parser.hpp>
+#include <ros_type_introspection/ros_introspection.hpp>
 
 using namespace ros::message_traits;
 using namespace RosIntrospection;
@@ -173,115 +173,116 @@ TEST(ROSMessageFields, ConstantComments )
 
 TEST(BuildROSTypeMapFromDefinition,  PoseParsing )
 {
-  RosIntrospection::ROSTypeList rmap;
+  RosIntrospection::Parser parser;
 
-  rmap = BuildROSTypeMapFromDefinition(
-        DataType<geometry_msgs::Pose >::value(),
+  parser.registerMessageDefinition(
+        "pose",
+        ROSType(DataType<geometry_msgs::Pose >::value()),
         Definition<geometry_msgs::Pose >::value());
 
-  if(VERBOSE_TEST){ std::cout << rmap << std::endl; }
+  const ROSMessageInfo* info = parser.getMessageInfo("pose");
+  const ROSMessage* msg = &(info->type_list[0]);
 
-  ROSMessage& msg = rmap.at(0);
-  EXPECT_EQ( msg.type().baseName(),  "geometry_msgs/Pose" );
-  EXPECT_EQ( msg.fields().size(),  2);
-  EXPECT_EQ( msg.field(0).type().baseName(),  "geometry_msgs/Point" );
-  EXPECT_EQ( msg.field(0).name(),  "position" );
-  EXPECT_EQ( msg.field(1).type().baseName(),  "geometry_msgs/Quaternion" );
-  EXPECT_EQ( msg.field(1).name(),  "orientation" );
+  EXPECT_EQ( msg->type().baseName(),  "geometry_msgs/Pose" );
+  EXPECT_EQ( msg->fields().size(),  2);
+  EXPECT_EQ( msg->field(0).type().baseName(),  "geometry_msgs/Point" );
+  EXPECT_EQ( msg->field(0).name(),  "position" );
+  EXPECT_EQ( msg->field(1).type().baseName(),  "geometry_msgs/Quaternion" );
+  EXPECT_EQ( msg->field(1).name(),  "orientation" );
 
-  msg = rmap.at(1);
-  EXPECT_EQ( ("geometry_msgs/Point" ),  msg.type().baseName() );
-  EXPECT_EQ( msg.fields().size(),  3);
-  EXPECT_EQ( msg.field(0).type().baseName(),  "float64" );
-  EXPECT_EQ( msg.field(0).name(),  "x" );
-  EXPECT_EQ( msg.field(1).type().baseName(),  "float64" );
-  EXPECT_EQ( msg.field(1).name(),  "y" );
-  EXPECT_EQ( msg.field(2).type().baseName(),  "float64" );
-  EXPECT_EQ( msg.field(2).name(),  "z" );
+  msg = &info->type_list[1];
+  EXPECT_EQ( ("geometry_msgs/Point" ),  msg->type().baseName() );
+  EXPECT_EQ( msg->fields().size(),  3);
+  EXPECT_EQ( msg->field(0).type().baseName(),  "float64" );
+  EXPECT_EQ( msg->field(0).name(),  "x" );
+  EXPECT_EQ( msg->field(1).type().baseName(),  "float64" );
+  EXPECT_EQ( msg->field(1).name(),  "y" );
+  EXPECT_EQ( msg->field(2).type().baseName(),  "float64" );
+  EXPECT_EQ( msg->field(2).name(),  "z" );
 
-  msg = rmap.at(2);
-  EXPECT_EQ( ("geometry_msgs/Quaternion" ),  msg.type().baseName() );
-  EXPECT_EQ( msg.fields().size(),  4);
-  EXPECT_EQ( msg.field(0).type().baseName(),  "float64" );
-  EXPECT_EQ( msg.field(0).name(),  "x" );
-  EXPECT_EQ( msg.field(1).type().baseName() ,  "float64" );
-  EXPECT_EQ( msg.field(1).name(),  "y" );
-  EXPECT_EQ( msg.field(2).type().baseName() ,  "float64" );
-  EXPECT_EQ( msg.field(2).name(),  "z" );
-  EXPECT_EQ( msg.field(3).type().baseName() ,  "float64" );
-  EXPECT_EQ( msg.field(3).name(),  "w" );
+  msg = &info->type_list[2];
+  EXPECT_EQ( ("geometry_msgs/Quaternion" ),  msg->type().baseName() );
+  EXPECT_EQ( msg->fields().size(),  4);
+  EXPECT_EQ( msg->field(0).type().baseName(),  "float64" );
+  EXPECT_EQ( msg->field(0).name(),  "x" );
+  EXPECT_EQ( msg->field(1).type().baseName() ,  "float64" );
+  EXPECT_EQ( msg->field(1).name(),  "y" );
+  EXPECT_EQ( msg->field(2).type().baseName() ,  "float64" );
+  EXPECT_EQ( msg->field(2).name(),  "z" );
+  EXPECT_EQ( msg->field(3).type().baseName() ,  "float64" );
+  EXPECT_EQ( msg->field(3).name(),  "w" );
 }
 
 TEST(BuildROSTypeMapFromDefinition,  IMUparsing )
 {
-  RosIntrospection::ROSTypeList rmap;
+  RosIntrospection::Parser parser;
 
-  rmap = BuildROSTypeMapFromDefinition(
-        DataType<sensor_msgs::Imu >::value(),
+  parser.registerMessageDefinition(
+        "imu",
+        ROSType(DataType<sensor_msgs::Imu >::value()),
         Definition<sensor_msgs::Imu >::value());
 
-  if(VERBOSE_TEST){ std::cout << rmap << std::endl; }
+  const ROSMessageInfo* info = parser.getMessageInfo("imu");
+  const ROSMessage* msg = &info->type_list[0];
+  EXPECT_EQ( ("sensor_msgs/Imu"),  msg->type().baseName() );
+  EXPECT_EQ( msg->fields().size(),  7);
+  EXPECT_EQ( ("std_msgs/Header" ),  msg->field(0).type().baseName() );
+  EXPECT_EQ( ("header" )         ,  msg->field(0).name() );
 
-  ROSMessage& msg = rmap.at(0);
-  EXPECT_EQ( ("sensor_msgs/Imu"),  msg.type().baseName() );
-  EXPECT_EQ( msg.fields().size(),  7);
-  EXPECT_EQ( ("std_msgs/Header" ),  msg.field(0).type().baseName() );
-  EXPECT_EQ( ("header" )         ,  msg.field(0).name() );
+  EXPECT_EQ( ("geometry_msgs/Quaternion" ),  msg->field(1).type().baseName() );
+  EXPECT_EQ( ("orientation" )             ,  msg->field(1).name() );
 
-  EXPECT_EQ( ("geometry_msgs/Quaternion" ),  msg.field(1).type().baseName() );
-  EXPECT_EQ( ("orientation" )             ,  msg.field(1).name() );
+  EXPECT_EQ( ("float64[9]" )             ,  msg->field(2).type().baseName() );
+  EXPECT_EQ( ("orientation_covariance" ) ,  msg->field(2).name() );
+  EXPECT_EQ( msg->field(2).type().arraySize(),  9);
 
-  EXPECT_EQ( ("float64[9]" )             ,  msg.field(2).type().baseName() );
-  EXPECT_EQ( ("orientation_covariance" ) ,  msg.field(2).name() );
-  EXPECT_EQ( msg.field(2).type().arraySize(),  9);
+  EXPECT_EQ( ("geometry_msgs/Vector3" ),  msg->field(3).type().baseName() );
+  EXPECT_EQ( ("angular_velocity" )     ,  msg->field(3).name() );
 
-  EXPECT_EQ( ("geometry_msgs/Vector3" ),  msg.field(3).type().baseName() );
-  EXPECT_EQ( ("angular_velocity" )     ,  msg.field(3).name() );
+  EXPECT_EQ( ("float64[9]" )                 ,  msg->field(4).type().baseName() );
+  EXPECT_EQ( ("angular_velocity_covariance" ),  msg->field(4).name() );
+  EXPECT_EQ( msg->field(4).type().arraySize(),  9);
 
-  EXPECT_EQ( ("float64[9]" )                 ,  msg.field(4).type().baseName() );
-  EXPECT_EQ( ("angular_velocity_covariance" ),  msg.field(4).name() );
-  EXPECT_EQ( msg.field(4).type().arraySize(),  9);
+  EXPECT_EQ( ("geometry_msgs/Vector3" ),  msg->field(5).type().baseName() );
+  EXPECT_EQ( ("linear_acceleration" )  ,  msg->field(5).name() );
 
-  EXPECT_EQ( ("geometry_msgs/Vector3" ),  msg.field(5).type().baseName() );
-  EXPECT_EQ( ("linear_acceleration" )  ,  msg.field(5).name() );
-
-  EXPECT_EQ( ("float64[9]" )                    ,  msg.field(6).type().baseName() );
-  EXPECT_EQ( ("linear_acceleration_covariance" ),  msg.field(6).name() );
-  EXPECT_EQ( msg.field(6).type().arraySize(),  9);
+  EXPECT_EQ( ("float64[9]" )                    ,  msg->field(6).type().baseName() );
+  EXPECT_EQ( ("linear_acceleration_covariance" ),  msg->field(6).name() );
+  EXPECT_EQ( msg->field(6).type().arraySize(),  9);
 
 
   //---------------------------------
-  msg = rmap.at(1);
-  EXPECT_EQ( msg.type().baseName(),  "std_msgs/Header" );
-  EXPECT_EQ( msg.fields().size(),  3);
-  EXPECT_EQ( msg.field(0).type().baseName(),  ("uint32" ));
-  EXPECT_EQ( msg.field(0).name(),  ("seq") );
-  EXPECT_EQ( msg.field(1).type().baseName(),  ("time") );
-  EXPECT_EQ( msg.field(1).name(),  "stamp" );
-  EXPECT_EQ( msg.field(2).type().baseName(),  "string" );
-  EXPECT_EQ( msg.field(2).name(),  "frame_id" );
+  msg = &info->type_list[1];
+  EXPECT_EQ( msg->type().baseName(),  "std_msgs/Header" );
+  EXPECT_EQ( msg->fields().size(),  3);
+  EXPECT_EQ( msg->field(0).type().baseName(),  ("uint32" ));
+  EXPECT_EQ( msg->field(0).name(),  ("seq") );
+  EXPECT_EQ( msg->field(1).type().baseName(),  ("time") );
+  EXPECT_EQ( msg->field(1).name(),  "stamp" );
+  EXPECT_EQ( msg->field(2).type().baseName(),  "string" );
+  EXPECT_EQ( msg->field(2).name(),  "frame_id" );
 
-  msg = rmap.at(2);
-  EXPECT_EQ( msg.type().baseName(),  ("geometry_msgs/Quaternion") );
-  EXPECT_EQ( msg.fields().size(),  4);
-  EXPECT_EQ( msg.field(0).type().baseName(),  "float64" );
-  EXPECT_EQ( msg.field(0).name(),  "x" );
-  EXPECT_EQ( msg.field(1).type().baseName(),  "float64" );
-  EXPECT_EQ( msg.field(1).name(),  "y" );
-  EXPECT_EQ( msg.field(2).type().baseName(),  "float64" );
-  EXPECT_EQ( msg.field(2).name(),  "z" );
-  EXPECT_EQ( msg.field(3).type().baseName(),  "float64" );
-  EXPECT_EQ( msg.field(3).name(),  "w" );
+  msg = &info->type_list[2];
+  EXPECT_EQ( msg->type().baseName(),  ("geometry_msgs/Quaternion") );
+  EXPECT_EQ( msg->fields().size(),  4);
+  EXPECT_EQ( msg->field(0).type().baseName(),  "float64" );
+  EXPECT_EQ( msg->field(0).name(),  "x" );
+  EXPECT_EQ( msg->field(1).type().baseName(),  "float64" );
+  EXPECT_EQ( msg->field(1).name(),  "y" );
+  EXPECT_EQ( msg->field(2).type().baseName(),  "float64" );
+  EXPECT_EQ( msg->field(2).name(),  "z" );
+  EXPECT_EQ( msg->field(3).type().baseName(),  "float64" );
+  EXPECT_EQ( msg->field(3).name(),  "w" );
 
-  msg = rmap.at(3);
-  EXPECT_EQ( msg.type().baseName(),  ("geometry_msgs/Vector3") );
-  EXPECT_EQ( msg.fields().size(),  3);
-  EXPECT_EQ( msg.field(0).type().baseName(),  "float64" );
-  EXPECT_EQ( msg.field(0).name(),  "x" );
-  EXPECT_EQ( msg.field(1).type().baseName(),  "float64" );
-  EXPECT_EQ( msg.field(1).name(),  "y" );
-  EXPECT_EQ( msg.field(2).type().baseName(),  "float64" );
-  EXPECT_EQ( msg.field(2).name(),  "z" );
+  msg = &info->type_list[3];
+  EXPECT_EQ( msg->type().baseName(),  ("geometry_msgs/Vector3") );
+  EXPECT_EQ( msg->fields().size(),  3);
+  EXPECT_EQ( msg->field(0).type().baseName(),  "float64" );
+  EXPECT_EQ( msg->field(0).name(),  "x" );
+  EXPECT_EQ( msg->field(1).type().baseName(),  "float64" );
+  EXPECT_EQ( msg->field(1).name(),  "y" );
+  EXPECT_EQ( msg->field(2).type().baseName(),  "float64" );
+  EXPECT_EQ( msg->field(2).name(),  "z" );
 }
 
 TEST(BuildROSTypeMapFromDefinition,  Int16MultiArrayParsing )
@@ -290,15 +291,12 @@ TEST(BuildROSTypeMapFromDefinition,  Int16MultiArrayParsing )
   // arrays of custom types. In this case:
   //    std_msgs/MultiArrayDimension[]
 
-  RosIntrospection::ROSTypeList rmap;
+  RosIntrospection::Parser parser;
 
-  rmap = BuildROSTypeMapFromDefinition(
-        DataType<std_msgs::Int16MultiArray >::value(),
+  parser.registerMessageDefinition( "multiarray",
+        ROSType(DataType<std_msgs::Int16MultiArray >::value()),
         Definition<std_msgs::Int16MultiArray >::value());
 
-  if(VERBOSE_TEST){
-    std::cout << rmap << std::endl;
-  }
 
   /*std_msgs/Int16MultiArray :
           layout : std_msgs/MultiArrayLayout
@@ -313,51 +311,48 @@ TEST(BuildROSTypeMapFromDefinition,  Int16MultiArrayParsing )
           size : uint32
           stride : uint32*/
 
-  ROSMessage& msg = rmap.at(0);
+  const ROSMessageInfo* info = parser.getMessageInfo("multiarray");
+  const ROSMessage* msg = &info->type_list[0];
 
-  EXPECT_EQ( ("std_msgs/Int16MultiArray"),  msg.type().baseName() );
-  EXPECT_EQ( msg.fields().size(),  2);
-  EXPECT_EQ( ("std_msgs/MultiArrayLayout" ),  msg.field(0).type().baseName() );
-  EXPECT_EQ( ("layout" )                   ,  msg.field(0).name() );
-  EXPECT_EQ( false,  msg.field(0).type().isArray() );
+  EXPECT_EQ( ("std_msgs/Int16MultiArray"),  msg->type().baseName() );
+  EXPECT_EQ( msg->fields().size(),  2);
+  EXPECT_EQ( ("std_msgs/MultiArrayLayout" ),  msg->field(0).type().baseName() );
+  EXPECT_EQ( ("layout" )                   ,  msg->field(0).name() );
+  EXPECT_EQ( false,  msg->field(0).type().isArray() );
 
-  EXPECT_EQ( ("int16[]" ),  msg.field(1).type().baseName() );
-  EXPECT_EQ( ("data" ) ,  msg.field(1).name() );
-  EXPECT_EQ( true,  msg.field(1).type().isArray() );
+  EXPECT_EQ( ("int16[]" ),  msg->field(1).type().baseName() );
+  EXPECT_EQ( ("data" ) ,  msg->field(1).name() );
+  EXPECT_EQ( true,  msg->field(1).type().isArray() );
 
-  msg = rmap.at(1);
-  EXPECT_EQ( ("std_msgs/MultiArrayLayout"),  msg.type().baseName() );
-  EXPECT_EQ( msg.fields().size(),  2);
-  EXPECT_EQ( ("std_msgs/MultiArrayDimension[]" ),  msg.field(0).type().baseName() );
-  EXPECT_EQ( ("dim" )                           ,  msg.field(0).name() );
-  EXPECT_EQ( true,  msg.field(0).type().isArray() );
+  msg = &info->type_list[1];
+  EXPECT_EQ( ("std_msgs/MultiArrayLayout"),  msg->type().baseName() );
+  EXPECT_EQ( msg->fields().size(),  2);
+  EXPECT_EQ( ("std_msgs/MultiArrayDimension[]" ),  msg->field(0).type().baseName() );
+  EXPECT_EQ( ("dim" )                           ,  msg->field(0).name() );
+  EXPECT_EQ( true,  msg->field(0).type().isArray() );
 
-  EXPECT_EQ( ("uint32" )      ,  msg.field(1).type().baseName() );
-  EXPECT_EQ( ("data_offset" ) ,  msg.field(1).name() );
-  EXPECT_EQ( false,  msg.field(1).type().isArray() );
+  EXPECT_EQ( ("uint32" )      ,  msg->field(1).type().baseName() );
+  EXPECT_EQ( ("data_offset" ) ,  msg->field(1).name() );
+  EXPECT_EQ( false,  msg->field(1).type().isArray() );
 
 
-  msg = rmap.at(2);
-  EXPECT_EQ( ("std_msgs/MultiArrayDimension"),  msg.type().baseName() );
-  EXPECT_EQ( msg.fields().size(),  3);
+  msg = &info->type_list[2];
+  EXPECT_EQ( ("std_msgs/MultiArrayDimension"),  msg->type().baseName() );
+  EXPECT_EQ( msg->fields().size(),  3);
 
-  EXPECT_EQ( ("string" ),  msg.field(0).type().baseName() );
-  EXPECT_EQ( ("label" )  ,  msg.field(0).name() );
-  EXPECT_EQ( false,  msg.field(0).type().isArray() );
+  EXPECT_EQ( ("string" ),  msg->field(0).type().baseName() );
+  EXPECT_EQ( ("label" )  ,  msg->field(0).name() );
+  EXPECT_EQ( false,  msg->field(0).type().isArray() );
 
-  EXPECT_EQ( ("uint32" ),  msg.field(1).type().baseName() );
-  EXPECT_EQ( ("size" )  ,  msg.field(1).name() );
-  EXPECT_EQ( false,  msg.field(1).type().isArray() );
+  EXPECT_EQ( ("uint32" ),  msg->field(1).type().baseName() );
+  EXPECT_EQ( ("size" )  ,  msg->field(1).name() );
+  EXPECT_EQ( false,  msg->field(1).type().isArray() );
 
-  EXPECT_EQ( ("uint32" ) ,  msg.field(2).type().baseName() );
-  EXPECT_EQ( ("stride" ) ,  msg.field(2).name() );
-  EXPECT_EQ( false,  msg.field(2).type().isArray() );
+  EXPECT_EQ( ("uint32" ) ,  msg->field(2).type().baseName() );
+  EXPECT_EQ( ("stride" ) ,  msg->field(2).name() );
+  EXPECT_EQ( false,  msg->field(2).type().isArray() );
 
 }
 
-// Run all the tests that were declared with TEST()
-int main(int argc, char **argv){
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
+
 

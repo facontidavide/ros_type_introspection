@@ -54,6 +54,7 @@ include_directories(
    src/parser.cpp
    src/deserializer.cpp
    src/renamer.cpp
+   src/ros_introspection.cpp
  )
 
 target_link_libraries(ros_type_introspection ${catkin_LIBRARIES})

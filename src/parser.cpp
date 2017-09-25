@@ -119,54 +119,23 @@ ROSType::ROSType(const std::string &name):
 }
 
 
-ROSTypeList BuildROSTypeMapFromDefinition(
-    const std::string & type_name,
-    const std::string & msg_definition)
-{
-  static const  boost::regex msg_separation_regex("^=+\\n+");
-
-  ROSTypeList type_list;
-
-  std::vector<std::string> split;
-  boost::split_regex(split, msg_definition, msg_separation_regex);
-
-  std::vector<ROSType> all_types;
-
-  for (size_t i = 0; i < split.size(); ++i) {
-
-    ROSMessage msg( split[i] );
-    if( i == 0)
-    {
-      msg.mutateType( ROSType(type_name) );
-    }
-
-    type_list.push_back( msg );
-    all_types.push_back( msg.type() );
-  }
-
-  for( ROSMessage& msg: type_list )
-  {
-    msg.updateTypes( all_types );
-  }
-
-  return type_list;
-}
 
 
-std::ostream& operator<<(std::ostream& ss, const ROSTypeList& type_list)
-{
-  for (const ROSMessage& msg: type_list)
-  {
-    ss<< "\n" << msg.type().baseName() <<" : " << std::endl;
 
-    for (const ROSField& field : msg.fields() )
-    {
-      ss << "\t" << field.name()
-         <<" : " << field.type().baseName() << std::endl;
-    }
-  }
-  return ss;
-}
+//std::ostream& operator<<(std::ostream& ss, const ROSTypeList& type_list)
+//{
+//  for (const ROSMessage& msg: type_list)
+//  {
+//    ss<< "\n" << msg.type().baseName() <<" : " << std::endl;
+
+//    for (const ROSField& field : msg.fields() )
+//    {
+//      ss << "\t" << field.name()
+//         <<" : " << field.type().baseName() << std::endl;
+//    }
+//  }
+//  return ss;
+//}
 
 
 const SString &ROSType::baseName() const
@@ -246,18 +215,18 @@ ROSMessage::ROSMessage(const std::string &msg_def)
   }
 }
 
-void ROSMessage::updateTypes(const std::vector<ROSType> &all_types)
+void ROSMessage::updateMissingPkgNames(const std::vector<const ROSType*> &all_types)
 {
   for (ROSField& field: _fields)
   {
     // if package name is missing, try to find msgName in the list of known_type
     if( field.type().pkgName().size() == 0 )
     {
-      for (const ROSType& known_type: all_types)
+      for (const ROSType* known_type: all_types)
       {
-        if( field.type().msgName() == known_type.msgName() )
+        if( field.type().msgName() == known_type->msgName() )
         {
-          field._type.setPkgName( known_type.pkgName() );
+          field._type.setPkgName( known_type->pkgName() );
           break;
         }
       }
