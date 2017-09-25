@@ -46,6 +46,12 @@ public:
                           const ROSTypeFlat& container,
                           RenamedValues* renamed_value );
 
+  typedef std::function<void(const ROSType&, nonstd::VectorViewMutable<uint8_t>&)> VisitingCallback;
+
+  void applyVisitorToBuffer(const std::string& msg_identifier, const ROSType &monitored_type,
+                            nonstd::VectorViewMutable<uint8_t> &buffer,
+                            VisitingCallback callback);
+
 private:
 
   std::map<std::string,ROSMessageInfo> _registred_messages;

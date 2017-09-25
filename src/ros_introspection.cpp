@@ -93,8 +93,8 @@ void Parser::registerMessageDefinition(const std::string &message_identifier,
 
   createTrees(info, message_identifier);
 
-//  std::cout << info.string_tree << std::endl;
-//  std::cout << info.message_tree << std::endl;
+  //  std::cout << info.string_tree << std::endl;
+  //  std::cout << info.message_tree << std::endl;
   _registred_messages.insert( std::make_pair(message_identifier, std::move(info) ) );
 }
 
@@ -195,10 +195,77 @@ void Parser::deserializeImpl(const ROSMessageInfo& info,
 
     if( field_type.typeID() == OTHER )
     {
-       index_m++;
+      index_m++;
     }
     index_s++;
   } // end for fields
+}
+
+void Parser::applyVisitorToBuffer(const std::string &msg_identifier, const ROSType& monitored_type,
+                                  nonstd::VectorViewMutable<uint8_t> &buffer, Parser::VisitingCallback callback)
+{
+  const ROSMessageInfo* msg_info = getMessageInfo(msg_identifier);
+
+  if( msg_info == nullptr)
+  {
+    throw std::runtime_error("deserializeIntoFlatContainer: msg_identifier not registerd. Use registerMessageDefinition" );
+  }
+
+  std::function<void(const MessageTreeNode*)> recursiveImpl;
+  size_t buffer_offset = 0;
+
+  recursiveImpl = [&](const MessageTreeNode* msg_node)
+  {
+    const ROSMessage* msg_definition = msg_node->value();
+    const ROSType& msg_type = msg_definition->type();
+
+    const bool matching =( msg_type.msgName() == monitored_type.msgName() &&
+                           msg_type.pkgName() == monitored_type.pkgName() );
+
+    uint8_t* prev_buffer_ptr = buffer.data() + buffer_offset;
+    size_t prev_offset = buffer_offset;
+
+    size_t index_m = 0;
+
+    for (const ROSField& field : msg_definition->fields() )
+    {
+      if(field.isConstant() ) continue;
+
+      const ROSType&  field_type = field.type();
+
+      int32_t array_size = field_type.arraySize();
+      if( array_size == -1)
+      {
+        ReadFromBuffer( buffer, buffer_offset, array_size );
+      }
+
+      //------------------------------------
+
+      if( field_type.isBuiltin() )
+      {
+        for (int i=0; i<array_size; i++ )
+        {
+          ReadFromBuffer( field_type.typeID(), buffer, buffer_offset );
+        }
+      }
+      else{
+        // field_type.typeID() == OTHER
+        for (int i=0; i<array_size; i++ )
+        {
+          recursiveImpl( msg_node->child(index_m) );
+        }
+        index_m++;
+      }
+    } // end for fields
+    if( matching )
+    {
+      nonstd::VectorViewMutable<uint8_t> view( prev_buffer_ptr, buffer_offset - prev_offset);
+      callback( monitored_type, view );
+    }
+  }; //end lambda
+
+  //start recursion
+  recursiveImpl( msg_info->message_tree.croot() );
 }
 
 void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,

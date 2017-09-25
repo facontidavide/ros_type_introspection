@@ -100,18 +100,61 @@ TEST(Deserialize, JointState)
   EXPECT_EQ( flat_container.name[3].second, ("bye") );
 
   //---------------------------------
-//  std::vector< std::pair<SString,std_msgs::Header>> headers;
+  std::vector<std_msgs::Header> headers;
 
-//  ExtractSpecificROSMessages(type_map,  main_type,
-//                              "JointState", buffer,
-//                              headers);
+  Parser::VisitingCallback callbackReadAndStore = [&headers](const ROSType&, nonstd::VectorViewMutable<uint8_t>& raw_data)
+  {
+    std_msgs::Header msg;
+    ros::serialization::IStream s( raw_data.data(), raw_data.size() );
+    ros::serialization::deserialize(s, msg);
+    headers.push_back( std::move(msg) );
+  };
 
-//  const std_msgs::Header& header = headers[0].second;
-//  EXPECT_EQ(headers.size(), 1);
-//  EXPECT_EQ(header.seq,        joint_state.header.seq);
-//  EXPECT_EQ(header.stamp.sec,  joint_state.header.stamp.sec);
-//  EXPECT_EQ(header.stamp.nsec, joint_state.header.stamp.nsec);
-//  EXPECT_EQ(header.frame_id,   joint_state.header.frame_id);
+  Parser::VisitingCallback callbackOverwiteInPlace = [&headers](const ROSType&, nonstd::VectorViewMutable<uint8_t>& raw_data)
+  {
+    std_msgs::Header msg;
+    ros::serialization::IStream is( raw_data.data(), raw_data.size() );
+    ros::serialization::deserialize(is, msg);
+
+    ASSERT_EQ(ros::serialization::serializationLength(msg), raw_data.size());
+
+    // msg.frame_id = "here";  //NOTE: I can NOT change the size of an array, nor a string
+    msg.seq = 666;
+    msg.stamp.sec = 1;
+    msg.stamp.nsec = 2;
+
+    ros::serialization::OStream os( raw_data.data(), raw_data.size() );
+    ros::serialization::serialize(os, msg);
+
+    ASSERT_EQ(ros::serialization::serializationLength(msg), raw_data.size());
+  };
+
+
+  nonstd::VectorViewMutable<uint8_t> buffer_view(buffer);
+  const ROSType header_type( DataType<std_msgs::Header>::value() );
+
+  parser.applyVisitorToBuffer( "JointState", header_type,
+                               buffer_view, callbackReadAndStore);
+
+  EXPECT_EQ(headers.size(), 1);
+  const std_msgs::Header& header = headers[0];
+  EXPECT_EQ(header.seq,        joint_state.header.seq);
+  EXPECT_EQ(header.stamp.sec,  joint_state.header.stamp.sec);
+  EXPECT_EQ(header.stamp.nsec, joint_state.header.stamp.nsec);
+  EXPECT_EQ(header.frame_id,   joint_state.header.frame_id);
+  //--------------------------------------------
+  parser.applyVisitorToBuffer( "JointState", header_type,
+                               buffer_view, callbackOverwiteInPlace);
+
+  parser.applyVisitorToBuffer( "JointState", header_type,
+                               buffer_view, callbackReadAndStore);
+
+  EXPECT_EQ(headers.size(), 2);
+  const std_msgs::Header& header_mutated = headers[1];
+  EXPECT_EQ(header_mutated.seq,        666);
+  EXPECT_EQ(header_mutated.stamp.sec,  1);
+  EXPECT_EQ(header_mutated.stamp.nsec, 2);
+
 }
 
 TEST( Deserialize, NavSatStatus)
