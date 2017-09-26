@@ -60,6 +60,12 @@ void Parser::registerMessageDefinition(const std::string &message_identifier,
                                        const ROSType &main_type,
                                        const std::string &definition)
 {
+  if( _block_register_message )
+  {
+    throw std::runtime_error("You have called registerRenamingRules already."
+                             " It is forbidden to use registerMessageDefinition again" );
+  }
+
   const boost::regex msg_separation_regex("^=+\\n+");
 
   static std::vector<std::string> split;
@@ -119,86 +125,6 @@ const ROSMessage* Parser::getMessageByType(const ROSType &type, const ROSMessage
     }
   }
   return nullptr;
-}
-
-
-void Parser::deserializeImpl(const ROSMessageInfo& info,
-                             const MessageTreeNode* msg_node,
-                             StringTreeLeaf tree_leaf, // copy, not reference
-                             const nonstd::VectorView<uint8_t>& buffer,
-                             size_t& buffer_offset,
-                             ROSTypeFlat* flat_container,
-                             const uint32_t max_array_size,
-                             bool DO_STORE)
-{
-
-  const ROSMessage* msg_definition = msg_node->value();
-  size_t index_s = 0;
-  size_t index_m = 0;
-
-  for (const ROSField& field : msg_definition->fields() )
-  {
-    if(field.isConstant() ) continue;
-
-    const ROSType&  field_type = field.type();
-
-    auto new_tree_leaf = tree_leaf;
-    new_tree_leaf.node_ptr = tree_leaf.node_ptr->child(index_s);
-
-    int32_t array_size = field_type.arraySize();
-    if( array_size == -1)
-    {
-      ReadFromBuffer( buffer, buffer_offset, array_size );
-    }
-    if( field_type.isArray())
-    {
-      new_tree_leaf.array_size++;
-      new_tree_leaf.node_ptr = new_tree_leaf.node_ptr->child(0);
-    }
-
-    if( array_size > max_array_size ) DO_STORE = false;
-
-    //------------------------------------
-    for (int i=0; i<array_size; i++ )
-    {
-      if( field_type.isArray() )
-      {
-        new_tree_leaf.index_array[ new_tree_leaf.array_size-1 ] = i;
-      }
-
-      if( field_type.typeID() == STRING )
-      {
-        SString string;
-        ReadFromBuffer<SString>( buffer, buffer_offset, string );
-
-        if( DO_STORE ){
-          flat_container->name.push_back( std::make_pair( new_tree_leaf, std::move(string) ) );
-        }
-      }
-      else if( field_type.isBuiltin() )
-      {
-        Variant var = ReadFromBuffer( field_type.typeID(), buffer, buffer_offset );
-
-        if( DO_STORE ){
-          flat_container->value.push_back( std::make_pair( new_tree_leaf, std::move(var) ) );
-        }
-      }
-      else{ // field_type.typeID() == OTHER
-
-        deserializeImpl(info, msg_node->child(index_m),
-                        new_tree_leaf,
-                        buffer,buffer_offset,
-                        flat_container,
-                        max_array_size, DO_STORE);
-      }
-    } // end for array_size
-
-    if( field_type.typeID() == OTHER )
-    {
-      index_m++;
-    }
-    index_s++;
-  } // end for fields
 }
 
 void Parser::applyVisitorToBuffer(const std::string &msg_identifier, const ROSType& monitored_type,
@@ -270,33 +196,105 @@ void Parser::applyVisitorToBuffer(const std::string &msg_identifier, const ROSTy
 
 void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
                                           const nonstd::VectorView<uint8_t>& buffer,
-                                          ROSTypeFlat* flat_container_output,
+                                          ROSTypeFlat* flat_container,
                                           const uint32_t max_array_size )
 {
+
   const ROSMessageInfo* msg_info = getMessageInfo(msg_identifier);
 
   if( msg_info == nullptr)
   {
     throw std::runtime_error("deserializeIntoFlatContainer: msg_identifier not registerd. Use registerMessageDefinition" );
   }
+  size_t buffer_offset = 0;
 
-  flat_container_output->tree = &msg_info->string_tree;
-  flat_container_output->name.clear();
-  flat_container_output->value.clear();
+  std::function<void(const MessageTreeNode*,StringTreeLeaf,bool)> deserializeImpl;
+
+  deserializeImpl = [&](
+      const MessageTreeNode* msg_node,
+      StringTreeLeaf tree_leaf, // copy, not reference
+      bool DO_STORE)
+  {
+      const ROSMessage* msg_definition = msg_node->value();
+      size_t index_s = 0;
+      size_t index_m = 0;
+
+      for (const ROSField& field : msg_definition->fields() )
+      {
+        if(field.isConstant() ) continue;
+
+        const ROSType&  field_type = field.type();
+
+        auto new_tree_leaf = tree_leaf;
+        new_tree_leaf.node_ptr = tree_leaf.node_ptr->child(index_s);
+
+        int32_t array_size = field_type.arraySize();
+        if( array_size == -1)
+        {
+          ReadFromBuffer( buffer, buffer_offset, array_size );
+        }
+        if( field_type.isArray())
+        {
+          new_tree_leaf.array_size++;
+          new_tree_leaf.node_ptr = new_tree_leaf.node_ptr->child(0);
+        }
+
+        if( array_size > max_array_size ) DO_STORE = false;
+
+        //------------------------------------
+        for (int i=0; i<array_size; i++ )
+        {
+          if( field_type.isArray() )
+          {
+            new_tree_leaf.index_array[ new_tree_leaf.array_size-1 ] = i;
+          }
+
+          if( field_type.typeID() == STRING )
+          {
+            SString string;
+            ReadFromBuffer<SString>( buffer, buffer_offset, string );
+
+            if( DO_STORE ){
+              flat_container->name.push_back( std::make_pair( new_tree_leaf, std::move(string) ) );
+            }
+          }
+          else if( field_type.isBuiltin() )
+          {
+            Variant var = ReadFromBuffer( field_type.typeID(), buffer, buffer_offset );
+
+            if( DO_STORE ){
+              flat_container->value.push_back( std::make_pair( new_tree_leaf, std::move(var) ) );
+            }
+          }
+          else{ // field_type.typeID() == OTHER
+
+            deserializeImpl(msg_node->child(index_m),
+                            new_tree_leaf,
+                            DO_STORE);
+          }
+        } // end for array_size
+
+        if( field_type.typeID() == OTHER )
+        {
+          index_m++;
+        }
+        index_s++;
+      } // end for fields
+  }; //end of lambda
+
+
+  flat_container->tree = &msg_info->string_tree;
+  flat_container->name.clear();
+  flat_container->value.clear();
 
   StringTreeLeaf rootnode;
   rootnode.node_ptr = msg_info->string_tree.croot();
 
-  size_t offset = 0;
-
-  deserializeImpl( *msg_info,
-                   msg_info->message_tree.croot(),
+  deserializeImpl( msg_info->message_tree.croot(),
                    rootnode,
-                   buffer, offset,
-                   flat_container_output,
-                   max_array_size, true);
+                   true);
 
-  if( offset != buffer.size() )
+  if( buffer_offset != buffer.size() )
   {
     throw std::runtime_error("buildRosFlatType: There was an error parsing the buffer" );
   }

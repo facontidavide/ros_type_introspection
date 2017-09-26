@@ -335,6 +335,7 @@ void Parser::registerRenamingRules(const ROSType &type, const std::vector<Substi
       }
     }
   }
+  _block_register_message = true;
 }
 
 
