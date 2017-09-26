@@ -44,7 +44,7 @@ StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr), array_size(0)
 
 bool StringTreeLeaf::toStr(SString& destination) const
 {
-  char buffer[1024];
+  char buffer[512];
   int offset = this->toStr(buffer);
 
   if( offset < 0 ) {
@@ -98,19 +98,19 @@ int StringTreeLeaf::toStr(char* buffer) const
 
   while ( index >=0 )
   {
-    const SString* str =  strings_from_leaf_to_root[index];
+    const SString* str = strings_from_leaf_to_root[index];
     if( str->size()== 1 && str->at(0) == '#' )
     {
       buffer[off-1] = '.';
       off += print_number(&buffer[off], this->index_array[ array_count++ ] );
     }
     else{
-      memcpy( &buffer[off], str->data(), str->size() );
-      off += str->size();
+      const size_t S = str->size();
+      memcpy( &buffer[off], str->data(), S );
+      off += S;
     }
     if( index > 0 ){
-      buffer[off] = '/';
-      off += 1;
+      buffer[off++] = '/';
     }
     index--;
   }
