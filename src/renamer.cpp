@@ -81,13 +81,13 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
                                 const ROSTypeFlat& container,
                                 RenamedValues *renamed_value )
 {
-  const std::vector<RulesCache> rules_cache = _registered_rules[msg_identifier];
+  const std::vector<RulesCache>& rules_cache = _registered_rules[msg_identifier];
 
   const size_t num_values = container.value.size();
   const size_t num_names  = container.name.size();
 
   renamed_value->resize( container.value.size() );
-  //DO NOT clear()
+  //DO NOT clear() renamed_value
 
   static std::vector<int> alias_array_pos;
   static std::vector<SString> formatted_string;
@@ -273,6 +273,10 @@ SubstitutionRule::SubstitutionRule(const char *pattern, const char *alias, const
   for (const auto& part: split_text){
     if(part.size()>0)  _substitution.push_back( part );
   }
+  size_t h1 = std::hash<std::string>{}(pattern);
+  size_t h2 = std::hash<std::string>{}(alias);
+  size_t h3 = std::hash<std::string>{}(substitution);
+  _hash = (h1 ^ (h2 << 1)) ^ (h3 << 1 );
 }
 
 inline bool FindPattern(const std::vector<SString> &pattern,
@@ -322,7 +326,9 @@ void Parser::registerRenamingRules(const ROSType &type, const std::vector<Substi
         RulesCache cache(rule);
         FindPattern( cache.rule.pattern(), 0, msg_info.string_tree.croot(), &cache.pattern_head );
         FindPattern( cache.rule.alias(),   0, msg_info.string_tree.croot(), &cache.alias_head );
-        if( cache.pattern_head && cache.alias_head)
+        if( cache.pattern_head && cache.alias_head
+           && std::find( cache_vector.begin(), cache_vector.end(), cache) == cache_vector.end()
+            )
         {
           cache_vector.push_back( std::move(cache) );
         }

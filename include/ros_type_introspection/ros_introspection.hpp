@@ -63,6 +63,7 @@ private:
     SubstitutionRule rule;
     const StringTreeNode* pattern_head;
     const StringTreeNode* alias_head;
+    bool operator==(const RulesCache& other) { return  this->rule == other.rule; }
   };
 
   std::map<std::string, std::vector<RulesCache>> _registered_rules;

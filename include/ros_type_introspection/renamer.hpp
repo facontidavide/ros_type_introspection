@@ -115,11 +115,16 @@ public:
   const std::vector<SString>& alias() const { return _alias; }
   const std::vector<SString>& substitution() const { return _substitution; }
 
+  bool operator == (const SubstitutionRule& other)
+  {
+    return _hash == other._hash;
+  }
 
 private:
   std::vector<SString> _pattern;
   std::vector<SString> _alias;
   std::vector<SString> _substitution;
+  size_t _hash;
 } ;
 
 typedef std::map< std::string, std::vector< RosIntrospection::SubstitutionRule > > SubstitutionRuleMap;
