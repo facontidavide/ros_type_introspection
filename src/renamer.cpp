@@ -218,7 +218,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
           {
             new_identifier.append( concatenated_name[c]->data(),
                                    concatenated_name[c]->size() );
-            if( c>0 ) new_identifier.append("/",1);
+            if( c>0 ) new_identifier += '/';
           }
 
           (*renamed_value)[renamed_index].second  = value_leaf.second ;
