@@ -220,9 +220,8 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
             const size_t S = concatenated_name[c]->size();
             memcpy( &buffer[buff_pos], concatenated_name[c]->data(), S );
             buff_pos += S;
-            buffer[buff_pos++] = '/';
+            if( c > 0 ) buffer[buff_pos++] = '/';
           }
-          memcpy( &buffer[buff_pos], concatenated_name[0]->data(), concatenated_name[0]->size() );
 
           renamed_pair.first.assign( buffer, buff_pos );
           renamed_pair.second  = value_leaf.second ;
