@@ -52,7 +52,7 @@ inline bool isSubstitutionPlaceholder( const SString& s)
 
 // given a leaf of the tree, that can have multiple index_array,
 // find the only index which corresponds to the # in the pattern
-int  PatternMatchAndIndexPosition(const StringTreeLeaf& leaf,
+inline int  PatternMatchAndIndexPosition(const StringTreeLeaf& leaf,
                                   const StringTreeNode* pattern_head )
 {
   const StringTreeNode* node_ptr = leaf.node_ptr;
@@ -109,8 +109,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
     const StringTreeNode* pattern_head = cache.pattern_head;
     const StringTreeNode* alias_head   = cache.alias_head;
 
-    if( !pattern_head ) continue;
-    if( !alias_head ) continue;
+    if( !pattern_head || !alias_head  ) continue;
 
     for (size_t n=0; n<num_names; n++)
     {
@@ -211,24 +210,26 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
           }
 
           //------------------------
-          std::string& new_identifier = (*renamed_value)[renamed_index].first;
-          new_identifier.clear();
+          auto& renamed_pair = (*renamed_value)[renamed_index];
 
-          for (int c = concatenated_name.size()-1; c >= 0; c--)
+          char buffer[256];
+          size_t buff_pos = 0;
+
+          for (int c = concatenated_name.size()-1; c > 0; c--)
           {
-            new_identifier.append( concatenated_name[c]->data(),
-                                   concatenated_name[c]->size() );
-            if( c>0 ) new_identifier += '/';
+            const size_t S = concatenated_name[c]->size();
+            memcpy( &buffer[buff_pos], concatenated_name[c]->data(), S );
+            buff_pos += S;
+            buffer[buff_pos++] = '/';
           }
+          memcpy( &buffer[buff_pos], concatenated_name[0]->data(), concatenated_name[0]->size() );
 
-          (*renamed_value)[renamed_index].second  = value_leaf.second ;
+          renamed_pair.first.assign( buffer, buff_pos );
+          renamed_pair.second  = value_leaf.second ;
           renamed_index++;
           substituted[i] = true;
 
         }// end if( new_name )
-        else {
-
-        }
       }// end if( PatternMatching )
       else  {
 
