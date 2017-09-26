@@ -76,10 +76,11 @@ int main( int argc, char** argv)
     auto rules = Rules();
 
     ROSTypeFlat flat_container;
+    RenamedValues renamed;
     for (int i=0; i<100*1000;i++)
     {
-        buildRosFlatType(type_map,main_type, "joint_state", buffer.data(), &flat_container);
-        applyNameTransform( rules , &flat_container );
+        buildRosFlatType(type_map, main_type, "joint_state", buffer.data(), &flat_container, 100);
+        applyNameTransform( rules , flat_container, renamed );
     }
 
     auto end = std::chrono::high_resolution_clock::now();
