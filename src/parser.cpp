@@ -118,26 +118,6 @@ ROSType::ROSType(const std::string &name):
   };
 }
 
-
-
-
-
-//std::ostream& operator<<(std::ostream& ss, const ROSTypeList& type_list)
-//{
-//  for (const ROSMessage& msg: type_list)
-//  {
-//    ss<< "\n" << msg.type().baseName() <<" : " << std::endl;
-
-//    for (const ROSField& field : msg.fields() )
-//    {
-//      ss << "\t" << field.name()
-//         <<" : " << field.type().baseName() << std::endl;
-//    }
-//  }
-//  return ss;
-//}
-
-
 const SString &ROSType::baseName() const
 {
   return _base_name;
@@ -302,16 +282,6 @@ ROSField::ROSField(const std::string &definition)
   _name  = fieldname;
   _value = value;
 }
-
-std::ostream* _global_warnings_stream_ = &( std::cerr );
-
-
-void SetWarningsOutput(std::ostream* stream)
-{
-  _global_warnings_stream_ = stream;
-}
-
-
 
 
 } // end namespace

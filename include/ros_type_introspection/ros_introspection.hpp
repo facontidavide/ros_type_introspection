@@ -61,6 +61,11 @@ public:
    *  This data is stored in two key/value vectors, ROSTypeFlat::value and ROSTypeFlat::name.
    * It must be noted that the key type is StringTreeLeaf. this type is not particularly user-friendly,
    * but allows a much faster post-processing.
+   *
+   * IMPORTANT: this approach is not meant to be used with use arrays such as maps, point clouds and images.
+   * It would require a ridicoulous amount of memory and, franckly, make little sense.
+   * For this reason the argument max_array_size is used.
+   *
    * This funtion is almost always followed by applyNameTransform, which provide a more human-readable
    * key-value representation.
    *
@@ -80,6 +85,17 @@ public:
    * @brief applyNameTransform is used to create a vector of type RenamedValues from
    *        the vector ROSTypeFlat::value. Additionally, it apply the renaming rules previously
    *        registred using registerRenamingRules.
+   *
+   * For example if you apply this to [geometry_msgs/Pose](http://docs.ros.org/kinetic/api/geometry_msgs/html/msg/Pose.html)
+   * the vector renamed_value.value will contain the following pairs (where ... is the number of that field) :
+   *
+   *  - Pose/Point/x = ...
+   *  - Pose/Point/y = ...
+   *  - Pose/Point/z = ...
+   *  - Pose/Quaternion/x = ...
+   *  - Pose/Quaternion/y = ...
+   *  - Pose/Quaternion/z = ...
+   *  - Pose.Quaternion/w = ...
    *
    * @param msg_identifier  String ID to identify the registered message (use registerMessageDefinition first).
    * @param container       Source. This instance must be created using deserializeIntoFlatContainer.
