@@ -76,6 +76,28 @@ inline int  PatternMatchAndIndexPosition(const StringTreeLeaf& leaf,
   return -1;
 }
 
+inline void JoinStrings( const std::vector<const SString*>& vect, const char separator, std::string& destination)
+{
+  size_t count = 0;
+  for(const auto &v: vect ) count += v->size();
+
+  // the following approach seems to be faster
+  // https://github.com/facontidavide/InterestingBenchmarks/blob/master/StringAppend_vs_Memcpy.md
+
+  destination.resize( count + vect.size() -1 );
+
+  char* buffer = &destination[0];
+  size_t buff_pos = 0;
+
+  for (size_t c = 0; c < vect.size()-1; c++)
+  {
+    const size_t S = vect[c]->size();
+    memcpy( &buffer[buff_pos], vect[c]->data(), S );
+    buff_pos += S;
+    buffer[buff_pos++] = separator;
+  }
+  memcpy( &buffer[buff_pos], vect.back()->data(), vect.back()->size() );
+}
 
 void Parser::applyNameTransform(const std::string& msg_identifier,
                                 const ROSTypeFlat& container,
@@ -150,7 +172,6 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
         //--------------------------
         if( new_name )
         {
-          int char_count = 0;
           static std::vector<const SString*> concatenated_name;
           concatenated_name.reserve( 10 );
           concatenated_name.clear();
@@ -170,7 +191,6 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
               value = &formatted_string.back();
             }
 
-            char_count += value->size();
             concatenated_name.push_back( value );
             node_ptr = node_ptr->parent();
           }
@@ -183,8 +203,6 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
               value = new_name;
               position--;
             }
-
-            char_count += value->size();
             concatenated_name.push_back( value );
           }
 
@@ -203,8 +221,6 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
               formatted_string.push_back( SString(buffer, str_size) );
               value = &formatted_string.back();
             }
-
-            char_count += value->size();
             concatenated_name.push_back( value );
             node_ptr = node_ptr->parent();
           }
@@ -212,19 +228,10 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
           //------------------------
           auto& renamed_pair = (*renamed_value)[renamed_index];
 
-          char buffer[256];
-          size_t buff_pos = 0;
-
-          for (int c = concatenated_name.size()-1; c >= 0; c--)
-          {
-            const size_t S = concatenated_name[c]->size();
-            memcpy( &buffer[buff_pos], concatenated_name[c]->data(), S );
-            buff_pos += S;
-            if( c > 0 ) buffer[buff_pos++] = '/';
-          }
-
-          renamed_pair.first.assign( buffer, buff_pos );
+          std::reverse(concatenated_name.begin(), concatenated_name.end());
+          JoinStrings( concatenated_name, '/', renamed_pair.first);
           renamed_pair.second  = value_leaf.second ;
+
           renamed_index++;
           substituted[i] = true;
 
