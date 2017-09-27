@@ -22,6 +22,8 @@
   <build_depend>roscpp_serialization</build_depend>
   <build_depend>rostime</build_depend>
   <build_depend>topic_tools</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
   
   <run_depend>rosbag</run_depend>
   <run_depend>rosbag_storage</run_depend>
@@ -29,11 +31,10 @@
   <run_depend>roscpp_serialization</run_depend>
   <run_depend>rostime</run_depend>
   <run_depend>topic_tools</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>sensor_msgs</run_depend>
 
   <test_depend>gtest</test_depend>
-  <test_depend>geometry_msgs</test_depend>
-  <test_depend>sensor_msgs</test_depend>
-  <test_depend>std_msgs</test_depend>
   <test_depend>tf2</test_depend>
 
 </package>

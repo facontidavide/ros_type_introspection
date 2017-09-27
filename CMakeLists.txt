@@ -10,6 +10,8 @@ find_package(catkin REQUIRED COMPONENTS
    rosbag 
    rosbag_storage 
    roscpp_serialization
+   sensor_msgs
+   geometry_msgs
 )
 
 # Build flags
