@@ -215,14 +215,13 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
           char buffer[256];
           size_t buff_pos = 0;
 
-          for (int c = concatenated_name.size()-1; c > 0; c--)
+          for (int c = concatenated_name.size()-1; c >= 0; c--)
           {
             const size_t S = concatenated_name[c]->size();
             memcpy( &buffer[buff_pos], concatenated_name[c]->data(), S );
             buff_pos += S;
-            buffer[buff_pos++] = '/';
+            if( c > 0 ) buffer[buff_pos++] = '/';
           }
-          memcpy( &buffer[buff_pos], concatenated_name[0]->data(), concatenated_name[0]->size() );
 
           renamed_pair.first.assign( buffer, buff_pos );
           renamed_pair.second  = value_leaf.second ;
