@@ -34,6 +34,8 @@
 
 
 #include "ros_type_introspection/ros_type.hpp"
+#include "ros_type_introspection/helper_funtions.hpp"
+
 
 namespace RosIntrospection{
 
@@ -59,7 +61,9 @@ ROSType::ROSType(const SString &name):
     _msg_name.assign( name.data() + pos, name.size() - pos);
   }
 
-  _id = toBuiltinType( _msg_name );
+  _id   = toBuiltinType( _msg_name );
+
+  _hash = std::hash<SString>{}( _base_name );
 }
 
 ROSType::ROSType(const std::string &name):
@@ -79,6 +83,7 @@ ROSType::ROSType(const std::string &name):
 
   //------------------------------
   _id = toBuiltinType( _msg_name );
+  _hash = std::hash<SString>{}( _base_name );
 }
 
 void ROSType::setPkgName(const SString &new_pkg)
@@ -86,6 +91,7 @@ void ROSType::setPkgName(const SString &new_pkg)
   assert(_pkg_name.size() == 0);
   _pkg_name = new_pkg;
   _base_name = SString(new_pkg).append("/").append(_base_name);
+  _hash = std::hash<SString>{}( _base_name );
 }
 
 

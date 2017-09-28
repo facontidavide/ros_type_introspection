@@ -36,6 +36,7 @@
 #ifndef ROS_INTROSPECTION_HELPER_H
 #define ROS_INTROSPECTION_HELPER_H
 
+#include <functional>
 #include "ros_type_introspection/utils/variant.hpp"
 #include "ros_type_introspection/utils/vector_view.hpp"
 
@@ -155,6 +156,28 @@ inline Variant ReadFromBufferToVariant(BuiltinType id, const nonstd::VectorView<
   throw std::runtime_error( "unsupported builtin type value");
 }
 
+
 } // end namespace
+
+namespace std {
+  template <> struct hash<RosIntrospection::SString>
+  {
+
+    typedef RosIntrospection::SString argument_type;
+    typedef std::size_t result_type;
+
+    result_type operator()(RosIntrospection::SString const& str) const
+    {
+      result_type hash = 5381;
+      for(size_t i=0; i<str.size(); i++)
+      {
+        hash = ((hash << 5) + hash) + static_cast<result_type>(str.at(i) );
+      }
+      return hash;
+    }
+  };
+}
+
+
 
 #endif

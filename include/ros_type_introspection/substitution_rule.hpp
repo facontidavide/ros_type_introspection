@@ -130,15 +130,7 @@ private:
 
 //------------------------
 
-inline bool isNumberPlaceholder( const SString& s)
-{
-  return s.size() == 1 && s.at(0) == '#';
-}
 
-inline bool isSubstitutionPlaceholder( const SString& s)
-{
-  return s.size() == 1 && s.at(0) == '@';
-}
 
 
 } // end namespace

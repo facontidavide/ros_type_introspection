@@ -43,6 +43,12 @@
 
 #include <iostream>
 
+#ifdef __MSVC__
+#define FORCEDINLINE __forceinline
+#else
+#define FORCEDINLINE __attribute__((always_inline))
+#endif
+
 namespace ssoX {
 
 namespace detail {
@@ -225,12 +231,12 @@ public:
         }
     }
 
-    basic_string& append(const basic_string& other)
+    FORCEDINLINE basic_string& append(const basic_string& other)
     {
         return append( other.data(), other.size() );
     }
 
-    basic_string& append(CharT const* string)
+    FORCEDINLINE basic_string& append(CharT const* string)
     {
         return append( string, std::strlen(string) );
     }
@@ -262,7 +268,7 @@ public:
         return sso() ? m_data.sso.string : m_data.non_sso.ptr;
     }
 
-    std::size_t size() const noexcept {
+    FORCEDINLINE std::size_t size() const noexcept {
         if(sso()) {
             return sso_size();
         } else {
@@ -313,17 +319,17 @@ private:
     }
 
     // We are using sso if the last two bits are 0
-    bool sso() const noexcept {
+    FORCEDINLINE bool sso() const noexcept {
         return !detail::lsb<0>(m_data.sso.size) && !detail::lsb<1>(m_data.sso.size);
     }
 
     // good
-    void set_sso_size(unsigned char size) noexcept {
+    FORCEDINLINE void set_sso_size(unsigned char size) noexcept {
         m_data.sso.size = static_cast<UCharT>(sso_capacity - size) << 2;
     }
 
     // good
-    std::size_t sso_size() const noexcept {
+    FORCEDINLINE std::size_t sso_size() const noexcept {
         return sso_capacity - ((m_data.sso.size >> 2) & 63u);
     }
 

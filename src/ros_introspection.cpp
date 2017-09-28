@@ -218,8 +218,7 @@ const ROSMessage* Parser::getMessageByType(const ROSType &type, const ROSMessage
 {
   for(const ROSMessage& msg: info.type_list) // find in the list
   {
-    if( msg.type().msgName() == type.msgName() &&
-        msg.type().pkgName() == type.pkgName() )
+    if( msg.type() == type )
     {
       return &msg;
     }
@@ -402,6 +401,16 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
   {
     throw std::runtime_error("buildRosFlatType: There was an error parsing the buffer" );
   }
+}
+
+inline FORCEDINLINE bool isNumberPlaceholder( const SString& s)
+{
+  return s.size() == 1 && s.at(0) == '#';
+}
+
+inline FORCEDINLINE bool isSubstitutionPlaceholder( const SString& s)
+{
+  return s.size() == 1 && s.at(0) == '@';
 }
 
 // given a leaf of the tree, that can have multiple index_array,

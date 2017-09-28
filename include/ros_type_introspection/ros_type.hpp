@@ -38,6 +38,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <functional>
 #include "ros_type_introspection/utils/variant.hpp"
 
 namespace RosIntrospection{
@@ -79,12 +80,14 @@ public:
   BuiltinType typeID() const;
 
   bool operator==(const ROSType& other) const  {
-    return this->baseName() == other.baseName();
+    return _hash == other._hash;
   }
 
   bool operator<(const ROSType& other) const {
     return this->baseName() < other.baseName();
   }
+
+  size_t hash() const { return _hash; }
 
 protected:
 
@@ -92,6 +95,7 @@ protected:
   SString _base_name;
   SString _msg_name;
   SString _pkg_name;
+  size_t _hash;
 
 };
 
@@ -159,5 +163,20 @@ inline BuiltinType toBuiltinType(const SString& s) {
 }
 
 }
+
+namespace std {
+  template <> struct hash<RosIntrospection::ROSType>
+  {
+
+    typedef RosIntrospection::ROSType argument_type;
+    typedef std::size_t               result_type;
+
+    result_type operator()(RosIntrospection::ROSType const& type) const
+    {
+      return type.hash();
+    }
+  };
+}
+
 
 #endif // ROSTYPE_H
