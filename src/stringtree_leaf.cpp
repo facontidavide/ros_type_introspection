@@ -46,16 +46,12 @@ int StringTreeLeaf::toStr(char* buffer) const
     return -1;
   }
 
-  const SString* strings_from_leaf_to_root[64];
+  std::array<const SString*, 32> strings_from_leaf_to_root;
   int index = 0;
-
-  int char_count = 0;
 
   while(leaf_node)
   {
     const SString& str = leaf_node->value();
-
-    char_count += str.size();
     strings_from_leaf_to_root[index] = &str;
     index++;
     leaf_node = leaf_node->parent();
@@ -70,13 +66,13 @@ int StringTreeLeaf::toStr(char* buffer) const
   while ( index >=0 )
   {
     const SString* str = strings_from_leaf_to_root[index];
-    if( str->size()== 1 && str->at(0) == '#' )
+    const size_t S = str->size();
+    if( S == 1 && str->at(0) == '#' )
     {
       buffer[off-1] = '.';
       off += print_number(&buffer[off], this->index_array[ array_count++ ] );
     }
     else{
-      const size_t S = str->size();
       memcpy( &buffer[off], str->data(), S );
       off += S;
     }

@@ -35,7 +35,7 @@
 #ifndef ROS_INTROSPECTION_ROSMESSAGE_H
 #define ROS_INTROSPECTION_ROSMESSAGE_H
 
-#include "ros_type_introspection/utils/stringtree.hpp"
+#include "ros_type_introspection/utils/tree.hpp"
 #include "ros_type_introspection/ros_field.hpp"
 
 namespace RosIntrospection{
