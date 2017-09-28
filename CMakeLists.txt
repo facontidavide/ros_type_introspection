@@ -73,6 +73,7 @@ add_dependencies(ros_introspection_benchmark
 target_link_libraries(ros_introspection_benchmark
  ${catkin_LIBRARIES}
   ros_type_introspection
+  benchmark
 )
 
 
