@@ -1,7 +1,7 @@
 /*********************************************************************
 * Software License Agreement (BSD License)
 *
-*  Copyright 2016 Davide Faconti
+*  Copyright 2016-2017 Davide Faconti
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -30,43 +30,14 @@
 *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 *  POSSIBILITY OF SUCH DAMAGE.
-********************************************************************/
+* *******************************************************************/
 
-#include <functional>
-#include "ros_type_introspection/deserializer.hpp"
-
+#include "ros_type_introspection/stringtree_leaf.hpp"
+#include "ros_type_introspection/helper_funtions.hpp"
 
 namespace RosIntrospection{
 
-StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr), array_size(0)
-{  for (int i=0; i<8; i++) index_array[i] = 0;}
 
-
-bool StringTreeLeaf::toStr(SString& destination) const
-{
-  char buffer[512];
-  int offset = this->toStr(buffer);
-
-  if( offset < 0 ) {
-    destination.clear();
-    return false;
-  }
-  destination.assign(buffer, offset);
-  return true;
-}
-
-bool StringTreeLeaf::toStr(std::string& destination) const
-{
-  char buffer[512];
-  int offset = this->toStr(buffer);
-
-  if( offset < 0 ) {
-    destination.clear();
-    return false;
-  }
-  destination.assign(buffer, offset);
-  return true;
-}
 
 int StringTreeLeaf::toStr(char* buffer) const
 {
@@ -75,16 +46,12 @@ int StringTreeLeaf::toStr(char* buffer) const
     return -1;
   }
 
-  const SString* strings_from_leaf_to_root[64];
+  std::array<const SString*, 32> strings_from_leaf_to_root;
   int index = 0;
-
-  int char_count = 0;
 
   while(leaf_node)
   {
     const SString& str = leaf_node->value();
-
-    char_count += str.size();
     strings_from_leaf_to_root[index] = &str;
     index++;
     leaf_node = leaf_node->parent();
@@ -99,13 +66,13 @@ int StringTreeLeaf::toStr(char* buffer) const
   while ( index >=0 )
   {
     const SString* str = strings_from_leaf_to_root[index];
-    if( str->size()== 1 && str->at(0) == '#' )
+    const size_t S = str->size();
+    if( S == 1 && str->at(0) == '#' )
     {
       buffer[off-1] = '.';
       off += print_number(&buffer[off], this->index_array[ array_count++ ] );
     }
     else{
-      const size_t S = str->size();
       memcpy( &buffer[off], str->data(), S );
       off += S;
     }
@@ -118,5 +85,4 @@ int StringTreeLeaf::toStr(char* buffer) const
   return off;
 }
 
-
-} // end namespace
+}

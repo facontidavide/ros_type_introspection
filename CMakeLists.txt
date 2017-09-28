@@ -3,6 +3,7 @@ project(ros_type_introspection)
 
 find_package(Boost REQUIRED COMPONENTS regex)
 
+
 find_package(catkin REQUIRED COMPONENTS 
    roscpp 
    rostime 
@@ -10,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
    rosbag 
    rosbag_storage 
    roscpp_serialization
+   sensor_msgs
+   geometry_msgs
 )
 
 # Build flags
@@ -51,15 +54,22 @@ include_directories(
 
 ## Declare a C++ library
  add_library(ros_type_introspection
-   src/parser.cpp
-   src/deserializer.cpp
-   src/renamer.cpp
+
+   src/ros_type.cpp
+   src/ros_field.cpp
+   src/stringtree_leaf.cpp
+   src/ros_message.cpp
+   src/substitution_rule.cpp
+
    src/ros_introspection.cpp
  )
 
 target_link_libraries(ros_type_introspection ${catkin_LIBRARIES})
 
-## Declare a C++ executable
+
+find_package(benchmark CONFIG)
+if (benchmark_FOUND)
+
 add_executable(ros_introspection_benchmark src/tests/benchmark.cpp)
 add_dependencies(ros_introspection_benchmark
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
@@ -68,7 +78,10 @@ add_dependencies(ros_introspection_benchmark
 target_link_libraries(ros_introspection_benchmark
  ${catkin_LIBRARIES}
   ros_type_introspection
+  benchmark
 )
+
+endif()
 
 
 #############

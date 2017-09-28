@@ -33,47 +33,66 @@
 * *******************************************************************/
 
 
-#ifndef VARIANT_NUMBER_EXCEPTIONS_H
-#define VARIANT_NUMBER_EXCEPTIONS_H
+#include "ros_type_introspection/ros_type.hpp"
+#include "ros_type_introspection/helper_funtions.hpp"
 
-#include <exception>
-#include <string>
 
-namespace RosIntrospection
+namespace RosIntrospection{
+
+ROSType::ROSType(const SString &name):
+  _base_name(name)
 {
-
-class RangeException: public std::exception
-{
-public:
-
-    explicit RangeException(const char* message): msg_(message)  {}
-    explicit RangeException(const std::string& message):  msg_(message)  {}
-    ~RangeException() throw () {}
-    const char* what() const throw ()
-    {
-        return msg_.c_str();
+  int pos = -1;
+  for (size_t i=0; i<name.size(); i++)
+  {
+    if(name.at(i) == '/'){
+      pos = i;
+      break;
     }
+  }
 
-protected:
-    std::string msg_;
-};
+  if( pos != -1)
+  {
+    _msg_name = name;
+  }
+  else{
+    _pkg_name.assign( name.data(), pos);
+    pos++;
+    _msg_name.assign( name.data() + pos, name.size() - pos);
+  }
 
-class TypeException: public std::exception
+  _id   = toBuiltinType( _msg_name );
+
+  _hash = std::hash<SString>{}( _base_name );
+}
+
+ROSType::ROSType(const std::string &name):
+  _base_name(name)
 {
-public:
+  size_t separator_pos = name.find_first_of('/');
 
-    explicit TypeException(const char* message): msg_(message)  {}
-    explicit TypeException(const std::string& message):  msg_(message)  {}
-    ~TypeException() throw () {}
-    const char* what() const throw ()
-    {
-        return msg_.c_str();
-    }
+  if( separator_pos == std::string::npos)
+  {
+    _msg_name = name;
+  }
+  else{
+    _pkg_name.assign( &name[0], separator_pos);
+    separator_pos++;
+    _msg_name.assign( &name[separator_pos], name.size() - separator_pos);
+  }
 
-protected:
-    std::string msg_;
-};
+  //------------------------------
+  _id = toBuiltinType( _msg_name );
+  _hash = std::hash<SString>{}( _base_name );
+}
 
-} //end namespace
+void ROSType::setPkgName(const SString &new_pkg)
+{
+  assert(_pkg_name.size() == 0);
+  _pkg_name = new_pkg;
+  _base_name = SString(new_pkg).append("/").append(_base_name);
+  _hash = std::hash<SString>{}( _base_name );
+}
 
-#endif
+
+}

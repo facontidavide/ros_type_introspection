@@ -1,7 +1,7 @@
 /*********************************************************************
 * Software License Agreement (BSD License)
 *
-*  Copyright 2016 Davide Faconti
+*  Copyright 2016-2017 Davide Faconti
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -30,19 +30,18 @@
 *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 *  POSSIBILITY OF SUCH DAMAGE.
-********************************************************************/
+* *******************************************************************/
 
-#ifndef ROS_INTRO_DESERIALIZE_H
-#define ROS_INTRO_DESERIALIZE_H
+#ifndef ROS_INTROSPECTION_STRINGTREELEAF_H
+#define ROS_INTROSPECTION_STRINGTREELEAF_H
 
-#include <array>
-#include <sstream>
-#include "ros_type_introspection/parser.hpp"
-#include "ros_type_introspection/utils/stringtree.hpp"
-#include "ros_type_introspection/utils/variant.hpp"
-
+#include <vector>
+#include <map>
+#include <iostream>
+#include "ros_type_introspection/ros_message.hpp"
 
 namespace RosIntrospection{
+
 
 /**
  * @brief The StringTreeLeaf is, as the name suggests, a leaf (terminal node)
@@ -79,30 +78,10 @@ struct StringTreeLeaf{
   // return string length or -1 if failed
   int toStr(char* buffer) const;
 
-  SString toSString() { SString out; toStr(out); return out; }
-
-  std::string toStdString() { std::string out; toStr(out); return out; }
+  std::string toStdString() const { std::string out; toStr(out); return out; }
 };
 
-struct ROSTypeFlat {
-
-  //ROSTypeFlat(const StringTree* tree_): tree(tree_) {}
-
-  /// Tree that the StringTreeLeaf(s) refer to.
-  const StringTree* tree;
-
-  /// List of all those parsed fields that can be represented by a builtin value different from "string".
-  /// This list will be filled by the funtion buildRosFlatType.
-  std::vector< std::pair<StringTreeLeaf, Variant> > value;
-
-  /// Ñist of all those parsed fields that can be represented by a builtin value equal to "string".
-  /// This list will be filled by the funtion buildRosFlatType.
-  std::vector< std::pair<StringTreeLeaf, SString> > name;
-
-  // Not used yet
-  std::vector< std::pair<StringTreeLeaf, std::vector<uint8_t>>> blob;
-
-};
+//---------------------------------
 
 inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
 {
@@ -112,38 +91,37 @@ inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
   return os;
 }
 
+inline StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr), array_size(0)
+{  for (auto& v: index_array) v= 0; }
 
-//-------------------- UTILITY function ------------------
-// Brutally faster for numbers below 100
-inline int print_number(char* buffer, uint16_t value)
+
+inline bool StringTreeLeaf::toStr(SString& destination) const
 {
-  const char DIGITS[] =
-      "00010203040506070809"
-      "10111213141516171819"
-      "20212223242526272829"
-      "30313233343536373839"
-      "40414243444546474849"
-      "50515253545556575859"
-      "60616263646566676869"
-      "70717273747576777879"
-      "80818283848586878889"
-      "90919293949596979899";
-  if (value < 10)
-  {
-    buffer[0] = static_cast<char>('0' + value);
-    return 1;
+  char buffer[256];
+  int offset = this->toStr(buffer);
+
+  if( offset < 0 ) {
+    destination.clear();
+    return false;
   }
-  else if (value < 100) {
-    value *= 2;
-    buffer[0] = DIGITS[ value+1 ];
-    buffer[1] = DIGITS[ value ];
-    return 2;
-  }
-  else{
-    return sprintf( buffer,"%d", value );
-  }
+  destination.assign(buffer, offset);
+  return true;
 }
 
-} //end namespace
+inline bool StringTreeLeaf::toStr(std::string& destination) const
+{
+  char buffer[256];
+  int offset = this->toStr(buffer);
 
-#endif // ROS_INTRO_DESERIALIZE_H
+  if( offset < 0 ) {
+    destination.clear();
+    return false;
+  }
+  destination.assign(buffer, offset);
+  return true;
+}
+
+
+}
+
+#endif // ROSTYPE_H

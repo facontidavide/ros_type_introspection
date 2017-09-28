@@ -1,12 +1,65 @@
+/*********************************************************************
+* Software License Agreement (BSD License)
+*
+*  Copyright 2016-2017 Davide Faconti
+*  All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without
+*  modification, are permitted provided that the following conditions
+*  are met:
+*
+*   * Redistributions of source code must retain the above copyright
+*     notice, this list of conditions and the following disclaimer.
+*   * Redistributions in binary form must reproduce the above
+*     copyright notice, this list of conditions and the following
+*     disclaimer in the documentation and/or other materials provided
+*     with the distribution.
+*   * Neither the name of Willow Garage, Inc. nor the names of its
+*     contributors may be used to endorse or promote products derived
+*     from this software without specific prior written permission.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+*  POSSIBILITY OF SUCH DAMAGE.
+* *******************************************************************/
+
 #ifndef ROS_INTROSPECTION_HPP
 #define ROS_INTROSPECTION_HPP
 
-#include <ros_type_introspection/renamer.hpp>
-#include <ros_type_introspection/deserializer.hpp>
-#include <ros_type_introspection/parser.hpp>
-#include <set>
+
+#include <ros_type_introspection/stringtree_leaf.hpp>
+#include <ros_type_introspection/utils/vector_view.hpp>
+#include <ros_type_introspection/substitution_rule.hpp>
 
 namespace RosIntrospection{
+
+struct ROSTypeFlat {
+
+  /// Tree that the StringTreeLeaf(s) refer to.
+  const StringTree* tree;
+
+  /// List of all those parsed fields that can be represented by a builtin value different from "string".
+  /// This list will be filled by the funtion buildRosFlatType.
+  std::vector< std::pair<StringTreeLeaf, Variant> > value;
+
+  /// List of all those parsed fields that can be represented by a builtin value equal to "string".
+  /// This list will be filled by the funtion buildRosFlatType.
+  std::vector< std::pair<StringTreeLeaf, SString> > name;
+
+  // Not used yet
+  std::vector< std::pair<StringTreeLeaf, std::vector<uint8_t>>> blob;
+};
+
+typedef std::vector< std::pair<std::string, Variant> > RenamedValues;
 
 class Parser{
 
@@ -45,7 +98,7 @@ public:
    * @param msg_identifier String ID to identify the registered message (use registerMessageDefinition first).
    * @return               Pointer to the instance or nullptr if not registered.
    */
-  const ROSMessageInfo* getMessageInfo(const std::string& msg_identifier);
+  const ROSMessageInfo* getMessageInfo(const std::string& msg_identifier) const;
 
   /**
    * @brief getMessageByType provides a pointer to a ROSMessage stored in ROSMessageInfo.
@@ -54,7 +107,7 @@ public:
    * @param info   Instance or ROSMessageInfo that shall contain the ROSType to be found.
    * @return       Pointer to the instance or nullptr if not registered.
    */
-  const ROSMessage *getMessageByType(const ROSType& type, const ROSMessageInfo &info);
+  const ROSMessage *getMessageByType(const ROSType& type, const ROSMessageInfo &info) const;
 
   /**
    * @brief deserializeIntoFlatContainer takes a raw buffer of memory and extract information from it.
@@ -79,7 +132,7 @@ public:
   void deserializeIntoFlatContainer(const std::string& msg_identifier,
                                     const nonstd::VectorView<uint8_t>& buffer,
                                     ROSTypeFlat* flat_container_output,
-                                    const uint32_t max_array_size );
+                                    const uint32_t max_array_size ) const;
 
   /**
    * @brief applyNameTransform is used to create a vector of type RenamedValues from
@@ -103,7 +156,7 @@ public:
    */
   void applyNameTransform(const std::string& msg_identifier,
                           const ROSTypeFlat& container,
-                          RenamedValues* renamed_value );
+                          RenamedValues* renamed_value ) const;
 
   typedef std::function<void(const ROSType&, nonstd::VectorViewMutable<uint8_t>&)> VisitingCallback;
 
@@ -121,7 +174,7 @@ public:
    */
   void applyVisitorToBuffer(const std::string& msg_identifier, const ROSType &monitored_type,
                             nonstd::VectorViewMutable<uint8_t> &buffer,
-                            VisitingCallback callback);
+                            VisitingCallback callback) const;
 
   /// Change where the warning messages are displayed.
   void setWarningsStream(std::ostream* output) { _global_warnings = output; }
@@ -142,7 +195,7 @@ private:
 
   std::map<std::string, std::vector<RulesCache>> _registered_rules;
 
-  void createTrees(ROSMessageInfo &info, const std::string &type_name);
+  void createTrees(ROSMessageInfo &info, const std::string &type_name) const;
 
   std::ostream* _global_warnings;
   bool _block_register_message;

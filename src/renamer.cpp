@@ -79,7 +79,7 @@ inline int  PatternMatchAndIndexPosition(const StringTreeLeaf& leaf,
 
 void Parser::applyNameTransform(const std::string& msg_identifier,
                                 const ROSTypeFlat& container,
-                                RenamedValues *renamed_value )
+                                RenamedValues *renamed_value ) const
 {
   const std::vector<RulesCache>& rules_cache = _registered_rules[msg_identifier];
 
