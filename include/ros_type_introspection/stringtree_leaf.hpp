@@ -78,6 +78,7 @@ struct StringTreeLeaf{
   // return string length or -1 if failed
   int toStr(char* buffer) const;
 
+  std::string toStdString() const { std::string out; toStr(out); return out; }
 };
 
 //---------------------------------

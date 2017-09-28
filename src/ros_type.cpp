@@ -33,6 +33,8 @@
 * *******************************************************************/
 
 
+#include "ros_type_introspection/ros_type.hpp"
+
 namespace RosIntrospection{
 
 ROSType::ROSType(const SString &name):

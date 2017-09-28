@@ -245,8 +245,7 @@ void Parser::applyVisitorToBuffer(const std::string &msg_identifier, const ROSTy
     const ROSMessage* msg_definition = msg_node->value();
     const ROSType& msg_type = msg_definition->type();
 
-    const bool matching =( msg_type.msgName() == monitored_type.msgName() &&
-                           msg_type.pkgName() == monitored_type.pkgName() );
+    const bool matching = ( msg_type == monitored_type );
 
     uint8_t* prev_buffer_ptr = buffer.data() + buffer_offset;
     size_t prev_offset = buffer_offset;
