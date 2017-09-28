@@ -10,11 +10,15 @@
 #include <chrono>
 #include <ros_type_introspection/ros_introspection.hpp>
 
+
+#include <benchmark/benchmark.h>
+
+
 using namespace ros::message_traits;
 using namespace RosIntrospection;
 
 
-std::vector<SubstitutionRule> Rules()
+static std::vector<SubstitutionRule> Rules()
 {
   std::vector<SubstitutionRule> rules;
 
@@ -34,7 +38,7 @@ std::vector<SubstitutionRule> Rules()
 }
 
 
-int main( int argc, char** argv)
+static void BM_Joints(benchmark::State& state)
 {
   RosIntrospection::Parser parser;
 
@@ -46,7 +50,6 @@ int main( int argc, char** argv)
         Definition<sensor_msgs::JointState>::value());
 
   parser.registerRenamingRules( main_type, Rules() );
-  std::cout << "------------------------------"  << std::endl;
 
   sensor_msgs::JointState js_msg;
 
@@ -70,26 +73,20 @@ int main( int argc, char** argv)
   }
 
   std::vector<uint8_t> buffer( ros::serialization::serializationLength(js_msg) );
-
-  auto start = std::chrono::high_resolution_clock::now();
-
   ros::serialization::OStream stream(buffer.data(), buffer.size());
   ros::serialization::Serializer<sensor_msgs::JointState>::write(stream, js_msg);
 
   ROSTypeFlat flat_container;
   RenamedValues renamed_values;
 
-  for (int i=0; i<100*1000;i++)
+  while (state.KeepRunning())
   {
     parser.deserializeIntoFlatContainer("joint_state",  buffer,  &flat_container,100);
     parser.applyNameTransform("joint_state", flat_container, &renamed_values );
   }
-
-  auto end = std::chrono::high_resolution_clock::now();
-  auto elapsed = end - start;
-
-  std::cout << "time elapsed: " << std::chrono::duration_cast< std::chrono::milliseconds>( elapsed ).count()  <<   std::endl;
-
-  return 0;
 }
+
+BENCHMARK(BM_Joints);
+
+BENCHMARK_MAIN();
 
