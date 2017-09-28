@@ -33,7 +33,7 @@
 * *******************************************************************/
 
 #include "ros_type_introspection/stringtree_leaf.hpp"
-#include "ros_type_introspection/helper_funtions.hpp"
+#include "ros_type_introspection/helper_functions.hpp"
 
 namespace RosIntrospection{
 

@@ -34,7 +34,7 @@
 
 
 #include "ros_type_introspection/ros_type.hpp"
-#include "ros_type_introspection/helper_funtions.hpp"
+#include "ros_type_introspection/helper_functions.hpp"
 
 
 namespace RosIntrospection{

@@ -40,7 +40,7 @@
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/regex.hpp>
 #include <functional>
-#include "ros_type_introspection/helper_funtions.hpp"
+#include "ros_type_introspection/helper_functions.hpp"
 
 namespace RosIntrospection {
 
