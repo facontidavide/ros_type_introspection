@@ -1,3 +1,37 @@
+/*********************************************************************
+* Software License Agreement (BSD License)
+*
+*  Copyright 2016-2017 Davide Faconti
+*  All rights reserved.
+*
+*  Redistribution and use in source and binary forms, with or without
+*  modification, are permitted provided that the following conditions
+*  are met:
+*
+*   * Redistributions of source code must retain the above copyright
+*     notice, this list of conditions and the following disclaimer.
+*   * Redistributions in binary form must reproduce the above
+*     copyright notice, this list of conditions and the following
+*     disclaimer in the documentation and/or other materials provided
+*     with the distribution.
+*   * Neither the name of Willow Garage, Inc. nor the names of its
+*     contributors may be used to endorse or promote products derived
+*     from this software without specific prior written permission.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+*  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+*  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+*  FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+*  COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+*  INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+*  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+*  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+*  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+*  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+*  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+*  POSSIBILITY OF SUCH DAMAGE.
+* *******************************************************************/
+
 #include "ros_type_introspection/ros_introspection.hpp"
 
 #include <boost/algorithm/string.hpp>
@@ -6,6 +40,7 @@
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/regex.hpp>
 #include <functional>
+#include "ros_type_introspection/helper_funtions.hpp"
 
 namespace RosIntrospection {
 
@@ -16,8 +51,10 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name)
   recursiveTreeCreator = [&](const ROSMessage* msg_definition, StringTreeNode* string_node, MessageTreeNode* msg_node)
   {
     // note: should use reserve here, NOT resize
-    string_node->children().reserve( msg_definition->fields().size() );
-    msg_node->children().reserve( msg_definition->fields().size() );
+    const size_t NUM_FIELDS = msg_definition->fields().size();
+
+    string_node->children().reserve( NUM_FIELDS );
+    msg_node->children().reserve( NUM_FIELDS );
 
     for (const ROSField& field : msg_definition->fields() )
     {
@@ -26,7 +63,7 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name)
         // Let's add first a child to string_node
         string_node->addChild( field.name() );
         StringTreeNode*  new_string_node = &(string_node->children().back());
-        if( field.type().isArray())
+        if( field.isArray())
         {
           new_string_node->children().reserve(1);
           new_string_node = new_string_node->addChild("#");
@@ -37,6 +74,11 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name)
         if( field.type().isBuiltin() == false)
         {
           next_msg = getMessageByType( field.type(), info );
+          if( next_msg == nullptr)
+          {
+            throw std::runtime_error("This type was not registered " +
+                                     field.type().baseName().toStdString());
+          }
           msg_node->addChild( next_msg );
           MessageTreeNode* new_msg_node = &(msg_node->children().back());
           recursiveTreeCreator(next_msg, new_string_node, new_msg_node);
@@ -54,6 +96,64 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name)
                         info.message_tree.root());
 }
 
+inline bool FindPattern(const std::vector<SString> &pattern,
+                        size_t index, const StringTreeNode *tail,
+                        const StringTreeNode **head)
+{
+  if(  tail->value() == pattern[index])
+  {
+    index++;
+  }
+  else{ // mismatch
+    if( index > 0 ){
+      // reset counter;
+      FindPattern( pattern, 0, tail, head);
+      return false;
+    }
+    index = 0;
+  }
+
+  if( index == pattern.size()){
+    *head = ( tail );
+    return true;
+  }
+
+  bool found = false;
+
+  for (auto& child: tail->children() ) {
+
+    found = FindPattern( pattern, index, &child, head);
+    if( found) break;
+  }
+  return found;
+}
+
+
+void Parser::registerRenamingRules(const ROSType &type, const std::vector<SubstitutionRule> &rules)
+{
+  for(const auto& it: _registred_messages)
+  {
+    const std::string& msg_identifier = it.first;
+    const ROSMessageInfo& msg_info    = it.second;
+    if( getMessageByType(type, msg_info) )
+    {
+      std::vector<RulesCache>&  cache_vector = _registered_rules[msg_identifier];
+      for(const auto& rule: rules )
+      {
+        RulesCache cache(rule);
+        FindPattern( cache.rule.pattern(), 0, msg_info.string_tree.croot(), &cache.pattern_head );
+        FindPattern( cache.rule.alias(),   0, msg_info.string_tree.croot(), &cache.alias_head );
+        if( cache.pattern_head && cache.alias_head
+           && std::find( cache_vector.begin(), cache_vector.end(), cache) == cache_vector.end()
+            )
+        {
+          cache_vector.push_back( std::move(cache) );
+        }
+      }
+    }
+  }
+  _block_register_message = true;
+}
 
 
 void Parser::registerMessageDefinition(const std::string &message_identifier,
@@ -159,7 +259,7 @@ void Parser::applyVisitorToBuffer(const std::string &msg_identifier, const ROSTy
 
       const ROSType&  field_type = field.type();
 
-      int32_t array_size = field_type.arraySize();
+      int32_t array_size = field.arraySize();
       if( array_size == -1)
       {
         ReadFromBuffer( buffer, buffer_offset, array_size );
@@ -171,7 +271,8 @@ void Parser::applyVisitorToBuffer(const std::string &msg_identifier, const ROSTy
       {
         for (int i=0; i<array_size; i++ )
         {
-          ReadFromBuffer( field_type.typeID(), buffer, buffer_offset );
+          //Skip
+          ReadFromBufferToVariant( field_type.typeID(), buffer, buffer_offset );
         }
       }
       else{
@@ -212,7 +313,7 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
 
   deserializeImpl = [&](
       const MessageTreeNode* msg_node,
-      StringTreeLeaf tree_leaf, // copy, not reference
+      const StringTreeLeaf& tree_leaf,
       bool DO_STORE)
   {
       const ROSMessage* msg_definition = msg_node->value();
@@ -228,23 +329,23 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
         auto new_tree_leaf = tree_leaf;
         new_tree_leaf.node_ptr = tree_leaf.node_ptr->child(index_s);
 
-        int32_t array_size = field_type.arraySize();
+        int32_t array_size = field.arraySize();
         if( array_size == -1)
         {
           ReadFromBuffer( buffer, buffer_offset, array_size );
         }
-        if( field_type.isArray())
+        if( field.isArray())
         {
           new_tree_leaf.array_size++;
           new_tree_leaf.node_ptr = new_tree_leaf.node_ptr->child(0);
         }
 
-        if( array_size > max_array_size ) DO_STORE = false;
+        if( array_size > static_cast<int>(max_array_size) ) DO_STORE = false;
 
         //------------------------------------
         for (int i=0; i<array_size; i++ )
         {
-          if( field_type.isArray() )
+          if( field.isArray() )
           {
             new_tree_leaf.index_array[ new_tree_leaf.array_size-1 ] = i;
           }
@@ -260,10 +361,14 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
           }
           else if( field_type.isBuiltin() )
           {
-            Variant var = ReadFromBuffer( field_type.typeID(), buffer, buffer_offset );
-
+            Variant var = ReadFromBufferToVariant( field_type.typeID(),
+                                                   buffer,
+                                                   buffer_offset );
             if( DO_STORE ){
               flat_container->value.push_back( std::make_pair( new_tree_leaf, std::move(var) ) );
+            }
+            else{
+              ReadFromBufferToVariant( field_type.typeID(), buffer, buffer_offset );
             }
           }
           else{ // field_type.typeID() == OTHER
@@ -298,7 +403,213 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
   {
     throw std::runtime_error("buildRosFlatType: There was an error parsing the buffer" );
   }
+}
 
+// given a leaf of the tree, that can have multiple index_array,
+// find the only index which corresponds to the # in the pattern
+inline int  PatternMatchAndIndexPosition(const StringTreeLeaf& leaf,
+                                  const StringTreeNode* pattern_head )
+{
+  const StringTreeNode* node_ptr = leaf.node_ptr;
+
+  int pos = leaf.array_size-1;
+
+  while( node_ptr )
+  {
+    if( node_ptr != pattern_head )
+    {
+      if( isNumberPlaceholder( node_ptr->value() ))
+      {
+        pos--;
+      }
+    }
+    else{
+      return pos;
+    }
+    node_ptr = node_ptr->parent();
+  } // end while
+  return -1;
+}
+
+inline void JoinStrings( const std::vector<const SString*>& vect, const char separator, std::string& destination)
+{
+  size_t count = 0;
+  for(const auto &v: vect ) count += v->size();
+
+  // the following approach seems to be faster
+  // https://github.com/facontidavide/InterestingBenchmarks/blob/master/StringAppend_vs_Memcpy.md
+
+  destination.resize( count + vect.size() -1 );
+
+  char* buffer = &destination[0];
+  size_t buff_pos = 0;
+
+  for (size_t c = 0; c < vect.size()-1; c++)
+  {
+    const size_t S = vect[c]->size();
+    memcpy( &buffer[buff_pos], vect[c]->data(), S );
+    buff_pos += S;
+    buffer[buff_pos++] = separator;
+  }
+  memcpy( &buffer[buff_pos], vect.back()->data(), vect.back()->size() );
+}
+
+void Parser::applyNameTransform(const std::string& msg_identifier,
+                                const ROSTypeFlat& container,
+                                RenamedValues *renamed_value )
+{
+  const std::vector<RulesCache>& rules_cache = _registered_rules[msg_identifier];
+
+  const size_t num_values = container.value.size();
+  const size_t num_names  = container.name.size();
+
+  renamed_value->resize( container.value.size() );
+  //DO NOT clear() renamed_value
+
+  static std::vector<int> alias_array_pos;
+  static std::vector<SString> formatted_string;
+  static std::vector<int8_t> substituted;
+
+  alias_array_pos.reserve( num_names );
+  alias_array_pos.clear();
+  formatted_string.reserve( num_values );
+  formatted_string.clear();
+
+  substituted.resize( num_values );
+  for(size_t i=0; i<num_values; i++) { substituted[i] = false; }
+
+  size_t renamed_index = 0;
+
+  for(const RulesCache& cache: rules_cache)
+  {
+    const SubstitutionRule& rule       = cache.rule;
+    const StringTreeNode* pattern_head = cache.pattern_head;
+    const StringTreeNode* alias_head   = cache.alias_head;
+
+    if( !pattern_head || !alias_head  ) continue;
+
+    for (size_t n=0; n<num_names; n++)
+    {
+      const StringTreeLeaf& alias_leaf = container.name[n].first;
+      alias_array_pos[n] = PatternMatchAndIndexPosition(alias_leaf, alias_head);
+    }
+
+    for(size_t i=0; i<num_values; i++)
+    {
+      if( substituted[i]) continue;
+
+      const auto& value_leaf = container.value[i];
+
+      const StringTreeLeaf& leaf = value_leaf.first;
+
+      int pattern_array_pos = PatternMatchAndIndexPosition(leaf,   pattern_head);
+
+      if( pattern_array_pos>= 0) // -1 if pattern doesn't match
+      {
+        const SString* new_name = nullptr;
+
+        for (size_t n=0; n < num_names; n++)
+        {
+          const auto & it = container.name[n];
+          const StringTreeLeaf& alias_leaf = it.first;
+
+          if( alias_array_pos[n] >= 0 ) // -1 if pattern doesn't match
+          {
+            if( alias_leaf.index_array[ alias_array_pos[n] ] ==
+                leaf.index_array[ pattern_array_pos] )
+            {
+              new_name =  &(it.second);
+              break;
+            }
+          }
+        }
+
+        //--------------------------
+        if( new_name )
+        {
+          static std::vector<const SString*> concatenated_name;
+          concatenated_name.reserve( 10 );
+          concatenated_name.clear();
+
+          const StringTreeNode* node_ptr = leaf.node_ptr;
+
+          int position = leaf.array_size - 1;
+
+          while( node_ptr != pattern_head)
+          {
+            const SString* value = &node_ptr->value();
+
+            if( isNumberPlaceholder( *value) ){
+              char buffer[16];
+              int str_size = print_number( buffer, leaf.index_array[position--] );
+              formatted_string.push_back( SString(buffer, str_size) );
+              value = &formatted_string.back();
+            }
+
+            concatenated_name.push_back( value );
+            node_ptr = node_ptr->parent();
+          }
+
+          for (int s = rule.substitution().size()-1; s >= 0; s--)
+          {
+            const SString* value = &rule.substitution()[s];
+
+            if( isSubstitutionPlaceholder( *value) ) {
+              value = new_name;
+              position--;
+            }
+            concatenated_name.push_back( value );
+          }
+
+          for (size_t p = 0; p < rule.pattern().size() && node_ptr; p++)
+          {
+            node_ptr = node_ptr->parent();
+          }
+
+          while( node_ptr )
+          {
+            const SString* value = &node_ptr->value();
+
+            if( isNumberPlaceholder(*value) ){
+              char buffer[16];
+              int str_size = print_number( buffer, leaf.index_array[position--] );
+              formatted_string.push_back( SString(buffer, str_size) );
+              value = &formatted_string.back();
+            }
+            concatenated_name.push_back( value );
+            node_ptr = node_ptr->parent();
+          }
+
+          //------------------------
+          auto& renamed_pair = (*renamed_value)[renamed_index];
+
+          std::reverse(concatenated_name.begin(), concatenated_name.end());
+          JoinStrings( concatenated_name, '/', renamed_pair.first);
+          renamed_pair.second  = value_leaf.second ;
+
+          renamed_index++;
+          substituted[i] = true;
+
+        }// end if( new_name )
+      }// end if( PatternMatching )
+      else  {
+
+      }
+    } // end for values
+  } // end for rules
+
+  for(size_t i=0; i< container.value.size(); i++)
+  {
+    if( !substituted[i] )
+    {
+      const std::pair<StringTreeLeaf, Variant> & value_leaf = container.value[i];
+
+      std::string& destination = (*renamed_value)[renamed_index].first;
+      value_leaf.first.toStr( destination );
+      (*renamed_value)[renamed_index].second = value_leaf.second ;
+      renamed_index++;
+    }
+  }
 }
 
 }

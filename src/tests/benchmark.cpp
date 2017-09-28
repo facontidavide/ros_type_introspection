@@ -9,7 +9,6 @@
 #include <iostream>
 #include <chrono>
 #include <ros_type_introspection/ros_introspection.hpp>
-#include <ros_type_introspection/renamer.hpp>
 
 using namespace ros::message_traits;
 using namespace RosIntrospection;

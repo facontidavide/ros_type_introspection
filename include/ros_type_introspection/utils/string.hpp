@@ -253,7 +253,7 @@ public:
     }
 
     ~basic_string() {
-        if(!sso()) {
+        if(m_data.sso.size != 0 && !sso()) {
             delete[] m_data.non_sso.ptr;
         }
     }
@@ -270,12 +270,12 @@ public:
         }
     }
 
-    const char at( size_t index )
+    char& at( size_t index )
     {
         return data()[index];
     }
 
-    const char at( size_t index ) const
+    char at( size_t index ) const
     {
         return data()[index];
     }

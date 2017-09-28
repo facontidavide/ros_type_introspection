@@ -1,7 +1,7 @@
 /*********************************************************************
 * Software License Agreement (BSD License)
 *
-*  Copyright 2016 Davide Faconti
+*  Copyright 2016-2017 Davide Faconti
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -30,93 +30,65 @@
 *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 *  POSSIBILITY OF SUCH DAMAGE.
-********************************************************************/
+* *******************************************************************/
 
-#include <functional>
-#include "ros_type_introspection/deserializer.hpp"
 
+#include <boost/algorithm/string.hpp>
+#include <boost/utility/string_ref.hpp>
+#include <boost/utility/string_ref.hpp>
+#include "ros_type_introspection/ros_message.hpp"
+#include <boost/regex.hpp>
+#include <boost/algorithm/string/regex.hpp>
 
 namespace RosIntrospection{
 
-StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr), array_size(0)
-{  for (int i=0; i<8; i++) index_array[i] = 0;}
-
-
-bool StringTreeLeaf::toStr(SString& destination) const
+ROSMessage::ROSMessage(const std::string &msg_def)
 {
-  char buffer[512];
-  int offset = this->toStr(buffer);
+  std::istringstream messageDescriptor(msg_def);
+  boost::match_results<std::string::const_iterator> what;
 
-  if( offset < 0 ) {
-    destination.clear();
-    return false;
-  }
-  destination.assign(buffer, offset);
-  return true;
-}
-
-bool StringTreeLeaf::toStr(std::string& destination) const
-{
-  char buffer[512];
-  int offset = this->toStr(buffer);
-
-  if( offset < 0 ) {
-    destination.clear();
-    return false;
-  }
-  destination.assign(buffer, offset);
-  return true;
-}
-
-int StringTreeLeaf::toStr(char* buffer) const
-{
-  const StringTreeNode* leaf_node = this->node_ptr;
-  if( !leaf_node ){
-    return -1;
-  }
-
-  const SString* strings_from_leaf_to_root[64];
-  int index = 0;
-
-  int char_count = 0;
-
-  while(leaf_node)
+  for (std::string line; std::getline(messageDescriptor, line, '\n') ; )
   {
-    const SString& str = leaf_node->value();
+    std::string::const_iterator begin = line.begin(), end = line.end();
 
-    char_count += str.size();
-    strings_from_leaf_to_root[index] = &str;
-    index++;
-    leaf_node = leaf_node->parent();
-  };
-
-  strings_from_leaf_to_root[index] = nullptr;
-  index--;
-
-  int array_count = 0;
-  int off = 0;
-
-  while ( index >=0 )
-  {
-    const SString* str = strings_from_leaf_to_root[index];
-    if( str->size()== 1 && str->at(0) == '#' )
+    // Skip empty line or one that is a comment
+    if (boost::regex_search( begin, end, what,
+                             boost::regex("(^\\s*$|^\\s*#)")))
     {
-      buffer[off-1] = '.';
-      off += print_number(&buffer[off], this->index_array[ array_count++ ] );
+      continue;
+    }
+
+    if( line.compare(0, 5, "MSG: ") == 0)
+    {
+      line.erase(0,5);
+      _type = ROSType(line);
     }
     else{
-      const size_t S = str->size();
-      memcpy( &buffer[off], str->data(), S );
-      off += S;
+      auto new_field = ROSField(line);
+      _fields.push_back(new_field);
     }
-    if( index > 0 ){
-      buffer[off++] = '/';
-    }
-    index--;
   }
-  buffer[off] = '\0';
-  return off;
 }
 
+void ROSMessage::updateMissingPkgNames(const std::vector<const ROSType*> &all_types)
+{
+  for (ROSField& field: _fields)
+  {
+    // if package name is missing, try to find msgName in the list of known_type
+    if( field.type().pkgName().size() == 0 )
+    {
+      for (const ROSType* known_type: all_types)
+      {
+        if( field.type().msgName() == known_type->msgName() )
+        {
+          field._type.setPkgName( known_type->pkgName() );
+          break;
+        }
+      }
+    }
+  }
+}
 
 } // end namespace
+
+

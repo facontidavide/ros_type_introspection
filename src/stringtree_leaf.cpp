@@ -32,48 +32,61 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 * *******************************************************************/
 
+#include "ros_type_introspection/stringtree_leaf.hpp"
+#include "ros_type_introspection/helper_funtions.hpp"
 
-#ifndef VARIANT_NUMBER_EXCEPTIONS_H
-#define VARIANT_NUMBER_EXCEPTIONS_H
+namespace RosIntrospection{
 
-#include <exception>
-#include <string>
 
-namespace RosIntrospection
+
+int StringTreeLeaf::toStr(char* buffer) const
 {
+  const StringTreeNode* leaf_node = this->node_ptr;
+  if( !leaf_node ){
+    return -1;
+  }
 
-class RangeException: public std::exception
-{
-public:
+  const SString* strings_from_leaf_to_root[64];
+  int index = 0;
 
-    explicit RangeException(const char* message): msg_(message)  {}
-    explicit RangeException(const std::string& message):  msg_(message)  {}
-    ~RangeException() throw () {}
-    const char* what() const throw ()
+  int char_count = 0;
+
+  while(leaf_node)
+  {
+    const SString& str = leaf_node->value();
+
+    char_count += str.size();
+    strings_from_leaf_to_root[index] = &str;
+    index++;
+    leaf_node = leaf_node->parent();
+  };
+
+  strings_from_leaf_to_root[index] = nullptr;
+  index--;
+
+  int array_count = 0;
+  int off = 0;
+
+  while ( index >=0 )
+  {
+    const SString* str = strings_from_leaf_to_root[index];
+    if( str->size()== 1 && str->at(0) == '#' )
     {
-        return msg_.c_str();
+      buffer[off-1] = '.';
+      off += print_number(&buffer[off], this->index_array[ array_count++ ] );
     }
-
-protected:
-    std::string msg_;
-};
-
-class TypeException: public std::exception
-{
-public:
-
-    explicit TypeException(const char* message): msg_(message)  {}
-    explicit TypeException(const std::string& message):  msg_(message)  {}
-    ~TypeException() throw () {}
-    const char* what() const throw ()
-    {
-        return msg_.c_str();
+    else{
+      const size_t S = str->size();
+      memcpy( &buffer[off], str->data(), S );
+      off += S;
     }
+    if( index > 0 ){
+      buffer[off++] = '/';
+    }
+    index--;
+  }
+  buffer[off] = '\0';
+  return off;
+}
 
-protected:
-    std::string msg_;
-};
-
-} //end namespace
-
-#endif
+}
