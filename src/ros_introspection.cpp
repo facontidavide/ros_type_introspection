@@ -131,7 +131,7 @@ inline bool FindPattern(const std::vector<SString> &pattern,
 
 void Parser::registerRenamingRules(const ROSType &type, const std::vector<SubstitutionRule> &rules)
 {
-  for(const auto& it: _registred_messages)
+  for(const auto& it: _registered_messages)
   {
     const std::string& msg_identifier = it.first;
     const ROSMessageInfo& msg_info    = it.second;
@@ -201,13 +201,13 @@ void Parser::registerMessageDefinition(const std::string &message_identifier,
 
   //  std::cout << info.string_tree << std::endl;
   //  std::cout << info.message_tree << std::endl;
-  _registred_messages.insert( std::make_pair(message_identifier, std::move(info) ) );
+  _registered_messages.insert( std::make_pair(message_identifier, std::move(info) ) );
 }
 
 const ROSMessageInfo *Parser::getMessageInfo(const std::string &msg_identifier) const
 {
-  auto it = _registred_messages.find(msg_identifier);
-  if( it != _registred_messages.end() )
+  auto it = _registered_messages.find(msg_identifier);
+  if( it != _registered_messages.end() )
   {
     return &(it->second);
   }
@@ -235,7 +235,7 @@ void Parser::applyVisitorToBuffer(const std::string &msg_identifier,
 
   if( msg_info == nullptr)
   {
-    throw std::runtime_error("deserializeIntoFlatContainer: msg_identifier not registerd. Use registerMessageDefinition" );
+    throw std::runtime_error("deserializeIntoFlatContainer: msg_identifier not registered. Use registerMessageDefinition" );
   }
 
   std::function<void(const MessageTreeNode*)> recursiveImpl;

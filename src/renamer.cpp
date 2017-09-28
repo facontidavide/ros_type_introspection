@@ -314,7 +314,7 @@ inline bool FindPattern(const std::vector<SString> &pattern,
 
 void Parser::registerRenamingRules(const ROSType &type, const std::vector<SubstitutionRule> &rules)
 {
-  for(const auto& it: _registred_messages)
+  for(const auto& it: _registered_messages)
   {
     const std::string& msg_identifier = it.first;
     const ROSMessageInfo& msg_info    = it.second;

@@ -181,7 +181,7 @@ public:
 
 private:
 
-  std::map<std::string,ROSMessageInfo> _registred_messages;
+  std::map<std::string,ROSMessageInfo> _registered_messages;
 
   struct RulesCache{
     RulesCache( const SubstitutionRule& other):
