@@ -62,7 +62,6 @@ ROSType::ROSType(const SString &name):
   }
 
   _id   = toBuiltinType( _msg_name );
-
   _hash = std::hash<SString>{}( _base_name );
 }
 

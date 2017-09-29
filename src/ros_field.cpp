@@ -56,7 +56,7 @@ ROSField::ROSField(const std::string &definition):
   boost::match_results<std::string::const_iterator> what;
 
   // Get type and field
-  std::string type, fieldname, value;
+  std::string type, value;
 
   //-------------------------------
   // Find type, field and array size
@@ -65,19 +65,20 @@ ROSField::ROSField(const std::string &definition):
     begin = what[0].second;
   }
   else {
-    throw std::runtime_error("Bad type when parsing message ----\n" + definition);
+    throw std::runtime_error("Bad type when parsing field: " + definition);
   }
 
   if (regex_search(begin, end, what, field_regex))
   {
-    fieldname = what[0];
+    _fieldname = what[0];
     begin = what[0].second;
   }
   else {
-    throw std::runtime_error("Bad field when parsing message ----\n" + definition);
+    throw std::runtime_error("Bad field when parsing field: " + definition);
   }
 
-  if (regex_search(type, what, array_regex))
+  std::string temp_type = type;
+  if (regex_search(temp_type, what, array_regex))
   {
     type = what[1];
 
@@ -89,7 +90,7 @@ ROSField::ROSField(const std::string &definition):
       _array_size = size.empty() ? -1 : atoi(size.c_str());
     }
     else {
-      throw std::runtime_error("Didn't catch bad type string: " + definition);
+      throw std::runtime_error("Bad array size when parsing field:  " + definition);
     }
   }
 
@@ -123,12 +124,11 @@ ROSField::ROSField(const std::string &definition):
       // Ignore comment
     } else {
       // Error
-      throw std::runtime_error("Unexpected character after type and field  ----\n" +
+      throw std::runtime_error("Unexpected character after type and field:  " +
                                definition);
     }
   }
   _type  = ROSType( type );
-  _name  = fieldname;
   _value = value;
 }
 

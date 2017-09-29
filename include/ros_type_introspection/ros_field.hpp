@@ -54,7 +54,7 @@ public:
 
   ROSField(const std::string& definition );
 
-  const SString&  name() const { return _name; }
+  const SString&  name() const { return _fieldname; }
 
   const ROSType&  type() const { return _type; }
 
@@ -76,7 +76,7 @@ public:
   friend class ROSMessage;
 
 protected:
-  SString _name;
+  SString _fieldname;
   ROSType _type;
   SString _value;
   int _array_size;
