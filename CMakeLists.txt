@@ -64,7 +64,9 @@ include_directories(
 
 target_link_libraries(ros_type_introspection ${catkin_LIBRARIES})
 
-# Declare a C++ executable
+find_package(benchmark CONFIG)
+if (benchmark_FOUND)
+
 add_executable(ros_introspection_benchmark src/tests/benchmark.cpp)
 add_dependencies(ros_introspection_benchmark
     ${${PROJECT_NAME}_EXPORTED_TARGETS}
@@ -75,6 +77,8 @@ target_link_libraries(ros_introspection_benchmark
   ros_type_introspection
   benchmark
 )
+
+endif()
 
 
 #############
