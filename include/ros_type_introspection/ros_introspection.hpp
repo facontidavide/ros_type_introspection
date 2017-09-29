@@ -42,7 +42,7 @@
 
 namespace RosIntrospection{
 
-struct ROSTypeFlat {
+struct FlatMessage {
 
   /// Tree that the StringTreeLeaf(s) refer to.
   const StringTree* tree;
@@ -111,7 +111,7 @@ public:
 
   /**
    * @brief deserializeIntoFlatContainer takes a raw buffer of memory and extract information from it.
-   *  This data is stored in two key/value vectors, ROSTypeFlat::value and ROSTypeFlat::name.
+   *  This data is stored in two key/value vectors, FlatMessage::value and FlatMessage::name.
    * It must be noted that the key type is StringTreeLeaf. this type is not particularly user-friendly,
    * but allows a much faster post-processing.
    *
@@ -131,12 +131,12 @@ public:
    */
   void deserializeIntoFlatContainer(const std::string& msg_identifier,
                                     const nonstd::VectorView<uint8_t>& buffer,
-                                    ROSTypeFlat* flat_container_output,
+                                    FlatMessage* flat_container_output,
                                     const uint32_t max_array_size ) const;
 
   /**
    * @brief applyNameTransform is used to create a vector of type RenamedValues from
-   *        the vector ROSTypeFlat::value. Additionally, it apply the renaming rules previously
+   *        the vector FlatMessage::value. Additionally, it apply the renaming rules previously
    *        registred using registerRenamingRules.
    *
    * For example if you apply this to [geometry_msgs/Pose](http://docs.ros.org/kinetic/api/geometry_msgs/html/msg/Pose.html)
@@ -155,7 +155,7 @@ public:
    * @param renamed_value   Destination.
    */
   void applyNameTransform(const std::string& msg_identifier,
-                          const ROSTypeFlat& container,
+                          const FlatMessage& container,
                           RenamedValues* renamed_value ) const;
 
   typedef std::function<void(const ROSType&, nonstd::VectorViewMutable<uint8_t>&)> VisitingCallback;

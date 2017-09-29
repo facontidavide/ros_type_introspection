@@ -297,7 +297,7 @@ void Parser::applyVisitorToBuffer(const std::string &msg_identifier,
 
 void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
                                           const nonstd::VectorView<uint8_t>& buffer,
-                                          ROSTypeFlat* flat_container,
+                                          FlatMessage* flat_container,
                                           const uint32_t max_array_size ) const
 {
 
@@ -465,7 +465,7 @@ inline void JoinStrings( const std::vector<const SString*>& vect, const char sep
 }
 
 void Parser::applyNameTransform(const std::string& msg_identifier,
-                                const ROSTypeFlat& container,
+                                const FlatMessage& container,
                                 RenamedValues *renamed_value ) const
 {
   const std::vector<RulesCache>& rules_cache = _registered_rules.find(msg_identifier)->second;

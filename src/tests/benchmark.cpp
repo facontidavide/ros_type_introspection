@@ -76,7 +76,7 @@ static void BM_Joints(benchmark::State& state)
   ros::serialization::OStream stream(buffer.data(), buffer.size());
   ros::serialization::Serializer<sensor_msgs::JointState>::write(stream, js_msg);
 
-  ROSTypeFlat flat_container;
+  FlatMessage flat_container;
   RenamedValues renamed_values;
 
   while (state.KeepRunning())

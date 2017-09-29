@@ -49,7 +49,7 @@ TEST(Deserialize, JointState)
   ros::serialization::OStream stream(buffer.data(), buffer.size());
   ros::serialization::Serializer<sensor_msgs::JointState>::write(stream, joint_state);
 
-  ROSTypeFlat flat_container;
+  FlatMessage flat_container;
   parser.deserializeIntoFlatContainer("JointState",  buffer,  &flat_container,100);
 
   if(VERBOSE_TEST){
@@ -177,7 +177,7 @@ TEST( Deserialize, NavSatStatus)
   ros::serialization::OStream stream(buffer.data(), buffer.size());
   ros::serialization::Serializer<sensor_msgs::NavSatStatus>::write(stream, nav_stat);
 
-  ROSTypeFlat flat_container;
+  FlatMessage flat_container;
   parser.deserializeIntoFlatContainer("nav_stat",  buffer,  &flat_container,100);
 
   if(VERBOSE_TEST){ std::cout << " -------------------- " << std::endl;
@@ -235,7 +235,7 @@ TEST( Deserialize, DeserializeIMU)
   ros::serialization::OStream stream(buffer.data(), buffer.size());
   ros::serialization::Serializer<sensor_msgs::Imu>::write(stream, imu);
 
-  ROSTypeFlat flat_container;
+  FlatMessage flat_container;
   parser.deserializeIntoFlatContainer("imu",  buffer,  &flat_container,100);
 
 
@@ -399,7 +399,7 @@ TEST( Deserialize, Int16MultiArrayDeserialize)
   ros::serialization::OStream stream(buffer.data(), buffer.size());
   ros::serialization::Serializer<std_msgs::Int16MultiArray>::write(stream, multi_array);
 
-  ROSTypeFlat flat_container;
+  FlatMessage flat_container;
   parser.deserializeIntoFlatContainer("multi_array",  buffer,  &flat_container,100);
 
   if(VERBOSE_TEST){

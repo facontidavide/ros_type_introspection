@@ -93,11 +93,11 @@ public:
    *   into       `JointState/first_joint/pos = 11`
    *
    *
-   *  1. The first argument, __"position/#"__, means: "find any element in `ROSTypeFlat::value` which contains the pattern [position/#] where __#__ is a number".
+   *  1. The first argument, __"position/#"__, means: "find any element in `FlatMessage::value` which contains the pattern [position/#] where __#__ is a number".
    *
    *     JointState/position/0 = 11
    *
-   * 2. The second argument, __"name/#"__, means: "find the element in `ROSTypeFlat::name` which contains the pattern [name.#] where __#__ is the __same__ number found in the previous pattern".
+   * 2. The second argument, __"name/#"__, means: "find the element in `FlatMessage::name` which contains the pattern [name.#] where __#__ is the __same__ number found in the previous pattern".
    *
    *     JointState/name.0 = first_joint
    *
@@ -106,9 +106,9 @@ public:
    *     JointState/first_joint.pos = 11
    *
    *
-   * @param pattern        The pattern to be found in ROSTypeFlat::value.
-   * @param alias          The name_id that substitutes the number in the pattern. To be found in ROSTypeFlat::name.
-   * @param substitution   The way the alias should be used to substitute the pattern in ROSTypeFlat::renamed_value.
+   * @param pattern        The pattern to be found in FlatMessage::value.
+   * @param alias          The name_id that substitutes the number in the pattern. To be found in FlatMessage::name.
+   * @param substitution   The way the alias should be used to substitute the pattern in FlatMessage::renamed_value.
    */
   SubstitutionRule(const char* pattern, const char* alias, const char* substitution);
 

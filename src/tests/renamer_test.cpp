@@ -50,7 +50,7 @@ TEST(Renamer, DeserializeJointStateAndRename)
 
   ROSType main_type( DataType<sensor_msgs::JointState >::value() );
 
-  ROSTypeFlat flat_container;
+  FlatMessage flat_container;
 
   buildRosFlatType(type_map, main_type, "JointState", buffer.data(), &flat_container);
   applyNameTransform( rules, &flat_container );
@@ -145,7 +145,7 @@ TEST(Renamer2, DeserializeJointStateAndRename)
   ros::serialization::OStream stream(buffer.data(), buffer.size());
   ros::serialization::Serializer<sensor_msgs::JointState>::write(stream, joint_state);
 
-  ROSTypeFlat flat_container;
+  FlatMessage flat_container;
   RenamedValues renamed_value;
 
   parser.deserializeIntoFlatContainer("JointState",  buffer,  &flat_container,100);
