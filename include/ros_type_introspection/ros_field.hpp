@@ -54,7 +54,7 @@ public:
 
   ROSField(const std::string& definition );
 
-  absl::string_view name() const { return _fieldname; }
+  const std::string& name() const { return _fieldname; }
 
   const ROSType&  type() const { return _type; }
 
@@ -64,7 +64,7 @@ public:
   }
 
   /// If constant, value of field, else undefined
-  absl::string_view value() const   { return _value; }
+  const std::string& value() const   { return _value; }
 
   /// True if the type is an array
   bool isArray() const { return _array_size != 1; }

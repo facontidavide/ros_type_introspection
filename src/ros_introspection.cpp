@@ -61,7 +61,7 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name) con
       if(field.isConstant() == false) {
 
         // Let's add first a child to string_node
-        string_node->addChild( std::string(field.name()) );
+        string_node->addChild( field.name() );
         StringTreeNode*  new_string_node = &(string_node->children().back());
         if( field.isArray())
         {
