@@ -72,7 +72,6 @@ struct StringTreeLeaf{
   std::array<uint16_t,8> index_array;
 
   /// Utility functions to print the entire branch
-  bool toStr(SString &destination) const;
   bool toStr(std::string &destination) const;
 
   // return string length or -1 if failed
@@ -85,7 +84,7 @@ struct StringTreeLeaf{
 
 inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
 {
-  SString dest;
+  std::string dest;
   leaf.toStr(dest);
   os << dest;
   return os;
@@ -94,19 +93,6 @@ inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
 inline StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr), array_size(0)
 {  for (auto& v: index_array) v= 0; }
 
-
-inline bool StringTreeLeaf::toStr(SString& destination) const
-{
-  char buffer[256];
-  int offset = this->toStr(buffer);
-
-  if( offset < 0 ) {
-    destination.clear();
-    return false;
-  }
-  destination.assign(buffer, offset);
-  return true;
-}
 
 inline bool StringTreeLeaf::toStr(std::string& destination) const
 {

@@ -36,9 +36,9 @@
 #define ROS_INTROSPECTION_HPP
 
 
-#include <ros_type_introspection/stringtree_leaf.hpp>
-#include <ros_type_introspection/utils/vector_view.hpp>
-#include <ros_type_introspection/substitution_rule.hpp>
+#include "ros_type_introspection/stringtree_leaf.hpp"
+#include "ros_type_introspection/substitution_rule.hpp"
+#include "absl/types/span.h"
 
 namespace RosIntrospection{
 
@@ -53,7 +53,7 @@ struct FlatMessage {
 
   /// List of all those parsed fields that can be represented by a builtin value equal to "string".
   /// This list will be filled by the funtion buildRosFlatType.
-  std::vector< std::pair<StringTreeLeaf, SString> > name;
+  std::vector< std::pair<StringTreeLeaf, std::string> > name;
 
   // Not used yet
   std::vector< std::pair<StringTreeLeaf, std::vector<uint8_t>>> blob;
@@ -130,7 +130,7 @@ public:
    *                         max_array_size is used to skip these arrays that are too large.
    */
   void deserializeIntoFlatContainer(const std::string& msg_identifier,
-                                    const nonstd::VectorView<uint8_t>& buffer,
+                                    absl::Span<uint8_t> buffer,
                                     FlatMessage* flat_container_output,
                                     const uint32_t max_array_size ) const;
 
@@ -158,7 +158,7 @@ public:
                           const FlatMessage& container,
                           RenamedValues* renamed_value ) const;
 
-  typedef std::function<void(const ROSType&, nonstd::VectorViewMutable<uint8_t>&)> VisitingCallback;
+  typedef std::function<void(const ROSType&, absl::Span<uint8_t>&)> VisitingCallback;
 
   /**
    * @brief applyVisitorToBuffer is used to pass a callback that is invoked every time
@@ -173,7 +173,7 @@ public:
    * @param callback          The callback.
    */
   void applyVisitorToBuffer(const std::string& msg_identifier, const ROSType &monitored_type,
-                            nonstd::VectorViewMutable<uint8_t> &buffer,
+                            absl::Span<uint8_t> &buffer,
                             VisitingCallback callback) const;
 
   /// Change where the warning messages are displayed.

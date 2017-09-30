@@ -112,9 +112,9 @@ public:
    */
   SubstitutionRule(const char* pattern, const char* alias, const char* substitution);
 
-  const std::vector<SString>& pattern() const { return _pattern; }
-  const std::vector<SString>& alias() const { return _alias; }
-  const std::vector<SString>& substitution() const { return _substitution; }
+  const std::vector<std::string>& pattern() const { return _pattern; }
+  const std::vector<std::string>& alias() const { return _alias; }
+  const std::vector<std::string>& substitution() const { return _substitution; }
 
   bool operator == (const SubstitutionRule& other)
   {
@@ -122,9 +122,9 @@ public:
   }
 
 private:
-  std::vector<SString> _pattern;
-  std::vector<SString> _alias;
-  std::vector<SString> _substitution;
+  std::vector<std::string> _pattern;
+  std::vector<std::string> _alias;
+  std::vector<std::string> _substitution;
   size_t _hash;
 } ;
 

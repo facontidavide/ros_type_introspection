@@ -38,7 +38,7 @@
 
 #include <functional>
 #include "ros_type_introspection/utils/variant.hpp"
-#include "ros_type_introspection/utils/vector_view.hpp"
+#include "absl/types/span.h"
 
 namespace RosIntrospection{
 
@@ -75,7 +75,7 @@ inline int print_number(char* buffer, uint16_t value)
 
 
 // helper function to deserialize raw memory
-template <typename T> inline void ReadFromBuffer( const nonstd::VectorView<uint8_t>& buffer, size_t& offset, T& destination)
+template <typename T> inline void ReadFromBuffer( const absl::Span<uint8_t>& buffer, size_t& offset, T& destination)
 {
   if ( offset + sizeof(T) > buffer.size() )
   {
@@ -85,7 +85,7 @@ template <typename T> inline void ReadFromBuffer( const nonstd::VectorView<uint8
   offset += sizeof(T);
 }
 
-template <> inline void ReadFromBuffer( const nonstd::VectorView<uint8_t>& buffer, size_t& offset, SString& destination)
+template <> inline void ReadFromBuffer( const absl::Span<uint8_t>& buffer, size_t& offset, std::string& destination)
 {
   uint32_t string_size = 0;
   ReadFromBuffer( buffer, offset, string_size );
@@ -102,14 +102,14 @@ template <> inline void ReadFromBuffer( const nonstd::VectorView<uint8_t>& buffe
 }
 
 template <typename T> inline
-Variant ReadFromBufferToVariant( const nonstd::VectorView<uint8_t>& buffer, size_t& offset)
+Variant ReadFromBufferToVariant( const absl::Span<uint8_t>& buffer, size_t& offset)
 {
   T destination;
   ReadFromBuffer(buffer, offset, destination);
   return Variant(destination);
 }
 
-inline Variant ReadFromBufferToVariant(BuiltinType id, const nonstd::VectorView<uint8_t>& buffer, size_t& offset)
+inline Variant ReadFromBufferToVariant(BuiltinType id, const absl::Span<uint8_t>& buffer, size_t& offset)
 {
   switch(id)
   {
@@ -158,26 +158,6 @@ inline Variant ReadFromBufferToVariant(BuiltinType id, const nonstd::VectorView<
 
 
 } // end namespace
-
-namespace std {
-  template <> struct hash<RosIntrospection::SString>
-  {
-
-    typedef RosIntrospection::SString argument_type;
-    typedef std::size_t result_type;
-
-    result_type operator()(RosIntrospection::SString const& str) const
-    {
-      result_type hash = 5381;
-      for(size_t i=0; i<str.size(); i++)
-      {
-        hash = ((hash << 5) + hash) + static_cast<result_type>(str.at(i) );
-      }
-      return hash;
-    }
-  };
-}
-
 
 
 #endif

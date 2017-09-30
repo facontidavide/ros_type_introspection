@@ -71,8 +71,8 @@ private:
   std::vector<ROSField> _fields;
 };
 
-typedef details::TreeNode<SString> StringTreeNode;
-typedef details::Tree<SString> StringTree;
+typedef details::TreeNode<std::string> StringTreeNode;
+typedef details::Tree<std::string> StringTree;
 
 typedef details::TreeNode<const ROSMessage*> MessageTreeNode;
 typedef details::Tree<const ROSMessage*> MessageTree;

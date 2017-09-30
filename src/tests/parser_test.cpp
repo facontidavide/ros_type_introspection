@@ -5,7 +5,7 @@
 #include <sensor_msgs/NavSatStatus.h>
 #include <sensor_msgs/Imu.h>
 #include <std_msgs/Int16MultiArray.h>
-#include <ros_type_introspection/ros_introspection.hpp>
+#include "ros_type_introspection/ros_introspection.hpp"
 
 using namespace ros::message_traits;
 using namespace RosIntrospection;

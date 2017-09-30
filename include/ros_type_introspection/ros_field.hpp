@@ -54,7 +54,7 @@ public:
 
   ROSField(const std::string& definition );
 
-  const SString&  name() const { return _fieldname; }
+  absl::string_view name() const { return _fieldname; }
 
   const ROSType&  type() const { return _type; }
 
@@ -64,7 +64,7 @@ public:
   }
 
   /// If constant, value of field, else undefined
-  const SString& value() const   { return _value; }
+  absl::string_view value() const   { return _value; }
 
   /// True if the type is an array
   bool isArray() const { return _array_size != 1; }
@@ -76,9 +76,9 @@ public:
   friend class ROSMessage;
 
 protected:
-  SString _fieldname;
-  ROSType _type;
-  SString _value;
+  std::string _fieldname;
+  ROSType     _type;
+  std::string _value;
   int _array_size;
 };
 

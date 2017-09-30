@@ -39,58 +39,49 @@
 
 namespace RosIntrospection{
 
-ROSType::ROSType(const SString &name):
+ROSType::ROSType(const absl::string_view &name):
   _base_name(name)
 {
   int pos = -1;
   for (size_t i=0; i<name.size(); i++)
   {
-    if(name.at(i) == '/'){
+    if(name[i] == '/'){
       pos = i;
       break;
     }
   }
 
-  if( pos != -1)
+  if( pos == -1)
   {
-    _msg_name = name;
+    _msg_name = _base_name;
   }
   else{
-    _pkg_name.assign( name.data(), pos);
+    _pkg_name = absl::string_view( _base_name.data(), pos);
     pos++;
-    _msg_name.assign( name.data() + pos, name.size() - pos);
+    _msg_name = absl::string_view( _base_name.data() + pos, _base_name.size() - pos);
   }
 
   _id   = toBuiltinType( _msg_name );
-  _hash = std::hash<SString>{}( _base_name );
+  _hash = std::hash<std::string>{}( _base_name );
 }
 
-ROSType::ROSType(const std::string &name):
-  _base_name(name)
-{
-  size_t separator_pos = name.find_first_of('/');
 
-  if( separator_pos == std::string::npos)
-  {
-    _msg_name = name;
-  }
-  else{
-    _pkg_name.assign( &name[0], separator_pos);
-    separator_pos++;
-    _msg_name.assign( &name[separator_pos], name.size() - separator_pos);
-  }
-
-  //------------------------------
-  _id = toBuiltinType( _msg_name );
-  _hash = std::hash<SString>{}( _base_name );
-}
-
-void ROSType::setPkgName(const SString &new_pkg)
+void ROSType::setPkgName(const absl::string_view &new_pkg)
 {
   assert(_pkg_name.size() == 0);
   _pkg_name = new_pkg;
-  _base_name = SString(new_pkg).append("/").append(_base_name);
-  _hash = std::hash<SString>{}( _base_name );
+  int pos = new_pkg.size();
+
+  std::string temp(new_pkg);
+  temp.append("/").append(_base_name);
+
+  _base_name = temp;
+
+  _pkg_name = absl::string_view( _base_name.data(), pos++);
+  pos++;
+  _msg_name = absl::string_view( _base_name.data() + pos, _base_name.size() - pos);
+
+  _hash = std::hash<std::string>{}( _base_name );
 }
 
 

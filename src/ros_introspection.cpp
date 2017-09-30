@@ -61,7 +61,7 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name) con
       if(field.isConstant() == false) {
 
         // Let's add first a child to string_node
-        string_node->addChild( field.name() );
+        string_node->addChild( std::string(field.name()) );
         StringTreeNode*  new_string_node = &(string_node->children().back());
         if( field.isArray())
         {
@@ -76,8 +76,7 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name) con
           next_msg = getMessageByType( field.type(), info );
           if( next_msg == nullptr)
           {
-            throw std::runtime_error("This type was not registered " +
-                                     field.type().baseName().toStdString());
+            throw std::runtime_error("This type was not registered " );
           }
           msg_node->addChild( next_msg );
           MessageTreeNode* new_msg_node = &(msg_node->children().back());
@@ -96,7 +95,7 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name) con
                         info.message_tree.root());
 }
 
-inline bool FindPattern(const std::vector<SString> &pattern,
+inline bool FindPattern(const std::vector<std::string> &pattern,
                         size_t index, const StringTreeNode *tail,
                         const StringTreeNode **head)
 {
@@ -228,7 +227,7 @@ const ROSMessage* Parser::getMessageByType(const ROSType &type, const ROSMessage
 
 void Parser::applyVisitorToBuffer(const std::string &msg_identifier,
                                   const ROSType& monitored_type,
-                                  nonstd::VectorViewMutable<uint8_t> &buffer,
+                                  absl::Span<uint8_t> &buffer,
                                   Parser::VisitingCallback callback) const
 {
   const ROSMessageInfo* msg_info = getMessageInfo(msg_identifier);
@@ -286,7 +285,7 @@ void Parser::applyVisitorToBuffer(const std::string &msg_identifier,
     } // end for fields
     if( matching )
     {
-      nonstd::VectorViewMutable<uint8_t> view( prev_buffer_ptr, buffer_offset - prev_offset);
+      absl::Span<uint8_t> view( prev_buffer_ptr, buffer_offset - prev_offset);
       callback( monitored_type, view );
     }
   }; //end lambda
@@ -296,12 +295,16 @@ void Parser::applyVisitorToBuffer(const std::string &msg_identifier,
 }
 
 void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
-                                          const nonstd::VectorView<uint8_t>& buffer,
+                                          absl::Span<uint8_t> buffer,
                                           FlatMessage* flat_container,
                                           const uint32_t max_array_size ) const
 {
 
   const ROSMessageInfo* msg_info = getMessageInfo(msg_identifier);
+
+  size_t value_index = 0;
+  size_t name_index = 0;
+
 
   if( msg_info == nullptr)
   {
@@ -352,20 +355,36 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
 
           if( field_type.typeID() == STRING )
           {
-            SString string;
-            ReadFromBuffer<SString>( buffer, buffer_offset, string );
+            if( flat_container->name.size() <= name_index)
+            {
+              const size_t increased_size = std::max( size_t(32), flat_container->name.size() *  3/2);
+              flat_container->name.resize( increased_size );
+            }
 
-            if( DO_STORE ){
-              flat_container->name.push_back( std::make_pair( new_tree_leaf, std::move(string) ) );
+            std::string& name = flat_container->name[name_index].second;//read directly inside an existing std::string
+            ReadFromBuffer<std::string>( buffer, buffer_offset, name );
+
+            if( DO_STORE )
+            {
+              flat_container->name[name_index].first = new_tree_leaf ;
+              name_index++;
             }
           }
           else if( field_type.isBuiltin() )
           {
+            if( flat_container->value.size() <= value_index)
+            {
+              const size_t increased_size = std::max( size_t(32), flat_container->value.size() *  3/2);
+              flat_container->value.resize( increased_size );
+            }
+
             Variant var = ReadFromBufferToVariant( field_type.typeID(),
                                                    buffer,
-                                                   buffer_offset );
-            if( DO_STORE ){
-              flat_container->value.push_back( std::make_pair( new_tree_leaf, std::move(var) ) );
+                                                   buffer_offset );           
+            if( DO_STORE )
+            {
+              flat_container->value[value_index] = std::make_pair( new_tree_leaf, std::move(var) );
+              value_index++;
             }
             else{
               ReadFromBufferToVariant( field_type.typeID(), buffer, buffer_offset );
@@ -389,8 +408,6 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
 
 
   flat_container->tree = &msg_info->string_tree;
-  flat_container->name.clear();
-  flat_container->value.clear();
 
   StringTreeLeaf rootnode;
   rootnode.node_ptr = msg_info->string_tree.croot();
@@ -399,18 +416,21 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
                    rootnode,
                    true);
 
+  flat_container->name.resize( name_index );
+  flat_container->value.resize( value_index );
+
   if( buffer_offset != buffer.size() )
   {
     throw std::runtime_error("buildRosFlatType: There was an error parsing the buffer" );
   }
 }
 
-inline FORCEDINLINE bool isNumberPlaceholder( const SString& s)
+inline bool isNumberPlaceholder( const std::string& s)
 {
   return s.size() == 1 && s.at(0) == '#';
 }
 
-inline FORCEDINLINE bool isSubstitutionPlaceholder( const SString& s)
+inline bool isSubstitutionPlaceholder( const std::string& s)
 {
   return s.size() == 1 && s.at(0) == '@';
 }
@@ -441,7 +461,7 @@ inline int  PatternMatchAndIndexPosition(const StringTreeLeaf& leaf,
   return -1;
 }
 
-inline void JoinStrings( const std::vector<const SString*>& vect, const char separator, std::string& destination)
+inline void JoinStrings( const std::vector<const std::string*>& vect, const char separator, std::string& destination)
 {
   size_t count = 0;
   for(const auto &v: vect ) count += v->size();
@@ -477,7 +497,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
   //DO NOT clear() renamed_value
 
   static std::vector<int> alias_array_pos;
-  static std::vector<SString> formatted_string;
+  static std::vector<std::string> formatted_string;
   static std::vector<int8_t> substituted;
 
   alias_array_pos.reserve( num_names );
@@ -516,7 +536,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
       if( pattern_array_pos>= 0) // -1 if pattern doesn't match
       {
-        const SString* new_name = nullptr;
+        const std::string* new_name = nullptr;
 
         for (size_t n=0; n < num_names; n++)
         {
@@ -537,7 +557,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
         //--------------------------
         if( new_name )
         {
-          static std::vector<const SString*> concatenated_name;
+          static std::vector<const std::string*> concatenated_name;
           concatenated_name.reserve( 10 );
           concatenated_name.clear();
 
@@ -547,12 +567,12 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
           while( node_ptr != pattern_head)
           {
-            const SString* value = &node_ptr->value();
+            const std::string* value = &node_ptr->value();
 
             if( isNumberPlaceholder( *value) ){
               char buffer[16];
               int str_size = print_number( buffer, leaf.index_array[position--] );
-              formatted_string.push_back( SString(buffer, str_size) );
+              formatted_string.push_back( std::string(buffer, str_size) );
               value = &formatted_string.back();
             }
 
@@ -562,7 +582,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
           for (int s = rule.substitution().size()-1; s >= 0; s--)
           {
-            const SString* value = &rule.substitution()[s];
+            const std::string* value = &rule.substitution()[s];
 
             if( isSubstitutionPlaceholder( *value) ) {
               value = new_name;
@@ -578,12 +598,12 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
           while( node_ptr )
           {
-            const SString* value = &node_ptr->value();
+            const std::string* value = &node_ptr->value();
 
             if( isNumberPlaceholder(*value) ){
               char buffer[16];
               int str_size = print_number( buffer, leaf.index_array[position--] );
-              formatted_string.push_back( SString(buffer, str_size) );
+              formatted_string.push_back( std::string(buffer, str_size) );
               value = &formatted_string.back();
             }
             concatenated_name.push_back( value );

@@ -50,7 +50,7 @@ TEST(Deserialize, JointState)
   ros::serialization::Serializer<sensor_msgs::JointState>::write(stream, joint_state);
 
   FlatMessage flat_container;
-  parser.deserializeIntoFlatContainer("JointState",  buffer,  &flat_container,100);
+  parser.deserializeIntoFlatContainer("JointState",  absl::Span<uint8_t>(buffer),  &flat_container,100);
 
   if(VERBOSE_TEST){
     for(auto&it: flat_container.value) {
@@ -102,7 +102,7 @@ TEST(Deserialize, JointState)
   //---------------------------------
   std::vector<std_msgs::Header> headers;
 
-  Parser::VisitingCallback callbackReadAndStore = [&headers](const ROSType&, nonstd::VectorViewMutable<uint8_t>& raw_data)
+  Parser::VisitingCallback callbackReadAndStore = [&headers](const ROSType&, absl::Span<uint8_t>& raw_data)
   {
     std_msgs::Header msg;
     ros::serialization::IStream s( raw_data.data(), raw_data.size() );
@@ -110,7 +110,7 @@ TEST(Deserialize, JointState)
     headers.push_back( std::move(msg) );
   };
 
-  Parser::VisitingCallback callbackOverwiteInPlace = [&headers](const ROSType&, nonstd::VectorViewMutable<uint8_t>& raw_data)
+  Parser::VisitingCallback callbackOverwiteInPlace = [&headers](const ROSType&, absl::Span<uint8_t>& raw_data)
   {
     std_msgs::Header msg;
     ros::serialization::IStream is( raw_data.data(), raw_data.size() );
@@ -130,7 +130,7 @@ TEST(Deserialize, JointState)
   };
 
 
-  nonstd::VectorViewMutable<uint8_t> buffer_view(buffer);
+  absl::Span<uint8_t> buffer_view(buffer);
   const ROSType header_type( DataType<std_msgs::Header>::value() );
 
   parser.applyVisitorToBuffer( "JointState", header_type,
@@ -178,7 +178,7 @@ TEST( Deserialize, NavSatStatus)
   ros::serialization::Serializer<sensor_msgs::NavSatStatus>::write(stream, nav_stat);
 
   FlatMessage flat_container;
-  parser.deserializeIntoFlatContainer("nav_stat",  buffer,  &flat_container,100);
+  parser.deserializeIntoFlatContainer("nav_stat",  absl::Span<uint8_t>(buffer),  &flat_container,100);
 
   if(VERBOSE_TEST){ std::cout << " -------------------- " << std::endl;
 
@@ -236,7 +236,7 @@ TEST( Deserialize, DeserializeIMU)
   ros::serialization::Serializer<sensor_msgs::Imu>::write(stream, imu);
 
   FlatMessage flat_container;
-  parser.deserializeIntoFlatContainer("imu",  buffer,  &flat_container,100);
+  parser.deserializeIntoFlatContainer("imu",  absl::Span<uint8_t>(buffer),  &flat_container,100);
 
 
   if(VERBOSE_TEST){
@@ -400,7 +400,7 @@ TEST( Deserialize, Int16MultiArrayDeserialize)
   ros::serialization::Serializer<std_msgs::Int16MultiArray>::write(stream, multi_array);
 
   FlatMessage flat_container;
-  parser.deserializeIntoFlatContainer("multi_array",  buffer,  &flat_container,100);
+  parser.deserializeIntoFlatContainer("multi_array",  absl::Span<uint8_t>(buffer),  &flat_container,100);
 
   if(VERBOSE_TEST){
     std::cout << " -------------------- " << std::endl;
