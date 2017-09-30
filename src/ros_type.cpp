@@ -51,7 +51,7 @@ ROSType::ROSType(const SString &name):
     }
   }
 
-  if( pos != -1)
+  if( pos == -1)
   {
     _msg_name = name;
   }
