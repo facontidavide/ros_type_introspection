@@ -38,6 +38,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <absl/container/inlined_vector.h>
 #include "ros_type_introspection/ros_message.hpp"
 
 namespace RosIntrospection{
@@ -67,46 +68,39 @@ struct StringTreeLeaf{
 
   const StringTreeNode* node_ptr;
 
-  uint8_t array_size;
-
   std::array<uint16_t,8> index_array;
+  int array_size;
 
   /// Utility functions to print the entire branch
-  bool toStr(SString &destination) const;
   bool toStr(std::string &destination) const;
 
   // return string length or -1 if failed
   int toStr(char* buffer) const;
 
   std::string toStdString() const { std::string out; toStr(out); return out; }
+
+  constexpr static const char SEPARATOR = '/';
+  constexpr static const char NUM_PLACEHOLDER = '#';
+
+  static const absl::string_view& num_placeholder() {
+    constexpr static const absl::string_view nph("#");
+    return nph;
+  }
 };
 
 //---------------------------------
 
 inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
 {
-  SString dest;
+  std::string dest;
   leaf.toStr(dest);
   os << dest;
   return os;
 }
 
 inline StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr), array_size(0)
-{  for (auto& v: index_array) v= 0; }
+{  }
 
-
-inline bool StringTreeLeaf::toStr(SString& destination) const
-{
-  char buffer[256];
-  int offset = this->toStr(buffer);
-
-  if( offset < 0 ) {
-    destination.clear();
-    return false;
-  }
-  destination.assign(buffer, offset);
-  return true;
-}
 
 inline bool StringTreeLeaf::toStr(std::string& destination) const
 {

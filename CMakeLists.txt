@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
    roscpp_serialization
    sensor_msgs
    geometry_msgs
+   abseil_cpp
 )
 
 # Build flags
@@ -37,6 +38,7 @@ catkin_package(
    rosbag 
    rosbag_storage 
    roscpp_serialization
+   abseil_cpp
    DEPENDS 
 )
 

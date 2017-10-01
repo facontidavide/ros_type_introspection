@@ -33,35 +33,22 @@
 * *******************************************************************/
 
 #include "ros_type_introspection/substitution_rule.hpp"
+#include <absl/strings/str_split.h>
 
 namespace RosIntrospection{
 
-SubstitutionRule::SubstitutionRule(const char *pattern, const char *alias, const char *substitution)
+SubstitutionRule::SubstitutionRule(const char *pattern, const char *alias, const char *substitution):
+  _full_pattern(pattern),
+  _full_alias(alias),
+  _full_substitution(substitution)
 {
-  std::vector<std::string> split_text;
-  boost::split(split_text, pattern, boost::is_any_of("./"));
+  _pattern      = absl::StrSplit(_full_pattern,      absl::ByAnyChar("./"));
+  _alias        = absl::StrSplit(_full_alias,        absl::ByAnyChar("./"));
+  _substitution = absl::StrSplit(_full_substitution, absl::ByAnyChar("./"));
 
-  _pattern.reserve(split_text.size());
-  for (const auto& part: split_text){
-    if(part.size()>0)  _pattern.push_back( part );
-  }
-
-  boost::split(split_text, alias, boost::is_any_of("./"));
-
-  _alias.reserve(split_text.size());
-  for (const auto& part: split_text){
-    if(part.size()>0)  _alias.push_back( part );
-  }
-
-  boost::split(split_text, substitution, boost::is_any_of("./"));
-
-  _substitution.reserve(split_text.size());
-  for (const auto& part: split_text){
-    if(part.size()>0)  _substitution.push_back( part );
-  }
-  size_t h1 = std::hash<std::string>{}(pattern);
-  size_t h2 = std::hash<std::string>{}(alias);
-  size_t h3 = std::hash<std::string>{}(substitution);
+  size_t h1 = std::hash<std::string>{}(_full_pattern);
+  size_t h2 = std::hash<std::string>{}(_full_alias);
+  size_t h3 = std::hash<std::string>{}(_full_substitution);
   _hash = (h1 ^ (h2 << 1)) ^ (h3 << 1 );
 }
 

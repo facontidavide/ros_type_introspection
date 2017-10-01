@@ -81,7 +81,7 @@ static void BM_Joints(benchmark::State& state)
 
   while (state.KeepRunning())
   {
-    parser.deserializeIntoFlatContainer("joint_state",  buffer,  &flat_container,100);
+    parser.deserializeIntoFlatContainer("joint_state",  absl::Span<uint8_t>(buffer),  &flat_container, 100);
     parser.applyNameTransform("joint_state", flat_container, &renamed_values );
   }
 }

@@ -38,15 +38,13 @@
 #include <type_traits>
 #include <limits>
 #include "ros_type_introspection/builtin_types.hpp"
-#include "ros_type_introspection/utils/string.hpp"
 #include "ros_type_introspection/details/exceptions.hpp"
 #include "ros_type_introspection/details/conversion_impl.hpp"
+#include "absl/strings/string_view.h"
 
 
 namespace RosIntrospection
 {
-
-typedef ssoX::basic_string<char> SString;
 
 class Variant
 {
@@ -153,7 +151,7 @@ inline Variant::Variant(const T& value):
 {
   static_assert (std::numeric_limits<T>::is_specialized ||
                  std::is_same<T, ros::Time>::value ||
-                 std::is_same<T, SString>::value ||
+                 std::is_same<T, absl::string_view>::value ||
                  std::is_same<T, std::string>::value ||
                  std::is_same<T, ros::Duration>::value
                  , "not a valid type");
@@ -193,7 +191,7 @@ template<typename T> inline T Variant::extract( ) const
   return * reinterpret_cast<const T*>( &_storage.raw_data[0] );
 }
 
-template<> inline SString Variant::extract( ) const
+template<> inline absl::string_view Variant::extract( ) const
 {
 
   if( _type != STRING )
@@ -202,7 +200,7 @@ template<> inline SString Variant::extract( ) const
   }
   const uint32_t size = *(reinterpret_cast<const uint32_t*>( &_storage.raw_string[0] ));
   char* data = static_cast<char*>(&_storage.raw_string[4]);
-  return SString(data, size);
+  return absl::string_view(data, size);
 }
 
 template<> inline std::string Variant::extract( ) const
@@ -252,7 +250,7 @@ inline void Variant::assign(const char* buffer, size_t size)
 
 
 
-template <> inline void Variant::assign(const SString& value)
+template <> inline void Variant::assign(const absl::string_view& value)
 {
   assign( value.data(), value.size() );
 }
@@ -375,14 +373,6 @@ template<> inline ros::Duration Variant::convert() const
   return extract<ros::Duration>();
 }
 
-template<> inline SString Variant::convert() const
-{
-  if(  _type != STRING )
-  {
-     throw TypeException("Variant::convert -> cannot convert to SString");
-  }
-  return extract<SString>();
-}
 
 template<> inline std::string Variant::convert() const
 {

@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 #include <sensor_msgs/JointState.h>
-#include <ros_type_introspection/ros_introspection.hpp>
+#include "ros_type_introspection/ros_introspection.hpp"
 
 using namespace ros::message_traits;
 using namespace RosIntrospection;
@@ -148,7 +148,7 @@ TEST(Renamer2, DeserializeJointStateAndRename)
   FlatMessage flat_container;
   RenamedValues renamed_value;
 
-  parser.deserializeIntoFlatContainer("JointState",  buffer,  &flat_container,100);
+  parser.deserializeIntoFlatContainer("JointState",  absl::Span<uint8_t>(buffer),  &flat_container,100);
   parser.applyNameTransform("JointState",  flat_container, &renamed_value);
 
   if(VERBOSE_TEST){

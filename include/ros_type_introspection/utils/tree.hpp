@@ -42,7 +42,7 @@
 #include <memory>
 #include <boost/container/stable_vector.hpp>
 #include <boost/noncopyable.hpp>
-#include "ros_type_introspection/utils/string.hpp"
+#include "absl/strings/string_view.h"
 
 namespace RosIntrospection {
 
