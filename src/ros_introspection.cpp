@@ -304,7 +304,7 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
 
   size_t value_index = 0;
   size_t name_index = 0;
-
+  size_t blob_index = 0;
 
   if( msg_info == nullptr)
   {
@@ -343,7 +343,12 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
         new_tree_leaf.node_ptr = new_tree_leaf.node_ptr->child(0);
       }
 
-      if( array_size > static_cast<int>(max_array_size) ) DO_STORE = false;
+      // Stop storing it it is NOT a blob and a very large array.
+      if( array_size > static_cast<int>(max_array_size) &&
+          field_type.typeID() != UINT8)
+      {
+        DO_STORE = false;
+      }
 
       //------------------------------------
       for (int i=0; i<array_size; i++ )
@@ -353,14 +358,35 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
           new_tree_leaf.index_array[ new_tree_leaf.array_size - 1 ] = i;
         }
 
-        if( field_type.typeID() == STRING )
+        if(field_type.typeID() == UINT8 && array_size > max_array_size )
+        {
+          // special case. This is a "blob", typically an image, a map, etc.
+          if( flat_container->blob.size() <= blob_index)
+          {
+            const size_t increased_size = std::max( size_t(32), flat_container->blob.size() *  3/2);
+            flat_container->blob.resize( increased_size );
+          }
+          if( buffer_offset + array_size > buffer.size() )
+          {
+              throw std::runtime_error("Buffer overrun in deserializeIntoFlatContainer (blob)");
+          }
+          if( DO_STORE )
+          {
+            flat_container->blob[blob_index].first  = new_tree_leaf ;
+            std::vector<uint8_t>& blob = flat_container->blob[blob_index].second;
+            blob_index++;
+            blob.resize( array_size );
+            std::memcpy( blob.data(), &buffer[buffer_offset], array_size);
+          }
+          buffer_offset += array_size;
+        }
+        else if( field_type.typeID() == STRING )
         {
           if( flat_container->name.size() <= name_index)
           {
             const size_t increased_size = std::max( size_t(32), flat_container->name.size() *  3/2);
             flat_container->name.resize( increased_size );
           }
-
           std::string& name = flat_container->name[name_index].second;//read directly inside an existing std::string
           ReadFromBuffer<std::string>( buffer, buffer_offset, name );
 
@@ -418,6 +444,7 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
 
   flat_container->name.resize( name_index );
   flat_container->value.resize( value_index );
+  flat_container->blob.resize( blob_index );
 
   if( buffer_offset != buffer.size() )
   {
