@@ -236,6 +236,11 @@ void Parser::applyVisitorToBuffer(const std::string &msg_identifier,
   {
     throw std::runtime_error("deserializeIntoFlatContainer: msg_identifier not registered. Use registerMessageDefinition" );
   }
+  if( getMessageByType( monitored_type, *msg_info) == nullptr)
+  {
+      // you will not find it. Skip it;
+      return;
+  }
 
   std::function<void(const MessageTreeNode*)> recursiveImpl;
   size_t buffer_offset = 0;
