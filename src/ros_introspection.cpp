@@ -95,11 +95,11 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name) con
                         info.message_tree.root());
 }
 
-inline bool FindPattern(const std::vector<std::string> &pattern,
+inline bool FindPattern(const std::vector<absl::string_view> &pattern,
                         size_t index, const StringTreeNode *tail,
                         const StringTreeNode **head)
 {
-  if(  tail->value() == pattern[index])
+  if(  tail->value() == pattern[index] )
   {
     index++;
   }
@@ -425,14 +425,14 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
   }
 }
 
-inline bool isNumberPlaceholder( const std::string& s)
+inline bool isNumberPlaceholder( const absl::string_view& s)
 {
-  return s.size() == 1 && s.at(0) == '#';
+  return s.size() == 1 && s[0] == '#';
 }
 
-inline bool isSubstitutionPlaceholder( const std::string& s)
+inline bool isSubstitutionPlaceholder( const absl::string_view& s)
 {
-  return s.size() == 1 && s.at(0) == '@';
+  return s.size() == 1 && s[0] == '@';
 }
 
 // given a leaf of the tree, that can have multiple index_array,
@@ -461,10 +461,11 @@ inline int  PatternMatchAndIndexPosition(const StringTreeLeaf& leaf,
   return -1;
 }
 
-inline void JoinStrings( const std::vector<const std::string*>& vect, const char separator, std::string& destination)
+template <typename VectorType>
+inline void JoinStrings( const VectorType& vect, const char separator, std::string& destination)
 {
   size_t count = 0;
-  for(const auto &v: vect ) count += v->size();
+  for(const auto &v: vect ) count += v.size();
 
   // the following approach seems to be faster
   // https://github.com/facontidavide/InterestingBenchmarks/blob/master/StringAppend_vs_Memcpy.md
@@ -476,12 +477,12 @@ inline void JoinStrings( const std::vector<const std::string*>& vect, const char
 
   for (size_t c = 0; c < vect.size()-1; c++)
   {
-    const size_t S = vect[c]->size();
-    memcpy( &buffer[buff_pos], vect[c]->data(), S );
+    const size_t S = vect[c].size();
+    std::memcpy( &buffer[buff_pos], vect[c].data(), S );
     buff_pos += S;
     buffer[buff_pos++] = separator;
   }
-  memcpy( &buffer[buff_pos], vect.back()->data(), vect.back()->size() );
+  std::memcpy( &buffer[buff_pos], vect.back().data(), vect.back().size() );
 }
 
 void Parser::applyNameTransform(const std::string& msg_identifier,
@@ -557,9 +558,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
         //--------------------------
         if( new_name )
         {
-          static std::vector<const std::string*> concatenated_name;
-          concatenated_name.reserve( 10 );
-          concatenated_name.clear();
+          absl::InlinedVector<absl::string_view, 12> concatenated_name;
 
           const StringTreeNode* node_ptr = leaf.node_ptr;
 
@@ -567,13 +566,13 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
           while( node_ptr != pattern_head)
           {
-            const std::string* value = &node_ptr->value();
+            absl::string_view value = node_ptr->value();
 
-            if( isNumberPlaceholder( *value) ){
+            if( isNumberPlaceholder( value ) ){
               char buffer[16];
               int str_size = print_number( buffer, leaf.index_array[position--] );
               formatted_string.push_back( std::string(buffer, str_size) );
-              value = &formatted_string.back();
+              value = absl::string_view( formatted_string.back() );
             }
 
             concatenated_name.push_back( value );
@@ -582,10 +581,10 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
           for (int s = rule.substitution().size()-1; s >= 0; s--)
           {
-            const std::string* value = &rule.substitution()[s];
+            absl::string_view value = rule.substitution()[s];
 
-            if( isSubstitutionPlaceholder( *value) ) {
-              value = new_name;
+            if( isSubstitutionPlaceholder(value) ) {
+              value = *new_name;
               position--;
             }
             concatenated_name.push_back( value );
@@ -598,13 +597,13 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
           while( node_ptr )
           {
-            const std::string* value = &node_ptr->value();
+            absl::string_view value = node_ptr->value();
 
-            if( isNumberPlaceholder(*value) ){
+            if( isNumberPlaceholder(value) ){
               char buffer[16];
               int str_size = print_number( buffer, leaf.index_array[position--] );
               formatted_string.push_back( std::string(buffer, str_size) );
-              value = &formatted_string.back();
+              value = formatted_string.back();
             }
             concatenated_name.push_back( value );
             node_ptr = node_ptr->parent();

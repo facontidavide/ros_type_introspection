@@ -77,6 +77,14 @@ struct StringTreeLeaf{
   int toStr(char* buffer) const;
 
   std::string toStdString() const { std::string out; toStr(out); return out; }
+
+  constexpr static const char SEPARATOR = '/';
+  constexpr static const char NUM_PLACEHOLDER = '#';
+
+  static const absl::string_view& num_placeholder() {
+    constexpr static const absl::string_view nph("#");
+    return nph;
+  }
 };
 
 //---------------------------------
