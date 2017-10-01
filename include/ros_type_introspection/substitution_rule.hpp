@@ -134,6 +134,7 @@ private:
 
 //------------------------
 
+typedef std::map<ROSType, std::vector<SubstitutionRule>> SubstitutionRuleMap;
 
 
 

@@ -516,7 +516,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
                                 const FlatMessage& container,
                                 RenamedValues *renamed_value ) const
 {
-  const std::vector<RulesCache>& rules_cache = _registered_rules.find(msg_identifier)->second;
+  auto rule_found = _registered_rules.find(msg_identifier);
 
   const size_t num_values = container.value.size();
   const size_t num_names  = container.name.size();
@@ -538,129 +538,134 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
   size_t renamed_index = 0;
 
-  for(const RulesCache& cache: rules_cache)
+  if( rule_found != _registered_rules.end() )
   {
-    const SubstitutionRule& rule       = cache.rule;
-    const StringTreeNode* pattern_head = cache.pattern_head;
-    const StringTreeNode* alias_head   = cache.alias_head;
+    const std::vector<RulesCache>& rules_cache = rule_found->second;
 
-    if( !pattern_head || !alias_head  ) continue;
-
-    for (size_t n=0; n<num_names; n++)
+    for(const RulesCache& cache: rules_cache)
     {
-      const StringTreeLeaf& alias_leaf = container.name[n].first;
-      alias_array_pos[n] = PatternMatchAndIndexPosition(alias_leaf, alias_head);
-    }
+      const SubstitutionRule& rule       = cache.rule;
+      const StringTreeNode* pattern_head = cache.pattern_head;
+      const StringTreeNode* alias_head   = cache.alias_head;
 
-    for(size_t i=0; i<num_values; i++)
-    {
-      if( substituted[i]) continue;
+      if( !pattern_head || !alias_head  ) continue;
 
-      const auto& value_leaf = container.value[i];
-
-      const StringTreeLeaf& leaf = value_leaf.first;
-
-      int pattern_array_pos = PatternMatchAndIndexPosition(leaf,   pattern_head);
-
-      if( pattern_array_pos>= 0) // -1 if pattern doesn't match
+      for (size_t n=0; n<num_names; n++)
       {
-        const std::string* new_name = nullptr;
-
-        for (size_t n=0; n < num_names; n++)
-        {
-          const auto & it = container.name[n];
-          const StringTreeLeaf& alias_leaf = it.first;
-
-          if( alias_array_pos[n] >= 0 ) // -1 if pattern doesn't match
-          {
-            if( alias_leaf.index_array[ alias_array_pos[n] ] ==
-                leaf.index_array[ pattern_array_pos] )
-            {
-              new_name =  &(it.second);
-              break;
-            }
-          }
-        }
-
-        //--------------------------
-        if( new_name )
-        {
-          absl::InlinedVector<absl::string_view, 12> concatenated_name;
-
-          const StringTreeNode* node_ptr = leaf.node_ptr;
-
-          int position = leaf.array_size-1;
-
-          while( node_ptr != pattern_head)
-          {
-            const absl::string_view& value = node_ptr->value();
-
-            if( isNumberPlaceholder( value ) )
-            {
-              char buffer[16];
-              const int number = leaf.index_array[position--];
-              int str_size = print_number( buffer, number );
-              formatted_string.push_back( std::string(buffer, str_size) );
-              concatenated_name.push_back( formatted_string.back() );
-            }
-            else{
-              concatenated_name.push_back( value );
-            }
-            node_ptr = node_ptr->parent();
-          }
-
-          for (int s = rule.substitution().size()-1; s >= 0; s--)
-          {
-            const absl::string_view& value = rule.substitution()[s];
-
-            if( isSubstitutionPlaceholder(value) )
-            {
-              concatenated_name.push_back( *new_name );
-              position--;
-            }
-            else{ concatenated_name.push_back( value ); }
-          }
-
-          for (size_t p = 0; p < rule.pattern().size() && node_ptr; p++)
-          {
-            node_ptr = node_ptr->parent();
-          }
-
-          while( node_ptr )
-          {
-            absl::string_view value = node_ptr->value();
-
-            if( isNumberPlaceholder(value) )
-            {
-              char buffer[16];
-              const int number = leaf.index_array[position--];
-              int str_size = print_number( buffer, number );
-              formatted_string.push_back( std::string(buffer, str_size) );
-              concatenated_name.push_back( formatted_string.back() );
-            }
-            else{
-              concatenated_name.push_back( value );
-            }
-            node_ptr = node_ptr->parent();
-          }
-
-          //------------------------
-          auto& renamed_pair = (*renamed_value)[renamed_index];
-
-          std::reverse(concatenated_name.begin(), concatenated_name.end());
-          JoinStrings( concatenated_name, '/', renamed_pair.first);
-          renamed_pair.second  = value_leaf.second ;
-
-          renamed_index++;
-          substituted[i] = true;
-
-        }// end if( new_name )
-      }// end if( PatternMatching )
-      else  {
-
+        const StringTreeLeaf& alias_leaf = container.name[n].first;
+        alias_array_pos[n] = PatternMatchAndIndexPosition(alias_leaf, alias_head);
       }
-    } // end for values
-  } // end for rules
+
+      for(size_t i=0; i<num_values; i++)
+      {
+        if( substituted[i]) continue;
+
+        const auto& value_leaf = container.value[i];
+
+        const StringTreeLeaf& leaf = value_leaf.first;
+
+        int pattern_array_pos = PatternMatchAndIndexPosition(leaf,   pattern_head);
+
+        if( pattern_array_pos>= 0) // -1 if pattern doesn't match
+        {
+          const std::string* new_name = nullptr;
+
+          for (size_t n=0; n < num_names; n++)
+          {
+            const auto & it = container.name[n];
+            const StringTreeLeaf& alias_leaf = it.first;
+
+            if( alias_array_pos[n] >= 0 ) // -1 if pattern doesn't match
+            {
+              if( alias_leaf.index_array[ alias_array_pos[n] ] ==
+                  leaf.index_array[ pattern_array_pos] )
+              {
+                new_name =  &(it.second);
+                break;
+              }
+            }
+          }
+
+          //--------------------------
+          if( new_name )
+          {
+            absl::InlinedVector<absl::string_view, 12> concatenated_name;
+
+            const StringTreeNode* node_ptr = leaf.node_ptr;
+
+            int position = leaf.array_size-1;
+
+            while( node_ptr != pattern_head)
+            {
+              const absl::string_view& value = node_ptr->value();
+
+              if( isNumberPlaceholder( value ) )
+              {
+                char buffer[16];
+                const int number = leaf.index_array[position--];
+                int str_size = print_number( buffer, number );
+                formatted_string.push_back( std::string(buffer, str_size) );
+                concatenated_name.push_back( formatted_string.back() );
+              }
+              else{
+                concatenated_name.push_back( value );
+              }
+              node_ptr = node_ptr->parent();
+            }
+
+            for (int s = rule.substitution().size()-1; s >= 0; s--)
+            {
+              const absl::string_view& value = rule.substitution()[s];
+
+              if( isSubstitutionPlaceholder(value) )
+              {
+                concatenated_name.push_back( *new_name );
+                position--;
+              }
+              else{ concatenated_name.push_back( value ); }
+            }
+
+            for (size_t p = 0; p < rule.pattern().size() && node_ptr; p++)
+            {
+              node_ptr = node_ptr->parent();
+            }
+
+            while( node_ptr )
+            {
+              absl::string_view value = node_ptr->value();
+
+              if( isNumberPlaceholder(value) )
+              {
+                char buffer[16];
+                const int number = leaf.index_array[position--];
+                int str_size = print_number( buffer, number );
+                formatted_string.push_back( std::string(buffer, str_size) );
+                concatenated_name.push_back( formatted_string.back() );
+              }
+              else{
+                concatenated_name.push_back( value );
+              }
+              node_ptr = node_ptr->parent();
+            }
+
+            //------------------------
+            auto& renamed_pair = (*renamed_value)[renamed_index];
+
+            std::reverse(concatenated_name.begin(), concatenated_name.end());
+            JoinStrings( concatenated_name, '/', renamed_pair.first);
+            renamed_pair.second  = value_leaf.second ;
+
+            renamed_index++;
+            substituted[i] = true;
+
+          }// end if( new_name )
+        }// end if( PatternMatching )
+        else  {
+
+        }
+      } // end for values
+    } // end for rules
+  } //end rule found
 
   for(size_t i=0; i< container.value.size(); i++)
   {
