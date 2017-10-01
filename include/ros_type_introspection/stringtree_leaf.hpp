@@ -68,7 +68,8 @@ struct StringTreeLeaf{
 
   const StringTreeNode* node_ptr;
 
-  absl::InlinedVector<uint16_t,8> index_array;
+  std::array<uint16_t,8> index_array;
+  int array_size;
 
   /// Utility functions to print the entire branch
   bool toStr(std::string &destination) const;
@@ -97,7 +98,7 @@ inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
   return os;
 }
 
-inline StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr)
+inline StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr), array_size(0)
 {  }
 
 

@@ -143,7 +143,7 @@ void Parser::registerRenamingRules(const ROSType &type, const std::vector<Substi
         FindPattern( cache.rule.pattern(), 0, msg_info.string_tree.croot(), &cache.pattern_head );
         FindPattern( cache.rule.alias(),   0, msg_info.string_tree.croot(), &cache.alias_head );
         if( cache.pattern_head && cache.alias_head
-           && std::find( cache_vector.begin(), cache_vector.end(), cache) == cache_vector.end()
+            && std::find( cache_vector.begin(), cache_vector.end(), cache) == cache_vector.end()
             )
         {
           cache_vector.push_back( std::move(cache) );
@@ -319,91 +319,91 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
       const StringTreeLeaf& tree_leaf,
       bool DO_STORE)
   {
-      const ROSMessage* msg_definition = msg_node->value();
-      size_t index_s = 0;
-      size_t index_m = 0;
+    const ROSMessage* msg_definition = msg_node->value();
+    size_t index_s = 0;
+    size_t index_m = 0;
 
-      for (const ROSField& field : msg_definition->fields() )
+    for (const ROSField& field : msg_definition->fields() )
+    {
+      if(field.isConstant() ) continue;
+
+      const ROSType&  field_type = field.type();
+
+      auto new_tree_leaf = tree_leaf;
+      new_tree_leaf.node_ptr = tree_leaf.node_ptr->child(index_s);
+
+      int32_t array_size = field.arraySize();
+      if( array_size == -1)
       {
-        if(field.isConstant() ) continue;
+        ReadFromBuffer( buffer, buffer_offset, array_size );
+      }
+      if( field.isArray())
+      {
+        new_tree_leaf.index_array[ new_tree_leaf.array_size++ ] = (0);
+        new_tree_leaf.node_ptr = new_tree_leaf.node_ptr->child(0);
+      }
 
-        const ROSType&  field_type = field.type();
+      if( array_size > static_cast<int>(max_array_size) ) DO_STORE = false;
 
-        auto new_tree_leaf = tree_leaf;
-        new_tree_leaf.node_ptr = tree_leaf.node_ptr->child(index_s);
-
-        int32_t array_size = field.arraySize();
-        if( array_size == -1)
+      //------------------------------------
+      for (int i=0; i<array_size; i++ )
+      {
+        if( field.isArray() )
         {
-          ReadFromBuffer( buffer, buffer_offset, array_size );
+          new_tree_leaf.index_array[ new_tree_leaf.array_size - 1 ] = i;
         }
-        if( field.isArray())
+
+        if( field_type.typeID() == STRING )
         {
-          new_tree_leaf.index_array.push_back(0);
-          new_tree_leaf.node_ptr = new_tree_leaf.node_ptr->child(0);
+          if( flat_container->name.size() <= name_index)
+          {
+            const size_t increased_size = std::max( size_t(32), flat_container->name.size() *  3/2);
+            flat_container->name.resize( increased_size );
+          }
+
+          std::string& name = flat_container->name[name_index].second;//read directly inside an existing std::string
+          ReadFromBuffer<std::string>( buffer, buffer_offset, name );
+
+          if( DO_STORE )
+          {
+            flat_container->name[name_index].first = new_tree_leaf ;
+            name_index++;
+          }
         }
-
-        if( array_size > static_cast<int>(max_array_size) ) DO_STORE = false;
-
-        //------------------------------------
-        for (int i=0; i<array_size; i++ )
+        else if( field_type.isBuiltin() )
         {
-          if( field.isArray() )
+          if( flat_container->value.size() <= value_index)
           {
-            new_tree_leaf.index_array.back() = i;
+            const size_t increased_size = std::max( size_t(32), flat_container->value.size() *  3/2);
+            flat_container->value.resize( increased_size );
           }
 
-          if( field_type.typeID() == STRING )
+          Variant var = ReadFromBufferToVariant( field_type.typeID(),
+                                                 buffer,
+                                                 buffer_offset );
+          if( DO_STORE )
           {
-            if( flat_container->name.size() <= name_index)
-            {
-              const size_t increased_size = std::max( size_t(32), flat_container->name.size() *  3/2);
-              flat_container->name.resize( increased_size );
-            }
-
-            std::string& name = flat_container->name[name_index].second;//read directly inside an existing std::string
-            ReadFromBuffer<std::string>( buffer, buffer_offset, name );
-
-            if( DO_STORE )
-            {
-              flat_container->name[name_index].first = new_tree_leaf ;
-              name_index++;
-            }
+            flat_container->value[value_index] = std::make_pair( new_tree_leaf, std::move(var) );
+            value_index++;
           }
-          else if( field_type.isBuiltin() )
-          {
-            if( flat_container->value.size() <= value_index)
-            {
-              const size_t increased_size = std::max( size_t(32), flat_container->value.size() *  3/2);
-              flat_container->value.resize( increased_size );
-            }
-
-            Variant var = ReadFromBufferToVariant( field_type.typeID(),
-                                                   buffer,
-                                                   buffer_offset );           
-            if( DO_STORE )
-            {
-              flat_container->value[value_index] = std::make_pair( new_tree_leaf, std::move(var) );
-              value_index++;
-            }
-            else{
-              ReadFromBufferToVariant( field_type.typeID(), buffer, buffer_offset );
-            }
+          else{
+            ReadFromBufferToVariant( field_type.typeID(), buffer, buffer_offset );
           }
-          else{ // field_type.typeID() == OTHER
-
-            deserializeImpl(msg_node->child(index_m),
-                            new_tree_leaf,
-                            DO_STORE);
-          }
-        } // end for array_size
-
-        if( field_type.typeID() == OTHER )
-        {
-          index_m++;
         }
-        index_s++;
-      } // end for fields
+        else{ // field_type.typeID() == OTHER
+
+          deserializeImpl(msg_node->child(index_m),
+                          new_tree_leaf,
+                          DO_STORE);
+        }
+      } // end for array_size
+
+      if( field_type.typeID() == OTHER )
+      {
+        index_m++;
+      }
+      index_s++;
+    } // end for fields
   }; //end of lambda
 
 
@@ -438,11 +438,11 @@ inline bool isSubstitutionPlaceholder( const absl::string_view& s)
 // given a leaf of the tree, that can have multiple index_array,
 // find the only index which corresponds to the # in the pattern
 inline int  PatternMatchAndIndexPosition(const StringTreeLeaf& leaf,
-                                  const StringTreeNode* pattern_head )
+                                         const StringTreeNode* pattern_head )
 {
   const StringTreeNode* node_ptr = leaf.node_ptr;
 
-  int pos = leaf.index_array.size()-1;
+  int pos = leaf.array_size-1;
 
   while( node_ptr )
   {
@@ -562,32 +562,36 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
           const StringTreeNode* node_ptr = leaf.node_ptr;
 
-          int position = leaf.index_array.size();
+          int position = leaf.array_size-1;
 
           while( node_ptr != pattern_head)
           {
-            absl::string_view value = node_ptr->value();
+            const absl::string_view& value = node_ptr->value();
 
-            if( isNumberPlaceholder( value ) ){
+            if( isNumberPlaceholder( value ) )
+            {
               char buffer[16];
-              int str_size = print_number( buffer, leaf.index_array[position--] );
+              const int number = leaf.index_array[position--];
+              int str_size = print_number( buffer, number );
               formatted_string.push_back( std::string(buffer, str_size) );
-              value = absl::string_view( formatted_string.back() );
+              concatenated_name.push_back( formatted_string.back() );
             }
-
-            concatenated_name.push_back( value );
+            else{
+              concatenated_name.push_back( value );
+            }
             node_ptr = node_ptr->parent();
           }
 
           for (int s = rule.substitution().size()-1; s >= 0; s--)
           {
-            absl::string_view value = rule.substitution()[s];
+            const absl::string_view& value = rule.substitution()[s];
 
-            if( isSubstitutionPlaceholder(value) ) {
-              value = *new_name;
+            if( isSubstitutionPlaceholder(value) )
+            {
+              concatenated_name.push_back( *new_name );
               position--;
             }
-            concatenated_name.push_back( value );
+            else{ concatenated_name.push_back( value ); }
           }
 
           for (size_t p = 0; p < rule.pattern().size() && node_ptr; p++)
@@ -599,13 +603,17 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
           {
             absl::string_view value = node_ptr->value();
 
-            if( isNumberPlaceholder(value) ){
+            if( isNumberPlaceholder(value) )
+            {
               char buffer[16];
-              int str_size = print_number( buffer, leaf.index_array[position--] );
+              const int number = leaf.index_array[position--];
+              int str_size = print_number( buffer, number );
               formatted_string.push_back( std::string(buffer, str_size) );
-              value = formatted_string.back();
+              concatenated_name.push_back( formatted_string.back() );
             }
-            concatenated_name.push_back( value );
+            else{
+              concatenated_name.push_back( value );
+            }
             node_ptr = node_ptr->parent();
           }
 
