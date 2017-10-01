@@ -339,7 +339,7 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
         }
         if( field.isArray())
         {
-          new_tree_leaf.array_size++;
+          new_tree_leaf.index_array.push_back(0);
           new_tree_leaf.node_ptr = new_tree_leaf.node_ptr->child(0);
         }
 
@@ -350,7 +350,7 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
         {
           if( field.isArray() )
           {
-            new_tree_leaf.index_array[ new_tree_leaf.array_size-1 ] = i;
+            new_tree_leaf.index_array.back() = i;
           }
 
           if( field_type.typeID() == STRING )
@@ -442,7 +442,7 @@ inline int  PatternMatchAndIndexPosition(const StringTreeLeaf& leaf,
 {
   const StringTreeNode* node_ptr = leaf.node_ptr;
 
-  int pos = leaf.array_size-1;
+  int pos = leaf.index_array.size()-1;
 
   while( node_ptr )
   {
@@ -563,7 +563,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
           const StringTreeNode* node_ptr = leaf.node_ptr;
 
-          int position = leaf.array_size - 1;
+          int position = leaf.index_array.size();
 
           while( node_ptr != pattern_head)
           {

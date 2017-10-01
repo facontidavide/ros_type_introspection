@@ -38,6 +38,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <absl/container/inlined_vector.h>
 #include "ros_type_introspection/ros_message.hpp"
 
 namespace RosIntrospection{
@@ -67,9 +68,7 @@ struct StringTreeLeaf{
 
   const StringTreeNode* node_ptr;
 
-  uint8_t array_size;
-
-  std::array<uint16_t,8> index_array;
+  absl::InlinedVector<uint16_t,8> index_array;
 
   /// Utility functions to print the entire branch
   bool toStr(std::string &destination) const;
@@ -90,8 +89,8 @@ inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
   return os;
 }
 
-inline StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr), array_size(0)
-{  for (auto& v: index_array) v= 0; }
+inline StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr)
+{  }
 
 
 inline bool StringTreeLeaf::toStr(std::string& destination) const
