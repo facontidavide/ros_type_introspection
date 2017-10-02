@@ -39,10 +39,27 @@
 #include <map>
 #include <iostream>
 #include <absl/container/inlined_vector.h>
+#include <absl/container/fixed_array.h>
 #include "ros_type_introspection/ros_message.hpp"
 
 namespace RosIntrospection{
 
+// Still faster in my benchmark than absl::InlinedVector
+
+template <typename T, size_t N>
+class InlinedVector{
+public:
+    InlinedVector(): _size(0) {}
+    void push_back(T val) { _array[_size++] = val; }
+    const T& back() const { return _array[_size-1]; }
+    T& back()             { return _array[_size-1]; }
+    size_t size() const { return _size; }
+    const T& operator[](size_t index) const { return _array[index]; }
+    T& operator[](size_t index)             { return _array[index]; }
+private:
+    std::array<T,N> _array;
+    size_t _size;
+};
 
 /**
  * @brief The StringTreeLeaf is, as the name suggests, a leaf (terminal node)
@@ -68,8 +85,7 @@ struct StringTreeLeaf{
 
   const StringTreeNode* node_ptr;
 
-  std::array<uint16_t,8> index_array;
-  int array_size;
+  InlinedVector<uint16_t,8> index_array;
 
   /// Utility functions to print the entire branch
   bool toStr(std::string &destination) const;
@@ -98,7 +114,7 @@ inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
   return os;
 }
 
-inline StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr), array_size(0)
+inline StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr)
 {  }
 
 
