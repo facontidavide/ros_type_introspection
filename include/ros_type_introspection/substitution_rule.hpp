@@ -113,6 +113,10 @@ public:
    */
   SubstitutionRule(const char* pattern, const char* alias, const char* substitution);
 
+  SubstitutionRule(const SubstitutionRule& other) { *this = other; }
+
+  SubstitutionRule& operator= (const SubstitutionRule& other);
+
   const std::vector<absl::string_view>& pattern() const      { return _pattern; }
   const std::vector<absl::string_view>& alias() const        { return _alias; }
   const std::vector<absl::string_view>& substitution() const { return _substitution; }

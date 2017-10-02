@@ -52,4 +52,18 @@ SubstitutionRule::SubstitutionRule(const char *pattern, const char *alias, const
   _hash = (h1 ^ (h2 << 1)) ^ (h3 << 1 );
 }
 
+SubstitutionRule& SubstitutionRule::operator= (const SubstitutionRule& other)
+{
+    _full_pattern = (other._full_pattern);
+    _full_alias = (other._full_alias);
+    _full_substitution = (other._full_substitution);
+    // this could be optimized...
+    _pattern      = absl::StrSplit(_full_pattern,      absl::ByAnyChar("./"));
+    _alias        = absl::StrSplit(_full_alias,        absl::ByAnyChar("./"));
+    _substitution = absl::StrSplit(_full_substitution, absl::ByAnyChar("./"));
+
+    _hash = other._hash;
+    return *this;
+}
+
 }

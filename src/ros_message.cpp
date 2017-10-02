@@ -79,7 +79,7 @@ void ROSMessage::updateMissingPkgNames(const std::vector<const ROSType*> &all_ty
     {
       for (const ROSType* known_type: all_types)
       {
-        if( field.type().msgName() == known_type->msgName() )
+        if( field.type().msgName().compare( known_type->msgName() ) == 0  )
         {
           field._type.setPkgName( known_type->pkgName() );
           break;

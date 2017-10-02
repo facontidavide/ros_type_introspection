@@ -52,19 +52,27 @@ public:
 
   ROSType(){}
 
-  ROSType(const absl::string_view& name);
+  ROSType(absl::string_view name);
+
+  ROSType(const ROSType& other) {  *this = other; }
+
+  ROSType(ROSType&& other) {  *this = other; }
+
+  ROSType& operator= (const ROSType& other);
+
+  ROSType& operator= (ROSType&& other);
 
   /// Concatenation of msg_name and pkg_name.
   /// ex.: geometry_msgs/Pose"
-  absl::string_view baseName() const;
+  const std::string& baseName() const;
 
   /// ex.: geometry_msgs/Pose -> "Pose"
-  absl::string_view msgName()  const;
+  const absl::string_view& msgName()  const;
 
   /// ex.: geometry_msgs/Pose -> "geometry_msgs"
-  absl::string_view pkgName()  const;
+  const absl::string_view& pkgName()  const;
 
-  void setPkgName(const absl::string_view& new_pkg);
+  void setPkgName(absl::string_view new_pkg);
 
   /// True if the type is ROS builtin
   bool isBuiltin() const;
@@ -97,17 +105,17 @@ protected:
 
 //----------- definitions -------------
 
-inline absl::string_view ROSType::baseName() const
+inline const std::string &ROSType::baseName() const
 {
   return _base_name;
 }
 
-inline absl::string_view ROSType::msgName() const
+inline const absl::string_view& ROSType::msgName() const
 {
   return _msg_name;
 }
 
-inline absl::string_view ROSType::pkgName() const
+inline const absl::string_view &ROSType::pkgName() const
 {
   return _pkg_name;
 }
@@ -124,7 +132,7 @@ inline int ROSType::typeSize() const
 
 inline BuiltinType ROSType::typeID() const
 {
-  return this->_id;
+  return _id;
 }
 
 //--------- helper functions --------------
