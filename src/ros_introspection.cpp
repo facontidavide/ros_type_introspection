@@ -539,8 +539,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
   static std::vector<std::string> formatted_string;
   static std::vector<int8_t> substituted;
 
-  alias_array_pos.reserve( num_names );
-  alias_array_pos.clear();
+  alias_array_pos.resize( num_names );
   formatted_string.reserve( num_values );
   formatted_string.clear();
 
@@ -563,8 +562,8 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
       for (size_t n=0; n<num_names; n++)
       {
-        const StringTreeLeaf& alias_leaf = container.name[n].first;
-        alias_array_pos[n] = PatternMatchAndIndexPosition(alias_leaf, alias_head);
+        const StringTreeLeaf& name_leaf = container.name[n].first;
+        alias_array_pos[n] = PatternMatchAndIndexPosition(name_leaf, alias_head);
       }
 
       for(size_t i=0; i<num_values; i++)
@@ -671,9 +670,6 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
           }// end if( new_name )
         }// end if( PatternMatching )
-        else  {
-
-        }
       } // end for values
     } // end for rules
   } //end rule found
