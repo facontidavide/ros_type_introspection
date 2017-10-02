@@ -348,22 +348,28 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
         new_tree_leaf.node_ptr = new_tree_leaf.node_ptr->child(0);
       }
 
+      bool IS_BLOB = false;
+
       // Stop storing it it is NOT a blob and a very large array.
-      if( array_size > static_cast<int>(max_array_size) &&
-          field_type.typeID() != UINT8)
+      if( array_size > max_array_size)
       {
-        DO_STORE = false;
+        if( field_type.typeID() == UINT8){
+          IS_BLOB = true;
+        }
+        else{
+          DO_STORE = false;
+        }
       }
 
       //------------------------------------
       for (int i=0; i<array_size; i++ )
       {
-        if( field.isArray() )
+        if( field.isArray() && !IS_BLOB && DO_STORE)
         {
           new_tree_leaf.index_array.back() = i;
         }
 
-        if(field_type.typeID() == UINT8 && array_size > max_array_size )
+        if( IS_BLOB )
         {
           // special case. This is a "blob", typically an image, a map, etc.
           if( flat_container->blob.size() <= blob_index)
