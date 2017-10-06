@@ -151,13 +151,26 @@ TEST(Renamer2, DeserializeJointStateAndRename)
   parser.deserializeIntoFlatContainer("JointState",  absl::Span<uint8_t>(buffer),  &flat_container,100);
   parser.applyNameTransform("JointState",  flat_container, &renamed_value);
 
-  if(VERBOSE_TEST){
+  if(VERBOSE_TEST)
+  {
+    std::cout << "----------------\n";
+    for(auto&it: flat_container.value) {
+      std::cout << it.first.toStdString() << " >> " << it.second.convert<double>() << std::endl;
+    }
+    std::cout << "----------------\n";
     for(auto&it: renamed_value) {
       std::cout << it.first << " >> " << it.second.convert<double>() << std::endl;
     }
+    std::cout << "----------------\n";
   }
 
   int i = 0;
+
+  EXPECT_EQ( renamed_value[i].first , ("JointState/header/seq"));
+  EXPECT_EQ( renamed_value[i++].second.convert<double>(), 2016 );
+
+  EXPECT_EQ( renamed_value[i].first , ("JointState/header/stamp"));
+  EXPECT_EQ( renamed_value[i++].second.convert<double>(), 1234.567 );
 
   EXPECT_EQ( renamed_value[i].first , ("JointState/hola/pos"));
   EXPECT_EQ( renamed_value[i++].second.convert<double>(), 11 );
@@ -185,12 +198,6 @@ TEST(Renamer2, DeserializeJointStateAndRename)
 
   EXPECT_EQ( renamed_value[i].first , ("JointState/bye/eff"));
   EXPECT_EQ( renamed_value[i++].second.convert<double>(), 33 );
-
-  EXPECT_EQ( renamed_value[i].first , ("JointState/header/seq"));
-  EXPECT_EQ( renamed_value[i++].second.convert<double>(), 2016 );
-
-  EXPECT_EQ( renamed_value[i].first , ("JointState/header/stamp"));
-  EXPECT_EQ( renamed_value[i++].second.convert<double>(), 1234.567 );
 
 }
 

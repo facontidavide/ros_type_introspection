@@ -35,7 +35,7 @@
 #ifndef ROS_INTROSPECTION_HPP
 #define ROS_INTROSPECTION_HPP
 
-
+#include <unordered_set>
 #include "ros_type_introspection/stringtree_leaf.hpp"
 #include "ros_type_introspection/substitution_rule.hpp"
 #include "absl/types/span.h"
@@ -64,7 +64,7 @@ typedef std::vector< std::pair<std::string, Variant> > RenamedValues;
 class Parser{
 
 public:
-  Parser(): _global_warnings(&std::cerr), _block_register_message(false) {}
+  Parser(): _global_warnings(&std::cerr), _rule_cache_dirty(true) {}
 
   /**
    * @brief A single message definition will (most probably) generate myltiple ROSMessage(s).
@@ -156,7 +156,7 @@ public:
    */
   void applyNameTransform(const std::string& msg_identifier,
                           const FlatMessage& container,
-                          RenamedValues* renamed_value ) const;
+                          RenamedValues* renamed_value );
 
   typedef std::function<void(const ROSType&, absl::Span<uint8_t>&)> VisitingCallback;
 
@@ -181,24 +181,29 @@ public:
 
 private:
 
-  std::map<std::string,ROSMessageInfo> _registered_messages;
 
   struct RulesCache{
-    RulesCache( const SubstitutionRule& other):
-      rule(other), pattern_head(nullptr), alias_head(nullptr)
+    RulesCache( const SubstitutionRule& r):
+      rule( &r ), pattern_head(nullptr), alias_head(nullptr)
     {}
-    SubstitutionRule rule;
+    const SubstitutionRule* rule;
     const StringTreeNode* pattern_head;
     const StringTreeNode* alias_head;
     bool operator==(const RulesCache& other) { return  this->rule == other.rule; }
   };
 
-  std::map<std::string, std::vector<RulesCache>> _registered_rules;
+  std::unordered_map<std::string, ROSMessageInfo> _registered_messages;
+  std::unordered_map<ROSType,     std::unordered_set<SubstitutionRule>>   _registered_rules;
+  std::unordered_map<std::string, std::vector<RulesCache>>  _rule_caches;
+
+  void updateRuleCache();
+
+  bool _rule_cache_dirty;
 
   void createTrees(ROSMessageInfo &info, const std::string &type_name) const;
 
   std::ostream* _global_warnings;
-  bool _block_register_message;
+
 };
 
 }

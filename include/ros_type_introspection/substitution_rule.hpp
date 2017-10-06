@@ -121,10 +121,11 @@ public:
   const std::vector<absl::string_view>& alias() const        { return _alias; }
   const std::vector<absl::string_view>& substitution() const { return _substitution; }
 
-  bool operator == (const SubstitutionRule& other)
+  bool operator == (const SubstitutionRule& other) const
   {
     return _hash == other._hash;
   }
+  size_t hash() const { return _hash; }
 
 private:
   std::string _full_pattern;
@@ -140,8 +141,21 @@ private:
 
 typedef std::map<ROSType, std::vector<SubstitutionRule>> SubstitutionRuleMap;
 
-
-
 } // end namespace
+
+
+namespace std {
+  template <> struct hash<RosIntrospection::SubstitutionRule>
+  {
+
+    typedef RosIntrospection::SubstitutionRule argument_type;
+    typedef std::size_t                        result_type;
+
+    result_type operator()(RosIntrospection::SubstitutionRule const& sr) const
+    {
+      return sr.hash();
+    }
+  };
+}
 
 #endif

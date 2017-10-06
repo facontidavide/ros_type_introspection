@@ -128,42 +128,68 @@ inline bool FindPattern(const std::vector<absl::string_view> &pattern,
 }
 
 
-void Parser::registerRenamingRules(const ROSType &type, const std::vector<SubstitutionRule> &rules)
+void Parser::registerRenamingRules(const ROSType &type, const std::vector<SubstitutionRule> &given_rules)
 {
-  for(const auto& it: _registered_messages)
+  std::unordered_set<SubstitutionRule>& rule_set = _registered_rules[type];
+  for(const auto& rule: given_rules)
   {
-    const std::string& msg_identifier = it.first;
-    const ROSMessageInfo& msg_info    = it.second;
-    if( getMessageByType(type, msg_info) )
+    if( rule_set.find( rule ) == rule_set.end() )
     {
-      std::vector<RulesCache>&  cache_vector = _registered_rules[msg_identifier];
-      for(const auto& rule: rules )
+      rule_set.insert( rule );
+      _rule_cache_dirty = true;
+    }
+  }
+}
+
+void Parser::updateRuleCache()
+{
+  if( _rule_cache_dirty == false)
+  {
+    return;
+  }
+  else{
+    _rule_cache_dirty = false;
+  }
+  for(const auto& rule_it: _registered_rules )
+  {
+    const ROSType& type = rule_it.first;
+    const std::unordered_set<SubstitutionRule>& rule_set = rule_it.second;
+
+    for(const auto& msg_it: _registered_messages)
+    {
+      const std::string& msg_identifier = msg_it.first;
+      const ROSMessageInfo& msg_info    = msg_it.second;
+
+      if( getMessageByType(type, msg_info) )
       {
-        RulesCache cache(rule);
-        FindPattern( cache.rule.pattern(), 0, msg_info.string_tree.croot(), &cache.pattern_head );
-        FindPattern( cache.rule.alias(),   0, msg_info.string_tree.croot(), &cache.alias_head );
-        if( cache.pattern_head && cache.alias_head
-            && std::find( cache_vector.begin(), cache_vector.end(), cache) == cache_vector.end()
-            )
+        std::vector<RulesCache>&  cache_vector = _rule_caches[msg_identifier];
+        for(const auto& rule: rule_set )
         {
-          cache_vector.push_back( std::move(cache) );
+          RulesCache cache(rule);
+          FindPattern( cache.rule->pattern(), 0, msg_info.string_tree.croot(), &cache.pattern_head );
+          FindPattern( cache.rule->alias(),   0, msg_info.string_tree.croot(), &cache.alias_head );
+          if( cache.pattern_head && cache.alias_head
+              && std::find( cache_vector.begin(), cache_vector.end(), cache) == cache_vector.end()
+              )
+          {
+            cache_vector.push_back( std::move(cache) );
+          }
         }
       }
     }
   }
-  _block_register_message = true;
 }
 
 
-void Parser::registerMessageDefinition(const std::string &message_identifier,
+void Parser::registerMessageDefinition(const std::string &msg_definition,
                                        const ROSType &main_type,
                                        const std::string &definition)
 {
-  if( _block_register_message )
+  if( _registered_messages.count(msg_definition) > 0 )
   {
-    throw std::runtime_error("You have called registerRenamingRules already."
-                             " It is forbidden to use registerMessageDefinition again" );
+    return; //already registered
   }
+  _rule_cache_dirty = true;
 
   const boost::regex msg_separation_regex("^=+\\n+");
 
@@ -171,7 +197,6 @@ void Parser::registerMessageDefinition(const std::string &message_identifier,
   split.clear();
   static std::vector<const ROSType*> all_types;
   all_types.clear();
-
 
   boost::split_regex(split, definition, msg_separation_regex);
 
@@ -196,11 +221,11 @@ void Parser::registerMessageDefinition(const std::string &message_identifier,
   }
   //------------------------------
 
-  createTrees(info, message_identifier);
+  createTrees(info, msg_definition);
 
   //  std::cout << info.string_tree << std::endl;
   //  std::cout << info.message_tree << std::endl;
-  _registered_messages.insert( std::make_pair(message_identifier, std::move(info) ) );
+  _registered_messages.insert( std::make_pair(msg_definition, std::move(info) ) );
 }
 
 const ROSMessageInfo *Parser::getMessageInfo(const std::string &msg_identifier) const
@@ -525,9 +550,13 @@ inline void JoinStrings( const VectorType& vect, const char separator, std::stri
 
 void Parser::applyNameTransform(const std::string& msg_identifier,
                                 const FlatMessage& container,
-                                RenamedValues *renamed_value ) const
+                                RenamedValues *renamed_value )
 {
-  auto rule_found = _registered_rules.find(msg_identifier);
+  if( _rule_cache_dirty )
+  {
+    updateRuleCache();
+  }
+  auto rule_found = _rule_caches.find(msg_identifier);
 
   const size_t num_values = container.value.size();
   const size_t num_names  = container.name.size();
@@ -546,17 +575,17 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
   substituted.resize( num_values );
   for(size_t i=0; i<num_values; i++) { substituted[i] = false; }
 
-  size_t renamed_index = 0;
+ // size_t renamed_index = 0;
 
-  if( rule_found != _registered_rules.end() )
+  if( rule_found != _rule_caches.end() )
   {
     const std::vector<RulesCache>& rules_cache = rule_found->second;
 
     for(const RulesCache& cache: rules_cache)
     {
-      const SubstitutionRule& rule       = cache.rule;
-      const StringTreeNode* pattern_head = cache.pattern_head;
-      const StringTreeNode* alias_head   = cache.alias_head;
+      const SubstitutionRule* rule         = cache.rule;
+      const StringTreeNode*   pattern_head = cache.pattern_head;
+      const StringTreeNode*   alias_head   = cache.alias_head;
 
       if( !pattern_head || !alias_head  ) continue;
 
@@ -566,11 +595,11 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
         alias_array_pos[n] = PatternMatchAndIndexPosition(name_leaf, alias_head);
       }
 
-      for(size_t i=0; i<num_values; i++)
+      for(size_t value_index = 0; value_index<num_values; value_index++)
       {
-        if( substituted[i]) continue;
+        if( substituted[value_index]) continue;
 
-        const auto& value_leaf = container.value[i];
+        const auto& value_leaf = container.value[value_index];
 
         const StringTreeLeaf& leaf = value_leaf.first;
 
@@ -607,9 +636,9 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
             while( node_ptr != pattern_head)
             {
-              const absl::string_view& value = node_ptr->value();
+              const absl::string_view& str_val = node_ptr->value();
 
-              if( isNumberPlaceholder( value ) )
+              if( isNumberPlaceholder( str_val ) )
               {
                 char buffer[16];
                 const int number = leaf.index_array[position--];
@@ -618,33 +647,33 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
                 concatenated_name.push_back( formatted_string.back() );
               }
               else{
-                concatenated_name.push_back( value );
+                concatenated_name.push_back( str_val );
               }
               node_ptr = node_ptr->parent();
             }
 
-            for (int s = rule.substitution().size()-1; s >= 0; s--)
+            for (int s = rule->substitution().size()-1; s >= 0; s--)
             {
-              const absl::string_view& value = rule.substitution()[s];
+              const absl::string_view& str_val = rule->substitution()[s];
 
-              if( isSubstitutionPlaceholder(value) )
+              if( isSubstitutionPlaceholder(str_val) )
               {
                 concatenated_name.push_back( *new_name );
                 position--;
               }
-              else{ concatenated_name.push_back( value ); }
+              else{ concatenated_name.push_back( str_val ); }
             }
 
-            for (size_t p = 0; p < rule.pattern().size() && node_ptr; p++)
+            for (size_t p = 0; p < rule->pattern().size() && node_ptr; p++)
             {
               node_ptr = node_ptr->parent();
             }
 
             while( node_ptr )
             {
-              absl::string_view value = node_ptr->value();
+              absl::string_view str_val = node_ptr->value();
 
-              if( isNumberPlaceholder(value) )
+              if( isNumberPlaceholder(str_val) )
               {
                 char buffer[16];
                 const int number = leaf.index_array[position--];
@@ -653,20 +682,19 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
                 concatenated_name.push_back( formatted_string.back() );
               }
               else{
-                concatenated_name.push_back( value );
+                concatenated_name.push_back( str_val );
               }
               node_ptr = node_ptr->parent();
             }
 
             //------------------------
-            auto& renamed_pair = (*renamed_value)[renamed_index];
+            auto& renamed_pair = (*renamed_value)[value_index];
 
             std::reverse(concatenated_name.begin(), concatenated_name.end());
             JoinStrings( concatenated_name, '/', renamed_pair.first);
             renamed_pair.second  = value_leaf.second ;
 
-            renamed_index++;
-            substituted[i] = true;
+            substituted[value_index] = true;
 
           }// end if( new_name )
         }// end if( PatternMatching )
@@ -674,16 +702,15 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
     } // end for rules
   } //end rule found
 
-  for(size_t i=0; i< container.value.size(); i++)
+  for(size_t value_index=0; value_index< container.value.size(); value_index++)
   {
-    if( !substituted[i] )
+    if( !substituted[value_index] )
     {
-      const std::pair<StringTreeLeaf, Variant> & value_leaf = container.value[i];
+      const std::pair<StringTreeLeaf, Variant> & value_leaf = container.value[value_index];
 
-      std::string& destination = (*renamed_value)[renamed_index].first;
+      std::string& destination = (*renamed_value)[value_index].first;
       value_leaf.first.toStr( destination );
-      (*renamed_value)[renamed_index].second = value_leaf.second ;
-      renamed_index++;
+      (*renamed_value)[value_index].second = value_leaf.second ;
     }
   }
 }
