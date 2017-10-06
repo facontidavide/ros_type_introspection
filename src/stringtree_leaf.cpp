@@ -46,7 +46,7 @@ int StringTreeLeaf::toStr(char* buffer) const
     return -1;
   }
 
-  absl::InlinedVector<const absl::string_view*, 16> strings_chain;
+  absl::InlinedVector<const std::string*, 16> strings_chain;
 
   while(leaf_node)
   {
