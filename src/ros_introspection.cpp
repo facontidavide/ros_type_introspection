@@ -95,6 +95,11 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name) con
                         info.message_tree.root());
 }
 
+inline bool operator ==( const std::string& a, const absl::string_view& b)
+{
+  return (  a.size() == b.size() && std::strncmp( a.data(), b.data(), a.size()) == 0);
+}
+
 inline bool FindPattern(const std::vector<absl::string_view> &pattern,
                         size_t index, const StringTreeNode *tail,
                         const StringTreeNode **head)
