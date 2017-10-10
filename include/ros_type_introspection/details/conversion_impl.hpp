@@ -61,6 +61,11 @@ struct is_integer : std::integral_constant<bool, std::is_integral<T>::value
 {};
 
 template <typename From, typename To>
+struct is_same_type : std::integral_constant<bool, std::is_same<From, To>::value>
+{};
+
+
+template <typename From, typename To>
 struct is_safe_integer_conversion
         : std::integral_constant<bool, is_integer<From>::value
         && is_integer<To>::value
@@ -195,6 +200,15 @@ inline void checkTruncation(const From& from)
 
 
 //----------------------- Implementation ----------------------------------------------
+
+template<typename SRC,typename DST,
+         typename details::EnableIf< details::is_same_type<SRC, DST>>* = nullptr >
+inline void convert_impl( const SRC& from, DST& target )
+{
+    //std::cout << "is_same_type" << std::endl;
+    target = from;
+}
+
 
 template<typename SRC,typename DST,
          typename details::EnableIf< details::is_safe_integer_conversion<SRC, DST>>* = nullptr >

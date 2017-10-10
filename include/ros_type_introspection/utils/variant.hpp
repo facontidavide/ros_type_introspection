@@ -333,7 +333,7 @@ template<> inline double Variant::convert() const
   case UINT64:  convert_impl<uint64_t, double>(*reinterpret_cast<const uint64_t*>( raw_data), target  ); break;
 
   case FLOAT32:  convert_impl<float, double>(*reinterpret_cast<const float*>( raw_data), target  ); break;
-  case FLOAT64:  convert_impl<double, double>(*reinterpret_cast<const double*>( raw_data), target  ); break;
+  case FLOAT64:  return extract<double>();
 
   case STRING: {
     throw TypeException("String will not be converted to a double implicitly");
