@@ -152,7 +152,7 @@ template<> inline double VarNumber::convert() const
   case UINT64:  convert_impl<uint64_t, double>(*reinterpret_cast<const uint64_t*>( _raw_data), target  ); break;
 
   case FLOAT32:  convert_impl<float, double>(*reinterpret_cast<const float*>( _raw_data), target  ); break;
-  case FLOAT64:  convert_impl<double, double>(*reinterpret_cast<const double*>( _raw_data), target  ); break;
+  case FLOAT64:  return extract<double>() break;
 
   case DURATION: {
     ros::Duration tmp =  extract<ros::Duration>();
