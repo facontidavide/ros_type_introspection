@@ -83,7 +83,14 @@ target_link_libraries(ros_introspection_benchmark
   benchmark
 )
 
-endif()
+endif(benchmark_FOUND)
+
+add_executable(rosbag_example          example/rosbag_example.cpp)
+target_link_libraries(rosbag_example   ${catkin_LIBRARIES} ros_type_introspection)
+
+add_executable(subscribe_example        example/subscribe_example.cpp)
+target_link_libraries(subscribe_example ${catkin_LIBRARIES} ros_type_introspection
+)
 
 
 #############
