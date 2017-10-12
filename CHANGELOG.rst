@@ -2,6 +2,11 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Complete refactoring
+* Contributors: Davide Faconti, Kartik Mohta, Ian Taylor, Mehdi Tlili 
+
 0.8.0 (2017-08-30)
 ------------------
 * fixing a serious issue with vectors which are too large
