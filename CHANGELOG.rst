@@ -2,8 +2,8 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.0 (2017-10-12)
+------------------
 * Complete refactoring
 * Contributors: Davide Faconti, Kartik Mohta, Ian Taylor, Mehdi Tlili 
 
