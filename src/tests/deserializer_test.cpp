@@ -1,7 +1,7 @@
 #include "config.h"
 #include <gtest/gtest.h>
 
-#include "ros_type_introspection/deserializer.hpp"
+#include "ros_type_introspection/ros_introspection.hpp"
 #include <sensor_msgs/JointState.h>
 #include <sensor_msgs/NavSatStatus.h>
 #include <sensor_msgs/Imu.h>
@@ -13,9 +13,12 @@ using namespace RosIntrospection;
 TEST(Deserialize, JointState)
 
 {
-  ROSTypeList type_map = buildROSTypeMapFromDefinition(
-        DataType<sensor_msgs::JointState >::value(),
-        Definition<sensor_msgs::JointState >::value() );
+  RosIntrospection::Parser parser;
+
+  parser.registerMessageDefinition(
+        "JointState",
+        ROSType(DataType<sensor_msgs::JointState>::value()),
+        Definition<sensor_msgs::JointState>::value());
 
   sensor_msgs::JointState joint_state;
 
@@ -42,19 +45,12 @@ TEST(Deserialize, JointState)
     joint_state.effort[i]= 31+i;
   }
 
-  std::vector<uint8_t> buffer(64*1024);
+  std::vector<uint8_t> buffer( ros::serialization::serializationLength(joint_state) );
   ros::serialization::OStream stream(buffer.data(), buffer.size());
   ros::serialization::Serializer<sensor_msgs::JointState>::write(stream, joint_state);
 
-  ROSType main_type( DataType<sensor_msgs::JointState >::value() );
-
-  ROSTypeFlat flat_container;
-  buildRosFlatType(type_map,
-                   main_type,
-                   "JointState",
-                   buffer.data(),
-                   &flat_container,
-                   100);
+  FlatMessage flat_container;
+  parser.deserializeIntoFlatContainer("JointState",  absl::Span<uint8_t>(buffer),  &flat_container,100);
 
   if(VERBOSE_TEST){
     for(auto&it: flat_container.value) {
@@ -102,34 +98,87 @@ TEST(Deserialize, JointState)
   EXPECT_EQ( flat_container.name[2].second, ("ciao") );
   EXPECT_EQ( flat_container.name[3].first.toStdString() , ("JointState/name.2"));
   EXPECT_EQ( flat_container.name[3].second, ("bye") );
+
+  //---------------------------------
+  std::vector<std_msgs::Header> headers;
+
+  Parser::VisitingCallback callbackReadAndStore = [&headers](const ROSType&, absl::Span<uint8_t>& raw_data)
+  {
+    std_msgs::Header msg;
+    ros::serialization::IStream s( raw_data.data(), raw_data.size() );
+    ros::serialization::deserialize(s, msg);
+    headers.push_back( std::move(msg) );
+  };
+
+  Parser::VisitingCallback callbackOverwiteInPlace = [&headers](const ROSType&, absl::Span<uint8_t>& raw_data)
+  {
+    std_msgs::Header msg;
+    ros::serialization::IStream is( raw_data.data(), raw_data.size() );
+    ros::serialization::deserialize(is, msg);
+
+    ASSERT_EQ(ros::serialization::serializationLength(msg), raw_data.size());
+
+    // msg.frame_id = "here";  //NOTE: I can NOT change the size of an array, nor a string
+    msg.seq = 666;
+    msg.stamp.sec = 1;
+    msg.stamp.nsec = 2;
+
+    ros::serialization::OStream os( raw_data.data(), raw_data.size() );
+    ros::serialization::serialize(os, msg);
+
+    ASSERT_EQ(ros::serialization::serializationLength(msg), raw_data.size());
+  };
+
+
+  absl::Span<uint8_t> buffer_view(buffer);
+  const ROSType header_type( DataType<std_msgs::Header>::value() );
+
+  parser.applyVisitorToBuffer( "JointState", header_type,
+                               buffer_view, callbackReadAndStore);
+
+  EXPECT_EQ(headers.size(), 1);
+  const std_msgs::Header& header = headers[0];
+  EXPECT_EQ(header.seq,        joint_state.header.seq);
+  EXPECT_EQ(header.stamp.sec,  joint_state.header.stamp.sec);
+  EXPECT_EQ(header.stamp.nsec, joint_state.header.stamp.nsec);
+  EXPECT_EQ(header.frame_id,   joint_state.header.frame_id);
+  //--------------------------------------------
+  parser.applyVisitorToBuffer( "JointState", header_type,
+                               buffer_view, callbackOverwiteInPlace);
+
+  parser.applyVisitorToBuffer( "JointState", header_type,
+                               buffer_view, callbackReadAndStore);
+
+  EXPECT_EQ(headers.size(), 2);
+  const std_msgs::Header& header_mutated = headers[1];
+  EXPECT_EQ(header_mutated.seq,        666);
+  EXPECT_EQ(header_mutated.stamp.sec,  1);
+  EXPECT_EQ(header_mutated.stamp.nsec, 2);
+
 }
 
 TEST( Deserialize, NavSatStatus)
 
 {
   // We test this because we want to test that constant fields are skipped.
+  RosIntrospection::Parser parser;
 
-  ROSTypeList type_map = buildROSTypeMapFromDefinition(
-        DataType<sensor_msgs::NavSatStatus >::value(),
-        Definition<sensor_msgs::NavSatStatus >::value() );
+  parser.registerMessageDefinition(
+        "nav_stat",
+        ROSType(DataType<sensor_msgs::NavSatStatus>::value()),
+        Definition<sensor_msgs::NavSatStatus>::value());
 
   sensor_msgs::NavSatStatus nav_stat;
   nav_stat.status  = nav_stat.STATUS_GBAS_FIX;  // 2
   nav_stat.service = nav_stat.SERVICE_COMPASS; // 4
 
 
-  std::vector<uint8_t> buffer(64*1024);
+  std::vector<uint8_t> buffer( ros::serialization::serializationLength(nav_stat) );
   ros::serialization::OStream stream(buffer.data(), buffer.size());
   ros::serialization::Serializer<sensor_msgs::NavSatStatus>::write(stream, nav_stat);
 
-  ROSType main_type( DataType<sensor_msgs::NavSatStatus >::value() );
-
-  ROSTypeFlat flat_container;
-  buildRosFlatType(type_map,
-                   main_type,
-                   "nav_stat",
-                   buffer.data(),
-                   &flat_container, 100);
+  FlatMessage flat_container;
+  parser.deserializeIntoFlatContainer("nav_stat",  absl::Span<uint8_t>(buffer),  &flat_container,100);
 
   if(VERBOSE_TEST){ std::cout << " -------------------- " << std::endl;
 
@@ -148,10 +197,12 @@ TEST( Deserialize, DeserializeIMU)
 //int func()
 {
   // We test this because to check if arrays with fixed length work.
+  RosIntrospection::Parser parser;
 
-  ROSTypeList type_map = buildROSTypeMapFromDefinition(
-        DataType<sensor_msgs::Imu >::value(),
-        Definition<sensor_msgs::Imu >::value() );
+  parser.registerMessageDefinition(
+        "imu",
+        ROSType(DataType<sensor_msgs::Imu>::value()),
+        Definition<sensor_msgs::Imu>::value());
 
   sensor_msgs::Imu imu;
 
@@ -180,18 +231,13 @@ TEST( Deserialize, DeserializeIMU)
     imu.linear_acceleration_covariance[i] = 60+i;
   }
 
-  std::vector<uint8_t> buffer(64*1024);
+  std::vector<uint8_t> buffer( ros::serialization::serializationLength(imu) );
   ros::serialization::OStream stream(buffer.data(), buffer.size());
   ros::serialization::Serializer<sensor_msgs::Imu>::write(stream, imu);
 
-  ROSType main_type( DataType<sensor_msgs::Imu >::value() );
+  FlatMessage flat_container;
+  parser.deserializeIntoFlatContainer("imu",  absl::Span<uint8_t>(buffer),  &flat_container,100);
 
-  ROSTypeFlat flat_container;
-  buildRosFlatType(type_map,
-                   main_type,
-                   "imu",
-                   buffer.data(),
-                   &flat_container, 100);
 
   if(VERBOSE_TEST){
 
@@ -269,6 +315,61 @@ TEST( Deserialize, DeserializeIMU)
     EXPECT_EQ( flat_container.value[index].second, 60+i );
     index++;
   }
+
+  //---------------------------------
+//  std::vector< std::pair<SString,std_msgs::Header>> headers;
+//  std::vector< std::pair<SString,geometry_msgs::Vector3>> vectors;
+//  std::vector< std::pair<SString,geometry_msgs::Quaternion>> quaternions;
+
+//  ExtractSpecificROSMessages(type_map,  main_type,
+//                              "imu", buffer,
+//                              headers);
+
+//  EXPECT_EQ(headers.size(), 1);
+//  const std_msgs::Header& header = headers[0].second;
+//  std::string header_prefix =  headers[0].first.toStdString();
+//  EXPECT_EQ( header_prefix, "imu/header");
+//  EXPECT_EQ(header.seq,        imu.header.seq);
+//  EXPECT_EQ(header.stamp.sec,  imu.header.stamp.sec);
+//  EXPECT_EQ(header.stamp.nsec, imu.header.stamp.nsec);
+//  EXPECT_EQ(header.frame_id,   imu.header.frame_id);
+
+//  ExtractSpecificROSMessages(type_map,  main_type,
+//                              "imu", buffer,
+//                              quaternions);
+
+//  EXPECT_EQ(quaternions.size(), 1);
+//  const geometry_msgs::Quaternion& quaternion = quaternions[0].second;
+//  std::string quaternion_prefix =  quaternions[0].first.toStdString();
+//  EXPECT_EQ( quaternion_prefix, "imu/orientation");
+//  EXPECT_EQ(quaternion.x,  imu.orientation.x);
+//  EXPECT_EQ(quaternion.y,  imu.orientation.y);
+//  EXPECT_EQ(quaternion.z,  imu.orientation.z);
+//  EXPECT_EQ(quaternion.w,  imu.orientation.w);
+
+//  ExtractSpecificROSMessages(type_map,  main_type,
+//                              "imu", buffer,
+//                              vectors);
+
+//  EXPECT_EQ(vectors.size(), 2);
+//  for( const auto& vect_pair: vectors)
+//  {
+//    if( vect_pair.first.toStdString() == "imu/angular_velocity")
+//    {
+//      EXPECT_EQ(vect_pair.second.x,  imu.angular_velocity.x);
+//      EXPECT_EQ(vect_pair.second.y,  imu.angular_velocity.y);
+//      EXPECT_EQ(vect_pair.second.z,  imu.angular_velocity.z);
+//    }
+//    else if( vect_pair.first.toStdString() == "imu/linear_acceleration")
+//    {
+//      EXPECT_EQ(vect_pair.second.x,  imu.linear_acceleration.x);
+//      EXPECT_EQ(vect_pair.second.y,  imu.linear_acceleration.y);
+//      EXPECT_EQ(vect_pair.second.z,  imu.linear_acceleration.z);
+//    }
+//    else{
+//      FAIL();
+//    }
+//  }
 }
 
 
@@ -276,9 +377,12 @@ TEST( Deserialize, DeserializeIMU)
 TEST( Deserialize, Int16MultiArrayDeserialize)
 //int func()
 {
-  ROSTypeList type_map = buildROSTypeMapFromDefinition(
-        DataType<std_msgs::Int16MultiArray >::value(),
-        Definition<std_msgs::Int16MultiArray >::value() );
+  RosIntrospection::Parser parser;
+
+  parser.registerMessageDefinition(
+        "multi_array",
+        ROSType(DataType<std_msgs::Int16MultiArray>::value()),
+        Definition<std_msgs::Int16MultiArray>::value());
 
   std_msgs::Int16MultiArray multi_array;
 
@@ -291,18 +395,12 @@ TEST( Deserialize, Int16MultiArrayDeserialize)
   }
 
 
-  std::vector<uint8_t> buffer(64*1024);
+  std::vector<uint8_t> buffer( ros::serialization::serializationLength(multi_array) );
   ros::serialization::OStream stream(buffer.data(), buffer.size());
   ros::serialization::Serializer<std_msgs::Int16MultiArray>::write(stream, multi_array);
 
-  ROSType main_type( DataType<std_msgs::Int16MultiArray>::value() );
-
-  ROSTypeFlat flat_container;
-  buildRosFlatType(type_map,
-                   main_type,
-                   "multi_array",
-                   buffer.data(),
-                   &flat_container, 100);
+  FlatMessage flat_container;
+  parser.deserializeIntoFlatContainer("multi_array",  absl::Span<uint8_t>(buffer),  &flat_container,100);
 
   if(VERBOSE_TEST){
     std::cout << " -------------------- " << std::endl;
@@ -314,4 +412,8 @@ TEST( Deserialize, Int16MultiArrayDeserialize)
 
 }
 
-
+// Run all the tests that were declared with TEST()
+int main(int argc, char **argv){
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

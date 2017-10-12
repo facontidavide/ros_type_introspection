@@ -1,8 +1,7 @@
 /*********************************************************************
 * Software License Agreement (BSD License)
 *
-*  Copyright (c) 2009, Willow Garage, Inc.
-*  Copyright 2016 Davide Faconti
+*  Copyright 2016-2017 Davide Faconti
 *  All rights reserved.
 *
 *  Redistribution and use in source and binary forms, with or without
@@ -31,7 +30,8 @@
 *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
 *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 *  POSSIBILITY OF SUCH DAMAGE.
-********************************************************************/
+* *******************************************************************/
+
 
 #ifndef ROS_INTROPSECTION_SHAPE_SHIFTER2_H
 #define ROS_INTROPSECTION_SHAPE_SHIFTER2_H

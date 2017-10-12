@@ -1,5 +1,5 @@
 # Ros Message Introspection
-### Or... "If you don't know why you need it, probably you don't need it".
+### "If you don't know why you need this library, probably you don't need it".
 
 This simple library extracts information from a ROS Message, even when its
 type is unknown at compilation time. 
@@ -13,20 +13,6 @@ The common solution in the ROS ecosystem is to use Python, that provides
 the needed introspection. Tools, for instance, like __rqt_plot__ and __rqt_bag__ 
 took this approach. This library implements a __C++ alternative__.
 
-The library is composed of three main modules:
-
-- __Parser__: it performs introspection of a ROS Message using the schema 
-stored in `ros::message_traits::Definition`.
-[Read more](../../wiki/The-Parser) 
-
-- __Deserializer__:using the schema built by the parsed, it can extract the 
-actual values from a raw message. 
-[Read more.](../../wiki/The-Deserializer)
-
-- __Renamer__: last but not least, the library offers as well an easy way to 
-remap/rename the data using a simple set of rules. This can be very handy in multiple
-scenarios that are very common in ROS. [Read more.](../../wiki/The-Renamer) 
-
 This library is particularly useful to extract data from two type-erasing classes 
 provided by ROS itself:
 
@@ -35,6 +21,13 @@ a type used to subscribe to any topic, regardless of the original type.
 
 2. [rosbag::MessageInstance](http://docs.ros.org/diamondback/api/rosbag/html/c++/classrosbag_1_1MessageInstance.html):
 the generic type commonly used to read data from a ROS bag.
+
+# About version 1.X
+
+Version 1.X has a completely new API; on the other hand, this implementatation is __3 times faster__ and much more flexible.
+To convert old applications should be straighforward, though. Please take a look to the [examples](example)
+and the unit tests to see how to update your code.
+
 
 # Some background
 The ROS Message Types can be described as 

@@ -33,47 +33,55 @@
 * *******************************************************************/
 
 
-#ifndef VARIANT_NUMBER_EXCEPTIONS_H
-#define VARIANT_NUMBER_EXCEPTIONS_H
+#ifndef ROS_INTROSPECTION_ROSFIELD_H
+#define ROS_INTROSPECTION_ROSFIELD_H
 
-#include <exception>
-#include <string>
+#include <vector>
+#include <map>
+#include <iostream>
+#include "ros_type_introspection/ros_type.hpp"
 
-namespace RosIntrospection
-{
+namespace RosIntrospection{
 
-class RangeException: public std::exception
-{
+class ROSMessage;
+
+/**
+ * @brief A ROSMessage will contain one or more ROSField(s). Each field is little more
+ * than a name / type pair.
+ */
+class ROSField {
 public:
 
-    explicit RangeException(const char* message): msg_(message)  {}
-    explicit RangeException(const std::string& message):  msg_(message)  {}
-    ~RangeException() throw () {}
-    const char* what() const throw ()
-    {
-        return msg_.c_str();
-    }
+  ROSField(const std::string& definition );
+
+  const std::string& name() const { return _fieldname; }
+
+  const ROSType&  type() const { return _type; }
+
+  /// True if field is a constant in message definition
+  bool isConstant() const {
+    return _value.size() != 0;
+  }
+
+  /// If constant, value of field, else undefined
+  const std::string& value() const   { return _value; }
+
+  /// True if the type is an array
+  bool isArray() const { return _array_size != 1; }
+
+  /// 1 if !is_array, -1 if is_array and array is
+  /// variable length, otherwise length in name
+  int  arraySize() const { return _array_size; }
+
+  friend class ROSMessage;
 
 protected:
-    std::string msg_;
+  std::string _fieldname;
+  ROSType     _type;
+  std::string _value;
+  int _array_size;
 };
 
-class TypeException: public std::exception
-{
-public:
-
-    explicit TypeException(const char* message): msg_(message)  {}
-    explicit TypeException(const std::string& message):  msg_(message)  {}
-    ~TypeException() throw () {}
-    const char* what() const throw ()
-    {
-        return msg_.c_str();
-    }
-
-protected:
-    std::string msg_;
-};
-
-} //end namespace
+}
 
 #endif

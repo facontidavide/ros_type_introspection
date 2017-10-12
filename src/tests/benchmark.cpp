@@ -8,8 +8,11 @@
 #include <sstream>
 #include <iostream>
 #include <chrono>
-#include <ros_type_introspection/renamer.hpp>
+#include <ros_type_introspection/ros_introspection.hpp>
+
+
 #include <benchmark/benchmark.h>
+
 
 using namespace ros::message_traits;
 using namespace RosIntrospection;
@@ -19,14 +22,14 @@ static std::vector<SubstitutionRule> Rules()
 {
   std::vector<SubstitutionRule> rules;
 
-  /*
+
     rules.push_back( SubstitutionRule( "transforms.#.transform",
                                        "transforms.#.header.frame_id",
                                        "transforms.#" ));
 
     rules.push_back( SubstitutionRule( "transforms.#.header",
                                        "transforms.#.header.frame_id",
-                                       "transforms.#.header" ));*/
+                                       "transforms.#.header" ));
 
   rules.push_back( SubstitutionRule( "position.#", "name.#", "@.position" ));
   rules.push_back( SubstitutionRule( "velocity.#", "name.#", "@.velocity" ));
@@ -35,11 +38,18 @@ static std::vector<SubstitutionRule> Rules()
 }
 
 
-static void BM_Joint(benchmark::State& state) {
+static void BM_Joints(benchmark::State& state)
+{
+  RosIntrospection::Parser parser;
 
-  ROSTypeList type_map =  buildROSTypeMapFromDefinition(
-        DataType<sensor_msgs::JointState >::value(),
-        Definition<sensor_msgs::JointState>::value() );
+  ROSType main_type(DataType<sensor_msgs::JointState>::value());
+
+  parser.registerMessageDefinition(
+        "joint_state",
+        main_type,
+        Definition<sensor_msgs::JointState>::value());
+
+  parser.registerRenamingRules( main_type, Rules() );
 
   sensor_msgs::JointState js_msg;
 
@@ -50,7 +60,7 @@ static void BM_Joint(benchmark::State& state) {
 
   const char* suffix[6] = { "_A", "_B", "_C", "_D" , "_E", "_F"};
 
-  for (int i=0; i< js_msg.name.size() ; i++)
+  for (size_t i=0; i< js_msg.name.size() ; i++)
   {
     js_msg.header.seq = 100+i;
     js_msg.header.stamp.sec = 1234;
@@ -62,23 +72,21 @@ static void BM_Joint(benchmark::State& state) {
     js_msg.effort[i]    = 30 +i;
   }
 
-  std::vector<uint8_t> buffer(64*1024);
+  std::vector<uint8_t> buffer( ros::serialization::serializationLength(js_msg) );
   ros::serialization::OStream stream(buffer.data(), buffer.size());
   ros::serialization::Serializer<sensor_msgs::JointState>::write(stream, js_msg);
-  ROSType main_type (DataType<sensor_msgs::JointState>::value());
 
-  auto rules = Rules();
-
-  ROSTypeFlat flat_container;
-  RenamedValues renamed;
+  FlatMessage flat_container;
+  RenamedValues renamed_values;
 
   while (state.KeepRunning())
   {
-    buildRosFlatType(type_map, main_type, "joint_state", buffer.data(), &flat_container, 100);
-    applyNameTransform( rules , flat_container, renamed );
+    parser.deserializeIntoFlatContainer("joint_state",  absl::Span<uint8_t>(buffer),  &flat_container, 100);
+    parser.applyNameTransform("joint_state", flat_container, &renamed_values );
   }
 }
 
-BENCHMARK(BM_Joint);
+BENCHMARK(BM_Joints);
 
 BENCHMARK_MAIN();
+

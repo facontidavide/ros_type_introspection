@@ -32,48 +32,38 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 * *******************************************************************/
 
+#include "ros_type_introspection/substitution_rule.hpp"
+#include <absl/strings/str_split.h>
 
-#ifndef VARIANT_NUMBER_EXCEPTIONS_H
-#define VARIANT_NUMBER_EXCEPTIONS_H
+namespace RosIntrospection{
 
-#include <exception>
-#include <string>
-
-namespace RosIntrospection
+SubstitutionRule::SubstitutionRule(const char *pattern, const char *alias, const char *substitution):
+  _full_pattern(pattern),
+  _full_alias(alias),
+  _full_substitution(substitution)
 {
+  _pattern      = absl::StrSplit(_full_pattern,      absl::ByAnyChar("./"));
+  _alias        = absl::StrSplit(_full_alias,        absl::ByAnyChar("./"));
+  _substitution = absl::StrSplit(_full_substitution, absl::ByAnyChar("./"));
 
-class RangeException: public std::exception
+  size_t h1 = std::hash<std::string>{}(_full_pattern);
+  size_t h2 = std::hash<std::string>{}(_full_alias);
+  size_t h3 = std::hash<std::string>{}(_full_substitution);
+  _hash = (h1 ^ (h2 << 1)) ^ (h3 << 1 );
+}
+
+SubstitutionRule& SubstitutionRule::operator= (const SubstitutionRule& other)
 {
-public:
+    _full_pattern = (other._full_pattern);
+    _full_alias = (other._full_alias);
+    _full_substitution = (other._full_substitution);
+    // this could be optimized...
+    _pattern      = absl::StrSplit(_full_pattern,      absl::ByAnyChar("./"));
+    _alias        = absl::StrSplit(_full_alias,        absl::ByAnyChar("./"));
+    _substitution = absl::StrSplit(_full_substitution, absl::ByAnyChar("./"));
 
-    explicit RangeException(const char* message): msg_(message)  {}
-    explicit RangeException(const std::string& message):  msg_(message)  {}
-    ~RangeException() throw () {}
-    const char* what() const throw ()
-    {
-        return msg_.c_str();
-    }
+    _hash = other._hash;
+    return *this;
+}
 
-protected:
-    std::string msg_;
-};
-
-class TypeException: public std::exception
-{
-public:
-
-    explicit TypeException(const char* message): msg_(message)  {}
-    explicit TypeException(const std::string& message):  msg_(message)  {}
-    ~TypeException() throw () {}
-    const char* what() const throw ()
-    {
-        return msg_.c_str();
-    }
-
-protected:
-    std::string msg_;
-};
-
-} //end namespace
-
-#endif
+}

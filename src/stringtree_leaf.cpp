@@ -32,48 +32,52 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 * *******************************************************************/
 
+#include "ros_type_introspection/stringtree_leaf.hpp"
+#include "ros_type_introspection/helper_functions.hpp"
 
-#ifndef VARIANT_NUMBER_EXCEPTIONS_H
-#define VARIANT_NUMBER_EXCEPTIONS_H
+namespace RosIntrospection{
 
-#include <exception>
-#include <string>
 
-namespace RosIntrospection
+
+int StringTreeLeaf::toStr(char* buffer) const
 {
+  const StringTreeNode* leaf_node = this->node_ptr;
+  if( !leaf_node ){
+    return -1;
+  }
 
-class RangeException: public std::exception
-{
-public:
+  absl::InlinedVector<const std::string*, 16> strings_chain;
 
-    explicit RangeException(const char* message): msg_(message)  {}
-    explicit RangeException(const std::string& message):  msg_(message)  {}
-    ~RangeException() throw () {}
-    const char* what() const throw ()
+  while(leaf_node)
+  {
+    const auto& str = leaf_node->value();
+    strings_chain.push_back( &str );
+    leaf_node = leaf_node->parent();
+  };
+
+  std::reverse(strings_chain.begin(),  strings_chain.end() );
+
+  size_t array_count = 0;
+  size_t offset = 0;
+
+  for( const auto& str: strings_chain)
+  {
+    const size_t S = str->size();
+    if( S == 1 && (*str)[0] == '#' )
     {
-        return msg_.c_str();
+      buffer[offset++] = '.';
+      offset += print_number(&buffer[offset], this->index_array[ array_count++ ] );
     }
-
-protected:
-    std::string msg_;
-};
-
-class TypeException: public std::exception
-{
-public:
-
-    explicit TypeException(const char* message): msg_(message)  {}
-    explicit TypeException(const std::string& message):  msg_(message)  {}
-    ~TypeException() throw () {}
-    const char* what() const throw ()
-    {
-        return msg_.c_str();
+    else{
+      if( str !=  strings_chain.front() ){
+        buffer[offset++] = '/';
+      }
+      std::memcpy( &buffer[offset], str->data(), S );
+      offset += S;
     }
+  }
+  buffer[offset] = '\0';
+  return offset;
+}
 
-protected:
-    std::string msg_;
-};
-
-} //end namespace
-
-#endif
+}

@@ -33,47 +33,62 @@
 * *******************************************************************/
 
 
-#ifndef VARIANT_NUMBER_EXCEPTIONS_H
-#define VARIANT_NUMBER_EXCEPTIONS_H
+#include <boost/algorithm/string.hpp>
+#include <boost/utility/string_ref.hpp>
+#include <boost/utility/string_ref.hpp>
+#include "ros_type_introspection/ros_message.hpp"
+#include <boost/regex.hpp>
+#include <boost/algorithm/string/regex.hpp>
 
-#include <exception>
-#include <string>
+namespace RosIntrospection{
 
-namespace RosIntrospection
+ROSMessage::ROSMessage(const std::string &msg_def)
 {
+  std::istringstream messageDescriptor(msg_def);
+  boost::match_results<std::string::const_iterator> what;
 
-class RangeException: public std::exception
-{
-public:
+  for (std::string line; std::getline(messageDescriptor, line, '\n') ; )
+  {
+    std::string::const_iterator begin = line.begin(), end = line.end();
 
-    explicit RangeException(const char* message): msg_(message)  {}
-    explicit RangeException(const std::string& message):  msg_(message)  {}
-    ~RangeException() throw () {}
-    const char* what() const throw ()
+    // Skip empty line or one that is a comment
+    if (boost::regex_search( begin, end, what,
+                             boost::regex("(^\\s*$|^\\s*#)")))
     {
-        return msg_.c_str();
+      continue;
     }
 
-protected:
-    std::string msg_;
-};
-
-class TypeException: public std::exception
-{
-public:
-
-    explicit TypeException(const char* message): msg_(message)  {}
-    explicit TypeException(const std::string& message):  msg_(message)  {}
-    ~TypeException() throw () {}
-    const char* what() const throw ()
+    if( line.compare(0, 5, "MSG: ") == 0)
     {
-        return msg_.c_str();
+      line.erase(0,5);
+      _type = ROSType(line);
     }
+    else{
+      auto new_field = ROSField(line);
+      _fields.push_back(new_field);
+    }
+  }
+}
 
-protected:
-    std::string msg_;
-};
+void ROSMessage::updateMissingPkgNames(const std::vector<const ROSType*> &all_types)
+{
+  for (ROSField& field: _fields)
+  {
+    // if package name is missing, try to find msgName in the list of known_type
+    if( field.type().pkgName().size() == 0 )
+    {
+      for (const ROSType* known_type: all_types)
+      {
+        if( field.type().msgName().compare( known_type->msgName() ) == 0  )
+        {
+          field._type.setPkgName( known_type->pkgName() );
+          break;
+        }
+      }
+    }
+  }
+}
 
-} //end namespace
+} // end namespace
 
-#endif
+

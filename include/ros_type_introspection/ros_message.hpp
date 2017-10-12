@@ -32,48 +32,73 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 * *******************************************************************/
 
+#ifndef ROS_INTROSPECTION_ROSMESSAGE_H
+#define ROS_INTROSPECTION_ROSMESSAGE_H
 
-#ifndef VARIANT_NUMBER_EXCEPTIONS_H
-#define VARIANT_NUMBER_EXCEPTIONS_H
+#include "ros_type_introspection/utils/tree.hpp"
+#include "ros_type_introspection/ros_field.hpp"
 
-#include <exception>
-#include <string>
+namespace RosIntrospection{
 
-namespace RosIntrospection
-{
 
-class RangeException: public std::exception
-{
+class ROSMessage{
 public:
 
-    explicit RangeException(const char* message): msg_(message)  {}
-    explicit RangeException(const std::string& message):  msg_(message)  {}
-    ~RangeException() throw () {}
-    const char* what() const throw ()
-    {
-        return msg_.c_str();
-    }
+  /// This constructor does most of the work in terms of parsing.
+  /// It uses the message definition to extract fields and types.
+  ROSMessage(const std::string& msg_def );
 
-protected:
-    std::string msg_;
+  /**
+   * @brief Get field by index.
+   */
+  const ROSField& field(size_t index) const { return _fields[index]; }
+
+  /**
+   * @brief Vector of fields.
+   * @return
+   */
+  const std::vector<ROSField>& fields() const { return _fields; }
+
+  const ROSType& type() const { return _type; }
+
+  void mutateType(const ROSType& new_type ) { _type = new_type; }
+
+  void updateMissingPkgNames(const std::vector<const ROSType *> &all_types);
+
+private:
+
+  ROSType _type;
+  std::vector<ROSField> _fields;
 };
 
-class TypeException: public std::exception
+typedef details::TreeNode<std::string> StringTreeNode;
+typedef details::Tree<std::string> StringTree;
+
+typedef details::TreeNode<const ROSMessage*> MessageTreeNode;
+typedef details::Tree<const ROSMessage*> MessageTree;
+
+struct ROSMessageInfo
 {
-public:
-
-    explicit TypeException(const char* message): msg_(message)  {}
-    explicit TypeException(const std::string& message):  msg_(message)  {}
-    ~TypeException() throw () {}
-    const char* what() const throw ()
-    {
-        return msg_.c_str();
-    }
-
-protected:
-    std::string msg_;
+  StringTree  string_tree;
+  MessageTree message_tree;
+  std::vector<ROSMessage> type_list;
 };
 
-} //end namespace
+//------------------------------------------------
+
+inline std::ostream& operator<<(std::ostream &os, const ROSMessage& msg )
+{
+  os << msg.type();
+  return os;
+}
+
+inline std::ostream& operator<<(std::ostream &os, const ROSMessage* msg )
+{
+  os << msg->type();
+  return os;
+}
+
+
+}
 
 #endif

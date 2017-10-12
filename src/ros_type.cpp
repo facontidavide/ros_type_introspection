@@ -33,47 +33,75 @@
 * *******************************************************************/
 
 
-#ifndef VARIANT_NUMBER_EXCEPTIONS_H
-#define VARIANT_NUMBER_EXCEPTIONS_H
+#include "ros_type_introspection/ros_type.hpp"
+#include "ros_type_introspection/helper_functions.hpp"
+#include <absl/strings/substitute.h>
 
-#include <exception>
-#include <string>
+namespace RosIntrospection{
 
-namespace RosIntrospection
+ROSType::ROSType(absl::string_view name):
+  _base_name(name)
 {
-
-class RangeException: public std::exception
-{
-public:
-
-    explicit RangeException(const char* message): msg_(message)  {}
-    explicit RangeException(const std::string& message):  msg_(message)  {}
-    ~RangeException() throw () {}
-    const char* what() const throw ()
-    {
-        return msg_.c_str();
+  int pos = -1;
+  for (size_t i=0; i<name.size(); i++)
+  {
+    if(name[i] == '/'){
+      pos = i;
+      break;
     }
+  }
 
-protected:
-    std::string msg_;
-};
+  if( pos == -1)
+  {
+    _msg_name = _base_name;
+  }
+  else{
+    _pkg_name = absl::string_view( _base_name.data(), pos);
+    pos++;
+    _msg_name = absl::string_view( _base_name.data() + pos, _base_name.size() - pos);
+  }
 
-class TypeException: public std::exception
+  _id   = toBuiltinType( _msg_name );
+  _hash = std::hash<std::string>{}( _base_name );
+}
+
+ROSType& ROSType::operator= (const ROSType &other)
 {
-public:
+    int pos = other._pkg_name.size();
+    _base_name = other._base_name;
+    _pkg_name = absl::string_view( _base_name.data(), pos);
+    if( pos > 0) pos++;
+    _msg_name = absl::string_view( _base_name.data() + pos, _base_name.size() - pos);
+    _id   = other._id;
+    _hash = other._hash;
+    return *this;
+}
 
-    explicit TypeException(const char* message): msg_(message)  {}
-    explicit TypeException(const std::string& message):  msg_(message)  {}
-    ~TypeException() throw () {}
-    const char* what() const throw ()
-    {
-        return msg_.c_str();
-    }
+ROSType& ROSType::operator= (ROSType &&other)
+{
+    int pos = other._pkg_name.size();
+    _base_name = std::move( other._base_name );
+    _pkg_name = absl::string_view( _base_name.data(), pos);
+    if( pos > 0) pos++;
+    _msg_name = absl::string_view( _base_name.data() + pos, _base_name.size() - pos);
+    _id   = other._id;
+    _hash = other._hash;
+    return *this;
+}
 
-protected:
-    std::string msg_;
-};
 
-} //end namespace
+void ROSType::setPkgName(absl::string_view new_pkg)
+{
+  assert(_pkg_name.size() == 0);
 
-#endif
+  int pos = new_pkg.size();
+  _base_name = absl::Substitute("$0/$1", new_pkg, _base_name);
+
+  _pkg_name = absl::string_view( _base_name.data(), pos++);
+  _msg_name = absl::string_view( _base_name.data() + pos, _base_name.size() - pos);
+
+  _hash = std::hash<std::string>{}( _base_name );
+}
+
+
+}
