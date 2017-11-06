@@ -204,6 +204,9 @@ private:
 
   std::ostream* _global_warnings;
 
+  std::vector<int> _alias_array_pos;
+  std::vector<std::string> _formatted_string;
+  std::vector<int8_t> _substituted;
 };
 
 }

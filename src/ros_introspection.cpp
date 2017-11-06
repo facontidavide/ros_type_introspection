@@ -32,7 +32,6 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 * *******************************************************************/
 
-#include "ros_type_introspection/ros_introspection.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/utility/string_ref.hpp>
@@ -40,6 +39,7 @@
 #include <boost/regex.hpp>
 #include <boost/algorithm/string/regex.hpp>
 #include <functional>
+#include "ros_type_introspection/ros_introspection.hpp"
 #include "ros_type_introspection/helper_functions.hpp"
 
 namespace RosIntrospection {
@@ -198,10 +198,8 @@ void Parser::registerMessageDefinition(const std::string &msg_definition,
 
   const boost::regex msg_separation_regex("^=+\\n+");
 
-  static std::vector<std::string> split;
-  split.clear();
-  static std::vector<const ROSType*> all_types;
-  all_types.clear();
+  std::vector<std::string> split;
+  std::vector<const ROSType*> all_types;
 
   boost::split_regex(split, definition, msg_separation_regex);
 
@@ -569,16 +567,12 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
   renamed_value->resize( container.value.size() );
   //DO NOT clear() renamed_value
 
-  static std::vector<int> alias_array_pos;
-  static std::vector<std::string> formatted_string;
-  static std::vector<int8_t> substituted;
+  _alias_array_pos.resize( num_names );
+  _formatted_string.reserve( num_values );
+  _formatted_string.clear();
 
-  alias_array_pos.resize( num_names );
-  formatted_string.reserve( num_values );
-  formatted_string.clear();
-
-  substituted.resize( num_values );
-  for(size_t i=0; i<num_values; i++) { substituted[i] = false; }
+  _substituted.resize( num_values );
+  for(size_t i=0; i<num_values; i++) { _substituted[i] = false; }
 
  // size_t renamed_index = 0;
 
@@ -597,12 +591,12 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
       for (size_t n=0; n<num_names; n++)
       {
         const StringTreeLeaf& name_leaf = container.name[n].first;
-        alias_array_pos[n] = PatternMatchAndIndexPosition(name_leaf, alias_head);
+        _alias_array_pos[n] = PatternMatchAndIndexPosition(name_leaf, alias_head);
       }
 
       for(size_t value_index = 0; value_index<num_values; value_index++)
       {
-        if( substituted[value_index]) continue;
+        if( _substituted[value_index]) continue;
 
         const auto& value_leaf = container.value[value_index];
 
@@ -619,9 +613,9 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
             const auto & it = container.name[n];
             const StringTreeLeaf& alias_leaf = it.first;
 
-            if( alias_array_pos[n] >= 0 ) // -1 if pattern doesn't match
+            if( _alias_array_pos[n] >= 0 ) // -1 if pattern doesn't match
             {
-              if( alias_leaf.index_array[ alias_array_pos[n] ] ==
+              if( alias_leaf.index_array[ _alias_array_pos[n] ] ==
                   leaf.index_array[ pattern_array_pos] )
               {
                 new_name =  &(it.second);
@@ -648,8 +642,8 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
                 char buffer[16];
                 const int number = leaf.index_array[position--];
                 int str_size = print_number( buffer, number );
-                formatted_string.push_back( std::string(buffer, str_size) );
-                concatenated_name.push_back( formatted_string.back() );
+                _formatted_string.push_back( std::string(buffer, str_size) );
+                concatenated_name.push_back( _formatted_string.back() );
               }
               else{
                 concatenated_name.push_back( str_val );
@@ -683,8 +677,8 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
                 char buffer[16];
                 const int number = leaf.index_array[position--];
                 int str_size = print_number( buffer, number );
-                formatted_string.push_back( std::string(buffer, str_size) );
-                concatenated_name.push_back( formatted_string.back() );
+                _formatted_string.push_back( std::string(buffer, str_size) );
+                concatenated_name.push_back( _formatted_string.back() );
               }
               else{
                 concatenated_name.push_back( str_val );
@@ -699,7 +693,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
             JoinStrings( concatenated_name, '/', renamed_pair.first);
             renamed_pair.second  = value_leaf.second ;
 
-            substituted[value_index] = true;
+            _substituted[value_index] = true;
 
           }// end if( new_name )
         }// end if( PatternMatching )
@@ -709,7 +703,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
   for(size_t value_index=0; value_index< container.value.size(); value_index++)
   {
-    if( !substituted[value_index] )
+    if( !_substituted[value_index] )
     {
       const std::pair<StringTreeLeaf, Variant> & value_leaf = container.value[value_index];
 
