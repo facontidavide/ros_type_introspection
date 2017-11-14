@@ -2,8 +2,8 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.1 (2017-11-14)
+------------------
 * added return value to deserializeIntoFlatContainer
 * bug fix
 * fix compilation issue
