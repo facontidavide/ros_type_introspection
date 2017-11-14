@@ -451,9 +451,6 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
             flat_container->value[value_index] = std::make_pair( new_tree_leaf, std::move(var) );
             value_index++;
           }
-          else{
-            ReadFromBufferToVariant( field_type.typeID(), buffer, buffer_offset );
-          }
         }
         else{ // field_type.typeID() == OTHER
 
