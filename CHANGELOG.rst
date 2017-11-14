@@ -2,6 +2,14 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* added return value to deserializeIntoFlatContainer
+* bug fix
+* fix compilation issue
+* fix potential issue with static variables
+* Contributors: Davide Faconti
+
 1.0.0 (2017-10-12)
 ------------------
 * Complete refactoring
