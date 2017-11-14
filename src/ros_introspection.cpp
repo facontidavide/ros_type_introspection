@@ -327,12 +327,13 @@ void Parser::applyVisitorToBuffer(const std::string &msg_identifier,
   recursiveImpl( msg_info->message_tree.croot() );
 }
 
-void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
+bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
                                           absl::Span<uint8_t> buffer,
                                           FlatMessage* flat_container,
                                           const uint32_t max_array_size ) const
 {
 
+  bool entire_message_parse = true;
   const ROSMessageInfo* msg_info = getMessageInfo(msg_identifier);
 
   size_t value_index = 0;
@@ -386,6 +387,7 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
         }
         else{
           DO_STORE = false;
+          entire_message_parse = false;
         }
       }
 
@@ -486,6 +488,7 @@ void Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
   {
     throw std::runtime_error("buildRosFlatType: There was an error parsing the buffer" );
   }
+  return entire_message_parse;
 }
 
 inline bool isNumberPlaceholder( const absl::string_view& s)

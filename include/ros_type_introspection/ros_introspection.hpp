@@ -128,8 +128,11 @@ public:
    *                               avoid memory allocations and speed up the parsing.
    * @param max_array_size   Usually we want to avoid special cases like maps and images, which contain very large arrays.
    *                         max_array_size is used to skip these arrays that are too large.
+   *
+   * return true if the entire message was parsed or false if parts of the message were
+   * skipped because an array has (size > max_array_size)
    */
-  void deserializeIntoFlatContainer(const std::string& msg_identifier,
+  bool deserializeIntoFlatContainer(const std::string& msg_identifier,
                                     absl::Span<uint8_t> buffer,
                                     FlatMessage* flat_container_output,
                                     const uint32_t max_array_size ) const;
