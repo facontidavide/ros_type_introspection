@@ -5,6 +5,7 @@
 #include <sensor_msgs/JointState.h>
 #include <sensor_msgs/NavSatStatus.h>
 #include <sensor_msgs/Imu.h>
+#include <sensor_msgs/Image.h>
 #include <std_msgs/Int16MultiArray.h>
 
 using namespace ros::message_traits;
@@ -394,13 +395,17 @@ TEST( Deserialize, Int16MultiArrayDeserialize)
     multi_array.data[i] = i;
   }
 
-
   std::vector<uint8_t> buffer( ros::serialization::serializationLength(multi_array) );
   ros::serialization::OStream stream(buffer.data(), buffer.size());
   ros::serialization::Serializer<std_msgs::Int16MultiArray>::write(stream, multi_array);
 
   FlatMessage flat_container;
-  parser.deserializeIntoFlatContainer("multi_array",  absl::Span<uint8_t>(buffer),  &flat_container,100);
+
+  EXPECT_NO_THROW(
+        parser.deserializeIntoFlatContainer("multi_array",
+                                            absl::Span<uint8_t>(buffer),
+                                            &flat_container,100)
+        );
 
   if(VERBOSE_TEST){
     std::cout << " -------------------- " << std::endl;
@@ -409,8 +414,37 @@ TEST( Deserialize, Int16MultiArrayDeserialize)
       std::cout << it.first << " >> " << it.second.convert<double>() << std::endl;
     }
   }
+}
+
+TEST( Deserialize, SensorImage)
+//int func()
+{
+  RosIntrospection::Parser parser;
+
+  parser.registerMessageDefinition( "image_raw",
+        ROSType(DataType<sensor_msgs::Image>::value()),
+        Definition<sensor_msgs::Image>::value());
+
+  sensor_msgs::Image image;
+  image.width = 640;
+  image.height = 480;
+  image.step = 3*image.width;
+  image.data.resize( image.height * image.step );
+
+  std::vector<uint8_t> buffer( ros::serialization::serializationLength(image) );
+  ros::serialization::OStream stream(buffer.data(), buffer.size());
+  ros::serialization::Serializer<sensor_msgs::Image>::write(stream, image);
+
+  FlatMessage flat_container;
+
+  EXPECT_NO_THROW(
+        parser.deserializeIntoFlatContainer("image_raw",
+                                            absl::Span<uint8_t>(buffer),
+                                            &flat_container,100)
+        );
 
 }
+
 
 // Run all the tests that were declared with TEST()
 int main(int argc, char **argv){
