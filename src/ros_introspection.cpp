@@ -266,8 +266,8 @@ void Parser::applyVisitorToBuffer(const std::string &msg_identifier,
   }
   if( getMessageByType( monitored_type, *msg_info) == nullptr)
   {
-      // you will not find it. Skip it;
-      return;
+    // you will not find it. Skip it;
+    return;
   }
 
   std::function<void(const MessageTreeNode*)> recursiveImpl;
@@ -391,76 +391,77 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
         }
       }
 
-      //------------------------------------
-      for (int i=0; i<array_size; i++ )
+      if( IS_BLOB ) // special case. This is a "blob", typically an image, a map, etc.
       {
-        if( field.isArray() && !IS_BLOB && DO_STORE)
+        if( flat_container->blob.size() <= blob_index)
         {
-          new_tree_leaf.index_array.back() = i;
+          const size_t increased_size = std::max( size_t(32), flat_container->blob.size() *  3/2);
+          flat_container->blob.resize( increased_size );
         }
-
-        if( IS_BLOB )
+        if( buffer_offset + array_size > buffer.size() )
         {
-          // special case. This is a "blob", typically an image, a map, etc.
-          if( flat_container->blob.size() <= blob_index)
-          {
-            const size_t increased_size = std::max( size_t(32), flat_container->blob.size() *  3/2);
-            flat_container->blob.resize( increased_size );
-          }
-          if( buffer_offset + array_size > buffer.size() )
-          {
-              throw std::runtime_error("Buffer overrun in deserializeIntoFlatContainer (blob)");
-          }
-          if( DO_STORE )
-          {
-            flat_container->blob[blob_index].first  = new_tree_leaf ;
-            std::vector<uint8_t>& blob = flat_container->blob[blob_index].second;
-            blob_index++;
-            blob.resize( array_size );
-            std::memcpy( blob.data(), &buffer[buffer_offset], array_size);
-          }
-          buffer_offset += array_size;
+          throw std::runtime_error("Buffer overrun in deserializeIntoFlatContainer (blob)");
         }
-        else if( field_type.typeID() == STRING )
+        if( DO_STORE )
         {
-          if( flat_container->name.size() <= name_index)
-          {
-            const size_t increased_size = std::max( size_t(32), flat_container->name.size() *  3/2);
-            flat_container->name.resize( increased_size );
-          }
-          std::string& name = flat_container->name[name_index].second;//read directly inside an existing std::string
-          ReadFromBuffer<std::string>( buffer, buffer_offset, name );
-
-          if( DO_STORE )
-          {
-            flat_container->name[name_index].first = new_tree_leaf ;
-            name_index++;
-          }
+          flat_container->blob[blob_index].first  = new_tree_leaf ;
+          std::vector<uint8_t>& blob = flat_container->blob[blob_index].second;
+          blob_index++;
+          blob.resize( array_size );
+          std::memcpy( blob.data(), &buffer[buffer_offset], array_size);
         }
-        else if( field_type.isBuiltin() )
+        buffer_offset += array_size;
+      }
+      else // NOT a BLOB
+      {
+        for (int i=0; i<array_size; i++ )
         {
-          if( flat_container->value.size() <= value_index)
+          if( field.isArray() && DO_STORE)
           {
-            const size_t increased_size = std::max( size_t(32), flat_container->value.size() *  3/2);
-            flat_container->value.resize( increased_size );
+            new_tree_leaf.index_array.back() = i;
           }
 
-          Variant var = ReadFromBufferToVariant( field_type.typeID(),
-                                                 buffer,
-                                                 buffer_offset );
-          if( DO_STORE )
+          if( field_type.typeID() == STRING )
           {
-            flat_container->value[value_index] = std::make_pair( new_tree_leaf, std::move(var) );
-            value_index++;
-          }
-        }
-        else{ // field_type.typeID() == OTHER
+            if( flat_container->name.size() <= name_index)
+            {
+              const size_t increased_size = std::max( size_t(32), flat_container->name.size() *  3/2);
+              flat_container->name.resize( increased_size );
+            }
+            std::string& name = flat_container->name[name_index].second;//read directly inside an existing std::string
+            ReadFromBuffer<std::string>( buffer, buffer_offset, name );
 
-          deserializeImpl(msg_node->child(index_m),
-                          new_tree_leaf,
-                          DO_STORE);
-        }
-      } // end for array_size
+            if( DO_STORE )
+            {
+              flat_container->name[name_index].first = new_tree_leaf ;
+              name_index++;
+            }
+          }
+          else if( field_type.isBuiltin() )
+          {
+            if( flat_container->value.size() <= value_index)
+            {
+              const size_t increased_size = std::max( size_t(32), flat_container->value.size() *  3/2);
+              flat_container->value.resize( increased_size );
+            }
+
+            Variant var = ReadFromBufferToVariant( field_type.typeID(),
+                                                   buffer,
+                                                   buffer_offset );
+            if( DO_STORE )
+            {
+              flat_container->value[value_index] = std::make_pair( new_tree_leaf, std::move(var) );
+              value_index++;
+            }
+          }
+          else{ // field_type.typeID() == OTHER
+
+            deserializeImpl(msg_node->child(index_m),
+                            new_tree_leaf,
+                            DO_STORE);
+          }
+        } // end for array_size
+      }
 
       if( field_type.typeID() == OTHER )
       {
@@ -574,7 +575,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
   _substituted.resize( num_values );
   for(size_t i=0; i<num_values; i++) { _substituted[i] = false; }
 
- // size_t renamed_index = 0;
+  // size_t renamed_index = 0;
 
   if( rule_found != _rule_caches.end() )
   {
