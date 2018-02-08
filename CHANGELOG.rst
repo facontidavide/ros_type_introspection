@@ -2,6 +2,12 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fixing issue with blobs (detected when parsing sensor_msgs::Image)
+* added test for sensor image
+* Contributors: Davide Faconti
+
 1.0.1 (2017-11-14)
 ------------------
 * added return value to deserializeIntoFlatContainer
