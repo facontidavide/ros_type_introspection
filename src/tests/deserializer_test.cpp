@@ -11,6 +11,7 @@
 using namespace ros::message_traits;
 using namespace RosIntrospection;
 
+
 TEST(Deserialize, JointState)
 
 {
@@ -64,31 +65,31 @@ TEST(Deserialize, JointState)
   }
 
   EXPECT_EQ( flat_container.value[0].first.toStdString() , ("JointState/header/seq"));
-  EXPECT_EQ( flat_container.value[0].second, 2016 );
+  EXPECT_EQ( flat_container.value[0].second.convert<int>(), 2016 );
   EXPECT_EQ( flat_container.value[1].first.toStdString() , ("JointState/header/stamp"));
   EXPECT_EQ( flat_container.value[1].second.convert<double>(),   double(1234.567)  );
   EXPECT_EQ( flat_container.value[1].second.convert<ros::Time>(), joint_state.header.stamp  );
 
   EXPECT_EQ( flat_container.value[2].first.toStdString() , ("JointState/position.0"));
-  EXPECT_EQ( flat_container.value[2].second, 11 );
+  EXPECT_EQ( flat_container.value[2].second.convert<int>(), 11 );
   EXPECT_EQ( flat_container.value[3].first.toStdString() , ("JointState/position.1"));
-  EXPECT_EQ( flat_container.value[3].second, 12 );
+  EXPECT_EQ( flat_container.value[3].second.convert<int>(), 12 );
   EXPECT_EQ( flat_container.value[4].first.toStdString() , ("JointState/position.2"));
-  EXPECT_EQ( flat_container.value[4].second, 13 );
+  EXPECT_EQ( flat_container.value[4].second.convert<int>(), 13 );
 
   EXPECT_EQ( flat_container.value[5].first.toStdString() , ("JointState/velocity.0"));
-  EXPECT_EQ( flat_container.value[5].second, 21 );
+  EXPECT_EQ( flat_container.value[5].second.convert<int>(), 21 );
   EXPECT_EQ( flat_container.value[6].first.toStdString() , ("JointState/velocity.1"));
-  EXPECT_EQ( flat_container.value[6].second, 22 );
+  EXPECT_EQ( flat_container.value[6].second.convert<int>(), 22 );
   EXPECT_EQ( flat_container.value[7].first.toStdString() , ("JointState/velocity.2"));
-  EXPECT_EQ( flat_container.value[7].second, 23 );
+  EXPECT_EQ( flat_container.value[7].second.convert<int>(), 23 );
 
   EXPECT_EQ( flat_container.value[8].first.toStdString() , ("JointState/effort.0"));
-  EXPECT_EQ( flat_container.value[8].second, 31 );
+  EXPECT_EQ( flat_container.value[8].second.convert<int>(), 31 );
   EXPECT_EQ( flat_container.value[9].first.toStdString() , ("JointState/effort.1"));
-  EXPECT_EQ( flat_container.value[9].second, 32 );
+  EXPECT_EQ( flat_container.value[9].second.convert<int>(), 32 );
   EXPECT_EQ( flat_container.value[10].first.toStdString() , ("JointState/effort.2"));
-  EXPECT_EQ( flat_container.value[10].second, 33 );
+  EXPECT_EQ( flat_container.value[10].second.convert<int>(), 33 );
 
   EXPECT_EQ( flat_container.name[0].first.toStdString() , ("JointState/header/frame_id"));
   EXPECT_EQ( flat_container.name[0].second, ("pippo") );
@@ -189,9 +190,9 @@ TEST( Deserialize, NavSatStatus)
   }
 
   EXPECT_EQ( flat_container.value[0].first.toStdString() , ("nav_stat/status"));
-  EXPECT_EQ( flat_container.value[0].second, (int)nav_stat.STATUS_GBAS_FIX );
+  EXPECT_EQ( flat_container.value[0].second.convert<int>(), (int)nav_stat.STATUS_GBAS_FIX );
   EXPECT_EQ( flat_container.value[1].first.toStdString() , ("nav_stat/service"));
-  EXPECT_EQ( flat_container.value[1].second, (int)nav_stat.SERVICE_COMPASS );
+  EXPECT_EQ( flat_container.value[1].second.convert<int>(), (int)nav_stat.SERVICE_COMPASS );
 }
 
 TEST( Deserialize, DeserializeIMU)
@@ -251,23 +252,23 @@ TEST( Deserialize, DeserializeIMU)
   int index = 0;
 
   EXPECT_EQ( flat_container.value[index].first.toStdString() , ("imu/header/seq"));
-  EXPECT_EQ( flat_container.value[index].second, 2016 );
+  EXPECT_EQ( flat_container.value[index].second.convert<int>(), 2016 );
   index++;
   EXPECT_EQ( flat_container.value[index].first.toStdString() , ("imu/header/stamp"));
   EXPECT_EQ( flat_container.value[index].second.convert<double>(),   double(1234.567)  );
   EXPECT_EQ( flat_container.value[index].second.convert<ros::Time>(), imu.header.stamp  );
   index++;
   EXPECT_EQ( flat_container.value[index].first.toStdString() , ("imu/orientation/x"));
-  EXPECT_EQ( flat_container.value[index].second, 11 );
+  EXPECT_EQ( flat_container.value[index].second.convert<int>(), 11 );
   index++;
   EXPECT_EQ( flat_container.value[index].first.toStdString() , ("imu/orientation/y"));
-  EXPECT_EQ( flat_container.value[index].second, 12 );
+  EXPECT_EQ( flat_container.value[index].second.convert<int>(), 12 );
   index++;
   EXPECT_EQ( flat_container.value[index].first.toStdString() , ("imu/orientation/z"));
-  EXPECT_EQ( flat_container.value[index].second, 13 );
+  EXPECT_EQ( flat_container.value[index].second.convert<int>(), 13 );
   index++;
   EXPECT_EQ( flat_container.value[index].first.toStdString() , ("imu/orientation/w"));
-  EXPECT_EQ( flat_container.value[index].second, 14 );
+  EXPECT_EQ( flat_container.value[index].second.convert<int>(), 14 );
   index++;
 
   for(int i=0; i<9; i++)
@@ -275,18 +276,18 @@ TEST( Deserialize, DeserializeIMU)
     char str[64];
     sprintf(str, "imu/orientation_covariance.%d",i);
     EXPECT_EQ( flat_container.value[index].first.toStdString() , (str) );
-    EXPECT_EQ( flat_container.value[index].second, 40+i );
+    EXPECT_EQ( flat_container.value[index].second.convert<int>(), 40+i );
     index++;
   }
 
   EXPECT_EQ( flat_container.value[index].first.toStdString() , ("imu/angular_velocity/x"));
-  EXPECT_EQ( flat_container.value[index].second, 21 );
+  EXPECT_EQ( flat_container.value[index].second.convert<int>(), 21 );
   index++;
   EXPECT_EQ( flat_container.value[index].first.toStdString() , ("imu/angular_velocity/y"));
-  EXPECT_EQ( flat_container.value[index].second, 22 );
+  EXPECT_EQ( flat_container.value[index].second.convert<int>(), 22 );
   index++;
   EXPECT_EQ( flat_container.value[index].first.toStdString() , ("imu/angular_velocity/z"));
-  EXPECT_EQ( flat_container.value[index].second, 23 );
+  EXPECT_EQ( flat_container.value[index].second.convert<int>(), 23 );
   index++;
 
   for(int i=0; i<9; i++)
@@ -294,18 +295,18 @@ TEST( Deserialize, DeserializeIMU)
     char str[64];
     sprintf(str, "imu/angular_velocity_covariance.%d",i);
     EXPECT_EQ( flat_container.value[index].first.toStdString() , (str) );
-    EXPECT_EQ( flat_container.value[index].second, 50+i );
+    EXPECT_EQ( flat_container.value[index].second.convert<int>(), 50+i );
     index++;
   }
 
   EXPECT_EQ( flat_container.value[index].first.toStdString() , ("imu/linear_acceleration/x"));
-  EXPECT_EQ( flat_container.value[index].second, 31 );
+  EXPECT_EQ( flat_container.value[index].second.convert<int>(), 31 );
   index++;
   EXPECT_EQ( flat_container.value[index].first.toStdString() , ("imu/linear_acceleration/y"));
-  EXPECT_EQ( flat_container.value[index].second, 32 );
+  EXPECT_EQ( flat_container.value[index].second.convert<int>(), 32 );
   index++;
   EXPECT_EQ( flat_container.value[index].first.toStdString() , ("imu/linear_acceleration/z"));
-  EXPECT_EQ( flat_container.value[index].second, 33 );
+  EXPECT_EQ( flat_container.value[index].second.convert<int>(), 33 );
   index++;
 
   for(int i=0; i<9; i++)
@@ -313,7 +314,7 @@ TEST( Deserialize, DeserializeIMU)
     char str[64];
     sprintf(str, "imu/linear_acceleration_covariance.%d",i);
     EXPECT_EQ( flat_container.value[index].first.toStdString() , (str) );
-    EXPECT_EQ( flat_container.value[index].second, 60+i );
+    EXPECT_EQ( flat_container.value[index].second.convert<int>(), 60+i );
     index++;
   }
 
