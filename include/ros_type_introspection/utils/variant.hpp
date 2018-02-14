@@ -130,17 +130,6 @@ private:
   BuiltinType _type;
 };
 
-template <typename T> inline
-bool operator ==(const Variant& var, const T& num)
-{
-  return var.convert<T>() == num;
-}
-
-template <typename T> inline
-bool operator ==(const T& num, const Variant& var)
-{
-  return var.convert<T>() == num;
-}
 
 //----------------------- Implementation ----------------------------------------------
 
