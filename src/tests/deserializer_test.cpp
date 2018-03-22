@@ -24,27 +24,29 @@ TEST(Deserialize, JointState)
 
   sensor_msgs::JointState joint_state;
 
+  const int NUM = 15;
+
   joint_state.header.seq = 2016;
   joint_state.header.stamp.sec  = 1234;
   joint_state.header.stamp.nsec = 567*1000*1000;
   joint_state.header.frame_id = "pippo";
 
-  joint_state.name.resize( 3 );
-  joint_state.position.resize( 3 );
-  joint_state.velocity.resize( 3 );
-  joint_state.effort.resize( 3 );
+  joint_state.name.resize( NUM );
+  joint_state.position.resize( NUM );
+  joint_state.velocity.resize( NUM );
+  joint_state.effort.resize( NUM );
 
-  std::string names[3];
+  std::string names[NUM];
   names[0] = ("hola");
   names[1] = ("ciao");
   names[2] = ("bye");
 
-  for (int i=0; i<3; i++)
+  for (int i=0; i<NUM; i++)
   {
-    joint_state.name[i] = names[i];
-    joint_state.position[i]= 11+i;
-    joint_state.velocity[i]= 21+i;
-    joint_state.effort[i]= 31+i;
+    joint_state.name[i] = names[i%3];
+    joint_state.position[i]= 10+i;
+    joint_state.velocity[i]= 30+i;
+    joint_state.effort[i]= 50+i;
   }
 
   std::vector<uint8_t> buffer( ros::serialization::serializationLength(joint_state) );
@@ -71,25 +73,31 @@ TEST(Deserialize, JointState)
   EXPECT_EQ( flat_container.value[1].second.convert<ros::Time>(), joint_state.header.stamp  );
 
   EXPECT_EQ( flat_container.value[2].first.toStdString() , ("JointState/position.0"));
-  EXPECT_EQ( flat_container.value[2].second.convert<int>(), 11 );
+  EXPECT_EQ( flat_container.value[2].second.convert<int>(), 10 );
   EXPECT_EQ( flat_container.value[3].first.toStdString() , ("JointState/position.1"));
-  EXPECT_EQ( flat_container.value[3].second.convert<int>(), 12 );
+  EXPECT_EQ( flat_container.value[3].second.convert<int>(), 11 );
   EXPECT_EQ( flat_container.value[4].first.toStdString() , ("JointState/position.2"));
-  EXPECT_EQ( flat_container.value[4].second.convert<int>(), 13 );
+  EXPECT_EQ( flat_container.value[4].second.convert<int>(), 12 );
+  EXPECT_EQ( flat_container.value[16].first.toStdString() , ("JointState/position.14"));
+  EXPECT_EQ( flat_container.value[16].second.convert<int>(), 24 );
 
-  EXPECT_EQ( flat_container.value[5].first.toStdString() , ("JointState/velocity.0"));
-  EXPECT_EQ( flat_container.value[5].second.convert<int>(), 21 );
-  EXPECT_EQ( flat_container.value[6].first.toStdString() , ("JointState/velocity.1"));
-  EXPECT_EQ( flat_container.value[6].second.convert<int>(), 22 );
-  EXPECT_EQ( flat_container.value[7].first.toStdString() , ("JointState/velocity.2"));
-  EXPECT_EQ( flat_container.value[7].second.convert<int>(), 23 );
+  EXPECT_EQ( flat_container.value[17].first.toStdString() , ("JointState/velocity.0"));
+  EXPECT_EQ( flat_container.value[17].second.convert<int>(), 30 );
+  EXPECT_EQ( flat_container.value[18].first.toStdString() , ("JointState/velocity.1"));
+  EXPECT_EQ( flat_container.value[18].second.convert<int>(), 31 );
+  EXPECT_EQ( flat_container.value[19].first.toStdString() , ("JointState/velocity.2"));
+  EXPECT_EQ( flat_container.value[19].second.convert<int>(), 32 );
+  EXPECT_EQ( flat_container.value[31].first.toStdString() , ("JointState/velocity.14"));
+  EXPECT_EQ( flat_container.value[31].second.convert<int>(), 44 );
 
-  EXPECT_EQ( flat_container.value[8].first.toStdString() , ("JointState/effort.0"));
-  EXPECT_EQ( flat_container.value[8].second.convert<int>(), 31 );
-  EXPECT_EQ( flat_container.value[9].first.toStdString() , ("JointState/effort.1"));
-  EXPECT_EQ( flat_container.value[9].second.convert<int>(), 32 );
-  EXPECT_EQ( flat_container.value[10].first.toStdString() , ("JointState/effort.2"));
-  EXPECT_EQ( flat_container.value[10].second.convert<int>(), 33 );
+  EXPECT_EQ( flat_container.value[32].first.toStdString() , ("JointState/effort.0"));
+  EXPECT_EQ( flat_container.value[32].second.convert<int>(), 50 );
+  EXPECT_EQ( flat_container.value[33].first.toStdString() , ("JointState/effort.1"));
+  EXPECT_EQ( flat_container.value[33].second.convert<int>(), 51 );
+  EXPECT_EQ( flat_container.value[34].first.toStdString() , ("JointState/effort.2"));
+  EXPECT_EQ( flat_container.value[34].second.convert<int>(), 52 );
+  EXPECT_EQ( flat_container.value[46].first.toStdString() , ("JointState/effort.14"));
+  EXPECT_EQ( flat_container.value[46].second.convert<int>(), 64 );
 
   EXPECT_EQ( flat_container.name[0].first.toStdString() , ("JointState/header/frame_id"));
   EXPECT_EQ( flat_container.name[0].second, ("pippo") );

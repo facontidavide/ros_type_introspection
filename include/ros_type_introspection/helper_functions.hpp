@@ -64,44 +64,13 @@ inline int print_number(char* buffer, uint16_t value)
   }
   else if (value < 100) {
     value *= 2;
-    buffer[0] = DIGITS[ value+1 ];
-    buffer[1] = DIGITS[ value ];
+    buffer[0] = DIGITS[ value ];
+    buffer[1] = DIGITS[ value+1 ];
     return 2;
   }
   else{
     return sprintf( buffer,"%d", value );
   }
-}
-
-inline absl::string_view stringview_from_number(uint16_t value)
-{
-  static std::array<absl::string_view,100> stored =
-      [](){
-    std::array<absl::string_view,100> out;
-    const char DIGITS[] =
-        "00010203040506070809"
-        "10111213141516171819"
-        "20212223242526272829"
-        "30313233343536373839"
-        "40414243444546474849"
-        "50515253545556575859"
-        "60616263646566676869"
-        "70717273747576777879"
-        "80818283848586878889"
-        "90919293949596979899";
-    for (int i=0; i<100; i++)
-    {
-      if (i < 10){
-        out[i] = absl::string_view( &DIGITS[i*2+1], 1 );
-      }
-      else{
-        out[i] = absl::string_view( &DIGITS[i*2], 2 );
-      }
-    }
-    return out;
-  }();
-
-  return stored[value];
 }
 
 
