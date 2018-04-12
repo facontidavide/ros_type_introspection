@@ -52,24 +52,23 @@ include_directories(
 find_package(benchmark CONFIG)
 if (benchmark_FOUND)
 
-add_executable(ros_introspection_benchmark tests/benchmark.cpp)
-add_dependencies(ros_introspection_benchmark
-    ${${PROJECT_NAME}_EXPORTED_TARGETS}
-    ${catkin_EXPORTED_TARGETS})
+    add_executable(ros_introspection_benchmark tests/benchmark.cpp)
+    add_dependencies(ros_introspection_benchmark
+        ${${PROJECT_NAME}_EXPORTED_TARGETS}
+        ${catkin_EXPORTED_TARGETS})
 
-target_link_libraries(ros_introspection_benchmark
- ${catkin_LIBRARIES}
-  ros_type_introspection
-  benchmark
-)
+    target_link_libraries(ros_introspection_benchmark
+     ${catkin_LIBRARIES}
+      benchmark
+    )
 
 endif(benchmark_FOUND)
 
 add_executable(rosbag_example          example/rosbag_example.cpp)
-target_link_libraries(rosbag_example   ${catkin_LIBRARIES} ros_type_introspection)
+target_link_libraries(rosbag_example   ${catkin_LIBRARIES})
 
 add_executable(subscribe_example        example/subscribe_example.cpp)
-target_link_libraries(subscribe_example ${catkin_LIBRARIES} ros_type_introspection)
+target_link_libraries(subscribe_example ${catkin_LIBRARIES})
 
 
 #############
