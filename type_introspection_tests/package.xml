@@ -1,10 +1,9 @@
 <?xml version="1.0"?>
 <package>
-  <name>ros_type_introspection</name>
+  <name>ros_introspection_test</name>
   <version>1.1.0</version>
   <description>
-  The ros_type_introspection package allows the user to parse and deserialize
-  ROS messages which type is unknown at compilation time.
+  The ros_type_introspection_test package contains the test related to ros_type_introspection
   </description>
 
   <maintainer email="faconti@icarustechnology.com">Davide Faconti</maintainer>
@@ -16,25 +15,19 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   
+  <build_depend>ros_type_introspection</build_depend>
   <build_depend>rosbag</build_depend>
   <build_depend>rosbag_storage</build_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>roscpp_serialization</build_depend>
-  <build_depend>rostime</build_depend>
   <build_depend>topic_tools</build_depend>
   <build_depend>geometry_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
-  <build_depend>abseil_cpp</build_depend>
-  
+
+  <run_depend>ros_type_introspection</run_depend>
   <run_depend>rosbag</run_depend>
   <run_depend>rosbag_storage</run_depend>
-  <run_depend>roscpp</run_depend>
-  <run_depend>roscpp_serialization</run_depend>
-  <run_depend>rostime</run_depend>
   <run_depend>topic_tools</run_depend>
   <run_depend>geometry_msgs</run_depend>
   <run_depend>sensor_msgs</run_depend>
-  <run_depend>abseil_cpp</run_depend>
 
   <test_depend>gtest</test_depend>
   <test_depend>tf2</test_depend>
