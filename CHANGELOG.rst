@@ -2,6 +2,11 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* split the project into two packages to reduce dependencies
+* Contributors: Davide Faconti
+
 1.1.0 (2018-03-22)
 ------------------
 * critical bug fix
