@@ -22,12 +22,7 @@ a type used to subscribe to any topic, regardless of the original type.
 2. [rosbag::MessageInstance](http://docs.ros.org/diamondback/api/rosbag/html/c++/classrosbag_1_1MessageInstance.html):
 the generic type commonly used to read data from a ROS bag.
 
-# About version 1.X
-
-Version 1.X has a completely new API; on the other hand, this implementatation is __3 times faster__ and much more flexible.
-To convert old applications should be straighforward, though. Please take a look to the [examples](example)
-and the unit tests to see how to update your code.
-
+Please take a look to the [examples and unit tests](https://github.com/facontidavide/type_introspection_tests) to see how to use the library.
 
 # Some background
 The ROS Message Types can be described as 
