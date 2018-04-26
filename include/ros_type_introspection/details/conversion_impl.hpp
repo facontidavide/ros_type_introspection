@@ -72,13 +72,14 @@ struct is_safe_integer_conversion
         : std::integral_constant<bool, is_integer<From>::value
         && is_integer<To>::value
         && sizeof(From) <= sizeof(To)
-&& std::is_signed<From>::value == std::is_signed<To>::value>
+        && std::is_signed<From>::value == std::is_signed<To>::value>
 {};
 
 template <typename From, typename To>
 struct float_conversion
         : std::integral_constant<bool, std::is_floating_point<From>::value
-        && std::is_floating_point<To>::value >
+        && std::is_floating_point<To>::value 
+        && !std::is_same<From,To>::value >
 {};
 
 template <typename From, typename To>
@@ -86,8 +87,8 @@ struct unsigned_to_smaller_conversion
         : std::integral_constant<bool, is_integer<From>::value
         && is_integer<To>::value
         && (sizeof(From) > sizeof(To))
-&& !std::is_signed<From>::value
-&& !std::is_signed<To>::value >
+        && !std::is_signed<From>::value
+        && !std::is_signed<To>::value >
 {};
 
 template <typename From, typename To>
@@ -105,8 +106,8 @@ struct signed_to_smaller_unsigned_conversion
         : std::integral_constant<bool, is_integer<From>::value
         && is_integer<To>::value
         && sizeof(From) >= sizeof(To)
-&& std::is_signed<From>::value
-&& !std::is_signed<To>::value >
+        && std::is_signed<From>::value
+        && !std::is_signed<To>::value >
 {};
 
 template <typename From, typename To>
@@ -114,8 +115,8 @@ struct signed_to_larger_unsigned_conversion
         : std::integral_constant<bool, is_integer<From>::value
         && is_integer<To>::value
         && sizeof(From) < sizeof(To)
-&& std::is_signed<From>::value
-&& !std::is_signed<To>::value >
+        && std::is_signed<From>::value
+        && !std::is_signed<To>::value >
 {};
 
 template <typename From, typename To>
@@ -123,8 +124,8 @@ struct unsigned_to_smaller_signed_conversion
         : std::integral_constant<bool, is_integer<From>::value
         && is_integer<To>::value
         && (sizeof(From) >= sizeof(To))
-&& !std::is_signed<From>::value
-&& std::is_signed<To>::value >
+        && !std::is_signed<From>::value
+        && std::is_signed<To>::value >
 {};
 
 template <typename From, typename To>
@@ -132,8 +133,8 @@ struct unsigned_to_larger_signed_conversion
         : std::integral_constant<bool, is_integer<From>::value
         && is_integer<To>::value
         && sizeof(From) < sizeof(To)
-&& !std::is_signed<From>::value
-&& std::is_signed<To>::value >
+        && !std::is_signed<From>::value
+        && std::is_signed<To>::value >
 {};
 
 template <typename From, typename To>
