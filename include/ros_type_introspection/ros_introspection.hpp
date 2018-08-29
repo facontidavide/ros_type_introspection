@@ -64,7 +64,7 @@ typedef std::vector< std::pair<std::string, Variant> > RenamedValues;
 class Parser{
 
 public:
-  Parser(): _global_warnings(&std::cerr), _rule_cache_dirty(true) {}
+  Parser(): _rule_cache_dirty(true), _global_warnings(&std::cerr) {}
 
   /**
    * @brief A single message definition will (most probably) generate myltiple ROSMessage(s).
