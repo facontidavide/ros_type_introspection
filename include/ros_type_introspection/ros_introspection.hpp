@@ -37,6 +37,7 @@
 
 #include <unordered_set>
 #include "ros_type_introspection/stringtree_leaf.hpp"
+#include "ros_type_introspection/utils/growing_vector.h"
 #include "ros_type_introspection/substitution_rule.hpp"
 #include "absl/types/span.h"
 
@@ -49,17 +50,17 @@ struct FlatMessage {
 
   /// List of all those parsed fields that can be represented by a builtin value different from "string".
   /// This list will be filled by the funtion buildRosFlatType.
-  std::vector< std::pair<StringTreeLeaf, Variant> > value;
+  RecyclingVector< std::pair<StringTreeLeaf, Variant> > value;
 
   /// List of all those parsed fields that can be represented by a builtin value equal to "string".
   /// This list will be filled by the funtion buildRosFlatType.
-  std::vector< std::pair<StringTreeLeaf, std::string> > name;
+  RecyclingVector< std::pair<StringTreeLeaf, std::string> > name;
 
   // Not used yet
   std::vector< std::pair<StringTreeLeaf, std::vector<uint8_t>>> blob;
 };
 
-typedef std::vector< std::pair<std::string, Variant> > RenamedValues;
+typedef RecyclingVector< std::pair<std::string, Variant> > RenamedValues;
 
 class Parser{
 
@@ -208,7 +209,7 @@ private:
   std::ostream* _global_warnings;
 
   std::vector<int> _alias_array_pos;
-  std::vector<std::string> _formatted_string;
+  std::vector<absl::string_view> _formatted_string;
   std::vector<int8_t> _substituted;
 };
 

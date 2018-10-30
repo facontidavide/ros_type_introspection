@@ -626,6 +626,9 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
           }
 
           //--------------------------
+          char big_buffer[10000];
+          char* buffer = big_buffer;
+
           if( new_name )
           {
             absl::InlinedVector<absl::string_view, 12> concatenated_name;
@@ -640,10 +643,10 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
               if( isNumberPlaceholder( str_val ) )
               {
-                char buffer[16];
                 const int number = leaf.index_array[position--];
                 int str_size = print_number( buffer, number );
-                _formatted_string.push_back( std::string(buffer, str_size) );
+                _formatted_string.push_back( absl::string_view(buffer, str_size) );
+                buffer += str_size;
                 concatenated_name.push_back( _formatted_string.back() );
               }
               else{
@@ -675,10 +678,10 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
               if( isNumberPlaceholder(str_val) )
               {
-                char buffer[16];
                 const int number = leaf.index_array[position--];
                 int str_size = print_number( buffer, number );
-                _formatted_string.push_back( std::string(buffer, str_size) );
+                _formatted_string.push_back( absl::string_view(buffer, str_size) );
+                buffer += str_size;
                 concatenated_name.push_back( _formatted_string.back() );
               }
               else{
