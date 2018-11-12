@@ -2,6 +2,14 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fixed -Wreorder (`#24 <https://github.com/facontidavide/ros_type_introspection/issues/24>`_)
+  * client code can now compile with -Werror
+* solved compilation problem when convert_impl<float, float>
+* Update README.md
+* Contributors: Davide Faconti, moooeeeep
+
 1.1.1 (2018-04-15)
 ------------------
 * split the project into two packages to reduce dependencies
