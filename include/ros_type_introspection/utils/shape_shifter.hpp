@@ -220,7 +220,7 @@ inline const uint8_t* ShapeShifter::raw_data() const {
   return msgBuf_.data();
 }
 
-uint32_t ShapeShifter::size() const
+inline uint32_t ShapeShifter::size() const
 {
   return msgBuf_.size();
 }
