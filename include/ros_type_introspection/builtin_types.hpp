@@ -115,7 +115,6 @@ template <typename T> BuiltinType getType()
 
 template <> inline BuiltinType getType<bool>()  {  return BOOL; }
 
-template <> inline BuiltinType getType<unsigned char>()  {  return BYTE; }
 template <> inline BuiltinType getType<char>()           {  return CHAR; }
 
 template <> inline BuiltinType getType<int8_t>()  {  return INT8; }
