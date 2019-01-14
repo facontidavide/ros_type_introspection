@@ -55,7 +55,9 @@ struct FlatMessage {
   /// This list will be filled by the funtion buildRosFlatType.
   std::vector< std::pair<StringTreeLeaf, std::string> > name;
 
-  // Not used yet
+  /// Store "blobs", i.e all those fields which are vectors of BYTES (AKA uint8_t),
+  /// where the vector size is greater than the argument [max_array_size]
+  /// passed  to the function deserializeIntoFlatContainer
   std::vector< std::pair<StringTreeLeaf, std::vector<uint8_t>>> blob;
 };
 
