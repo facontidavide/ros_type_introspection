@@ -357,8 +357,10 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
     size_t index_s = 0;
     size_t index_m = 0;
 
+
     for (const ROSField& field : msg_definition->fields() )
     {
+      size_t buffer_offset_start = buffer_offset;
       if(field.isConstant() ) continue;
 
       const ROSType&  field_type = field.type();
@@ -404,8 +406,8 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
         }
         if( DO_STORE )
         {
-          flat_container->blob[blob_index].first  = new_tree_leaf ;
-          std::vector<uint8_t>& blob = flat_container->blob[blob_index].second;
+          std::get<0>(flat_container->blob[blob_index])  = new_tree_leaf ;
+          std::vector<uint8_t>& blob = std::get<1>(flat_container->blob[blob_index]);
           blob_index++;
           blob.resize( array_size );
           std::memcpy( blob.data(), &buffer[buffer_offset], array_size);
@@ -428,12 +430,12 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
               const size_t increased_size = std::max( size_t(32), flat_container->name.size() *  3/2);
               flat_container->name.resize( increased_size );
             }
-            std::string& name = flat_container->name[name_index].second;//read directly inside an existing std::string
+            std::string& name = std::get<1>(flat_container->name[name_index]);//read directly inside an existing std::string
             ReadFromBuffer<std::string>( buffer, buffer_offset, name );
 
             if( DO_STORE )
             {
-              flat_container->name[name_index].first = new_tree_leaf ;
+              std::get<0>(flat_container->name[name_index]) = new_tree_leaf ;
               name_index++;
             }
           }
@@ -450,7 +452,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
                                                    buffer_offset );
             if( DO_STORE )
             {
-              flat_container->value[value_index] = std::make_pair( new_tree_leaf, std::move(var) );
+              flat_container->value[value_index] = std::make_tuple( new_tree_leaf, std::move(var), buffer_offset_start );
               value_index++;
             }
           }
@@ -591,7 +593,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
       for (size_t n=0; n<num_names; n++)
       {
-        const StringTreeLeaf& name_leaf = container.name[n].first;
+        const StringTreeLeaf& name_leaf = std::get<0>(container.name[n]);
         _alias_array_pos[n] = PatternMatchAndIndexPosition(name_leaf, alias_head);
       }
 
@@ -601,7 +603,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
         const auto& value_leaf = container.value[value_index];
 
-        const StringTreeLeaf& leaf = value_leaf.first;
+        const StringTreeLeaf& leaf = std::get<0>(value_leaf);
 
         int pattern_array_pos = PatternMatchAndIndexPosition(leaf,   pattern_head);
 
@@ -612,14 +614,14 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
           for (size_t n=0; n < num_names; n++)
           {
             const auto & it = container.name[n];
-            const StringTreeLeaf& alias_leaf = it.first;
+            const StringTreeLeaf& alias_leaf = std::get<0>(it);
 
             if( _alias_array_pos[n] >= 0 ) // -1 if pattern doesn't match
             {
               if( alias_leaf.index_array[ _alias_array_pos[n] ] ==
                   leaf.index_array[ pattern_array_pos] )
               {
-                new_name =  &(it.second);
+                new_name =  &(std::get<1>(it));
                 break;
               }
             }
@@ -691,8 +693,9 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
             auto& renamed_pair = (*renamed_value)[value_index];
 
             std::reverse(concatenated_name.begin(), concatenated_name.end());
-            JoinStrings( concatenated_name, '/', renamed_pair.first);
-            renamed_pair.second  = value_leaf.second ;
+            JoinStrings( concatenated_name, '/', std::get<0>(renamed_pair));
+            std::get<1>(renamed_pair)  = std::get<1>(value_leaf);
+            std::get<2>(renamed_pair)  = std::get<2>(value_leaf);
 
             _substituted[value_index] = true;
 
@@ -706,11 +709,14 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
   {
     if( !_substituted[value_index] )
     {
-      const std::pair<StringTreeLeaf, Variant> & value_leaf = container.value[value_index];
+      const auto& value_leaf = container.value[value_index];
 
-      std::string& destination = (*renamed_value)[value_index].first;
-      value_leaf.first.toStr( destination );
-      (*renamed_value)[value_index].second = value_leaf.second ;
+      auto ptr = (*renamed_value)[value_index];
+      std::string& destination = std::get<0>(ptr);
+
+      std::get<0>(value_leaf).toStr( destination );
+      std::get<1>(ptr) = std::get<1>(value_leaf) ;
+      std::get<2>(ptr) = std::get<2>(value_leaf);
     }
   }
 }

@@ -49,19 +49,19 @@ struct FlatMessage {
 
   /// List of all those parsed fields that can be represented by a builtin value different from "string".
   /// This list will be filled by the funtion buildRosFlatType.
-  std::vector< std::pair<StringTreeLeaf, Variant> > value;
+  std::vector< std::tuple<StringTreeLeaf, Variant, uint32_t> > value;
 
   /// List of all those parsed fields that can be represented by a builtin value equal to "string".
   /// This list will be filled by the funtion buildRosFlatType.
-  std::vector< std::pair<StringTreeLeaf, std::string> > name;
+  std::vector< std::tuple<StringTreeLeaf, std::string, uint32_t> > name;
 
   /// Store "blobs", i.e all those fields which are vectors of BYTES (AKA uint8_t),
   /// where the vector size is greater than the argument [max_array_size]
   /// passed  to the function deserializeIntoFlatContainer
-  std::vector< std::pair<StringTreeLeaf, std::vector<uint8_t>>> blob;
+  std::vector< std::tuple<StringTreeLeaf, std::vector<uint8_t>, uint32_t>> blob;
 };
 
-typedef std::vector< std::pair<std::string, Variant> > RenamedValues;
+typedef std::vector< std::tuple<std::string, Variant, uint32_t> > RenamedValues;
 
 class Parser{
 
