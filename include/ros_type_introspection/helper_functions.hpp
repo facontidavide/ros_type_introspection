@@ -152,6 +152,7 @@ inline Variant ReadFromBufferToVariant(BuiltinType id, const absl::Span<uint8_t>
     return var_string;
   }
   case OTHER: return -1;
+  default: break;
   }
   throw std::runtime_error( "unsupported builtin type value");
 }

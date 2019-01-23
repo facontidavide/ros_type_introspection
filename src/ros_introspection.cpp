@@ -380,7 +380,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
       bool IS_BLOB = false;
 
       // Stop storing it it is NOT a blob and a very large array.
-      if( array_size > max_array_size)
+      if( array_size > static_cast<int32_t>(max_array_size))
       {
         if( field_type.typeID() == UINT8){
           IS_BLOB = true;
