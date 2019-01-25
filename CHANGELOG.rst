@@ -2,6 +2,13 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* adding new policy
+* fix compiler warnings
+* added comment
+* Contributors: Davide Faconti, Robert Haschke, YiweiHan, janEbert
+
 1.2.0 (2018-11-12)
 ------------------
 * fixed -Wreorder (`#24 <https://github.com/facontidavide/ros_type_introspection/issues/24>`_)
