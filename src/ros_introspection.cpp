@@ -186,6 +186,7 @@ void Parser::updateRuleCache()
 }
 
 
+
 void Parser::registerMessageDefinition(const std::string &msg_definition,
                                        const ROSType &main_type,
                                        const std::string &definition)
@@ -379,14 +380,16 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
 
       bool IS_BLOB = false;
 
-      // Stop storing it it is NOT a blob and a very large array.
+      // Stop storing it if is NOT a blob and a very large array.
       if( array_size > static_cast<int32_t>(max_array_size))
       {
-        if( field_type.typeID() == UINT8){
+        if( builtinSize(field_type.typeID()) == 1){
           IS_BLOB = true;
         }
         else{
-          DO_STORE = false;
+          if( _discard_large_array ){
+             DO_STORE = false;
+          }
           entire_message_parse = false;
         }
       }
@@ -416,6 +419,11 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
       {
         for (int i=0; i<array_size; i++ )
         {
+          if( DO_STORE && i > max_array_size)
+          {
+              DO_STORE = false;
+          }
+
           if( field.isArray() && DO_STORE)
           {
             new_tree_leaf.index_array.back() = i;

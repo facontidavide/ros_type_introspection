@@ -66,7 +66,12 @@ typedef std::vector< std::pair<std::string, Variant> > RenamedValues;
 class Parser{
 
 public:
-  Parser(): _rule_cache_dirty(true), _global_warnings(&std::cerr) {}
+  Parser(): _rule_cache_dirty(true), _global_warnings(&std::cerr), _discard_large_array(true) {}
+
+  void setMaxArrayPolicy( bool discard_entire_array )
+  {
+      _discard_large_array = discard_entire_array;
+  }
 
   /**
    * @brief A single message definition will (most probably) generate myltiple ROSMessage(s).
@@ -212,6 +217,7 @@ private:
   std::vector<int> _alias_array_pos;
   std::vector<std::string> _formatted_string;
   std::vector<int8_t> _substituted;
+  bool _discard_large_array;
 };
 
 }
