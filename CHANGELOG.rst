@@ -2,8 +2,8 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.1 (2019-03-24)
+------------------
 * Merge pull request `#32 <https://github.com/facontidavide/ros_type_introspection/issues/32>`_ from aeudes/fix_large_array
 * Fix invalid clamp and discard beaviour.
 * Contributors: Alexandre Eudes, Davide Faconti
