@@ -417,14 +417,15 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
       }
       else // NOT a BLOB
       {
+	bool DO_STORE_ARRAY = DO_STORE;
         for (int i=0; i<array_size; i++ )
         {
-          if( DO_STORE && i > max_array_size)
+          if( DO_STORE_ARRAY && i >= max_array_size )
           {
-              DO_STORE = false;
+              DO_STORE_ARRAY = false;
           }
 
-          if( field.isArray() && DO_STORE)
+          if( field.isArray() && DO_STORE_ARRAY )
           {
             new_tree_leaf.index_array.back() = i;
           }
@@ -439,7 +440,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
             std::string& name = flat_container->name[name_index].second;//read directly inside an existing std::string
             ReadFromBuffer<std::string>( buffer, buffer_offset, name );
 
-            if( DO_STORE )
+            if( DO_STORE_ARRAY )
             {
               flat_container->name[name_index].first = new_tree_leaf ;
               name_index++;
@@ -456,7 +457,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
             Variant var = ReadFromBufferToVariant( field_type.typeID(),
                                                    buffer,
                                                    buffer_offset );
-            if( DO_STORE )
+            if( DO_STORE_ARRAY )
             {
               flat_container->value[value_index] = std::make_pair( new_tree_leaf, std::move(var) );
               value_index++;
@@ -466,7 +467,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
 
             deserializeImpl(msg_node->child(index_m),
                             new_tree_leaf,
-                            DO_STORE);
+                            DO_STORE_ARRAY);
           }
         } // end for array_size
       }
