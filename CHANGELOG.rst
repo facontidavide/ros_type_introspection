@@ -2,6 +2,11 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* embedding abseil-cpp
+* Contributors: Davide Faconti
+
 1.3.0 (2019-01-25)
 ------------------
 * adding new policy
