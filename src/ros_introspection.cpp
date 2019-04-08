@@ -495,7 +495,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
 
   if( buffer_offset != buffer.size() )
   {
-    throw std::runtime_error("buildRosFlatType: There was an error parsing the buffer" );
+   // throw std::runtime_error("buildRosFlatType: There was an error parsing the buffer" );
   }
   return entire_message_parse;
 }
