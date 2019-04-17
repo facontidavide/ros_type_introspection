@@ -2,8 +2,8 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.2 (2019-04-17)
+------------------
 * fix issue `#35 <https://github.com/facontidavide/ros_type_introspection/issues/35>`_
 * Contributors: Davide Faconti
 
