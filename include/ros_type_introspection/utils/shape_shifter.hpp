@@ -75,7 +75,7 @@ public:
 
   //! Call to try instantiating as a particular type
   template<class M>
-  boost::shared_ptr<M> instantiate() const;
+  void instantiate(M& destination) const;
 
   //! Write serialized message contents out to a stream
   template<typename Stream>
@@ -102,7 +102,7 @@ private:
   boost::flyweight<std::string> msg_def_;
   bool typed_;
 
-  std::vector<uint8_t> msgBuf_;
+  mutable std::vector<uint8_t> msgBuf_;
 
 };
 
@@ -191,7 +191,7 @@ namespace RosIntrospection
 {
 
 template<class M> inline 
-boost::shared_ptr<M> ShapeShifter::instantiate() const
+void ShapeShifter::instantiate(M& destination) const
 {
   if (!typed_)
     throw std::runtime_error("Tried to instantiate message from an untyped ShapeShifter2.");
@@ -202,12 +202,9 @@ boost::shared_ptr<M> ShapeShifter::instantiate() const
   if (ros::message_traits::md5sum<M>() != getMD5Sum())
     throw std::runtime_error("Tried to instantiate message without matching md5sum.");
 
-  boost::shared_ptr<M> p(boost::make_shared<M>());
-
   ros::serialization::IStream s(msgBuf_.data(), msgBuf_.size() );
-  ros::serialization::deserialize(s, *p);
+  ros::serialization::deserialize(s, destination);
 
-  return p;
 }
 
 template<typename Stream> inline 
