@@ -87,6 +87,10 @@ public:
     return _hash == other._hash;
   }
 
+  bool operator!=(const ROSType& other) const  {
+    return (_hash != other._hash);
+  }
+
   bool operator<(const ROSType& other) const {
     return this->baseName() < other.baseName();
   }

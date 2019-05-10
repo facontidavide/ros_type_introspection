@@ -263,7 +263,7 @@ void Parser::applyVisitorToBuffer(const std::string &msg_identifier,
 
   if( msg_info == nullptr)
   {
-    throw std::runtime_error("deserializeIntoFlatContainer: msg_identifier not registered. Use registerMessageDefinition" );
+    throw std::runtime_error("extractField: msg_identifier not registered. Use registerMessageDefinition" );
   }
   if( getMessageByType( monitored_type, *msg_info) == nullptr)
   {
@@ -417,7 +417,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
       }
       else // NOT a BLOB
       {
-	bool DO_STORE_ARRAY = DO_STORE;
+        bool DO_STORE_ARRAY = DO_STORE;
         for (int i=0; i<array_size; i++ )
         {
           if( DO_STORE_ARRAY && i >= max_array_size )
