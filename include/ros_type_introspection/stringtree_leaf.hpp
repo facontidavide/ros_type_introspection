@@ -104,6 +104,8 @@ struct StringTreeLeaf{
   }
 };
 
+std::string CreateStringFromTreeLeaf(const StringTreeLeaf& leaf, bool skip_root);
+
 //---------------------------------
 
 inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )

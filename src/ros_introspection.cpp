@@ -563,7 +563,8 @@ inline void JoinStrings( const VectorType& vect, const char separator, std::stri
 
 void Parser::applyNameTransform(const std::string& msg_identifier,
                                 const FlatMessage& container,
-                                RenamedValues *renamed_value )
+                                RenamedValues *renamed_value,
+                                bool skip_topicname)
 {
   if( _rule_cache_dirty )
   {
@@ -699,6 +700,11 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
             //------------------------
             auto& renamed_pair = (*renamed_value)[value_index];
 
+            if( skip_topicname )
+            {
+                concatenated_name.pop_back();
+            }
+
             std::reverse(concatenated_name.begin(), concatenated_name.end());
             JoinStrings( concatenated_name, '/', renamed_pair.first);
             renamed_pair.second  = value_leaf.second ;
@@ -718,7 +724,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
       const std::pair<StringTreeLeaf, Variant> & value_leaf = container.value[value_index];
 
       std::string& destination = (*renamed_value)[value_index].first;
-      value_leaf.first.toStr( destination );
+      destination = CreateStringFromTreeLeaf( value_leaf.first, skip_topicname );
       (*renamed_value)[value_index].second = value_leaf.second ;
     }
   }

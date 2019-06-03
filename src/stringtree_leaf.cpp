@@ -80,4 +80,63 @@ int StringTreeLeaf::toStr(char* buffer) const
   return offset;
 }
 
+
+std::string CreateStringFromTreeLeaf(const StringTreeLeaf& leaf, bool skip_root)
+{
+  const StringTreeNode* leaf_node = leaf.node_ptr;
+  if( !leaf_node ){
+      return {};
+  }
+
+  absl::InlinedVector<const std::string*, 16> strings_chain;
+
+  size_t total_size = 0;
+
+  while(leaf_node)
+  {
+    const auto& str = leaf_node->value();
+    leaf_node = leaf_node->parent();
+    if( !( leaf_node == nullptr && skip_root) )
+    {
+        strings_chain.push_back( &str );
+        const size_t S = str.size();
+        if( S == 1 && str[0] == '#' )
+        {
+            total_size += 5; // super conservative
+        }
+        else{
+            total_size += S+1;
+        }
+    }
+  };
+
+  std::string out;
+  out.resize(total_size);
+  char* buffer = &out[0];
+
+  std::reverse(strings_chain.begin(),  strings_chain.end() );
+
+  size_t array_count = 0;
+  size_t offset = 0;
+
+  for( const auto& str: strings_chain)
+  {
+    const size_t S = str->size();
+    if( S == 1 && (*str)[0] == '#' )
+    {
+      buffer[offset++] = '.';
+      offset += print_number(&buffer[offset], leaf.index_array[ array_count++ ] );
+    }
+    else{
+      if( str !=  strings_chain.front() ){
+        buffer[offset++] = '/';
+      }
+      std::memcpy( &buffer[offset], str->data(), S );
+      offset += S;
+    }
+  }
+  out.resize(offset);
+  return out;
+}
+
 }

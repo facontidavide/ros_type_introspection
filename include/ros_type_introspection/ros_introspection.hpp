@@ -167,7 +167,7 @@ public:
    */
   void applyNameTransform(const std::string& msg_identifier,
                           const FlatMessage& container,
-                          RenamedValues* renamed_value );
+                          RenamedValues* renamed_value , bool dont_add_topicname = false);
 
   typedef std::function<void(const ROSType&, absl::Span<uint8_t>&)> VisitingCallback;
 
