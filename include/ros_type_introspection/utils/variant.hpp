@@ -292,7 +292,7 @@ template<typename DST> inline DST Variant::convert() const
      throw TypeException("ros::Duration and ros::Time can be converted only to double (will be seconds)");
   } break;
 
-  case OTHER: throw TypeException("Variant::convert -> cannot convert type" + std::to_string(_type)); break;
+  default: throw TypeException("Variant::convert -> cannot convert type" + std::to_string(_type)); break;
 
   }
   return  target;
@@ -338,7 +338,7 @@ template<> inline double Variant::convert() const
     target = tmp.toSec();
   }break;
 
-  case OTHER: throw TypeException("Variant::convert -> cannot convert type" + std::to_string(_type));
+  default: throw TypeException("Variant::convert -> cannot convert type" + std::to_string(_type));
 
   }
   return  target;
