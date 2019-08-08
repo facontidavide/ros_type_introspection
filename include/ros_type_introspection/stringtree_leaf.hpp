@@ -99,7 +99,7 @@ struct StringTreeLeaf{
   constexpr static const char NUM_PLACEHOLDER = '#';
 
   static const absl::string_view& num_placeholder() {
-    constexpr static const absl::string_view nph("#");
+    static const absl::string_view nph("#");
     return nph;
   }
 };
