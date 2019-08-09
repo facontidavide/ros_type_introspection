@@ -197,7 +197,7 @@ void Parser::registerMessageDefinition(const std::string &msg_definition,
   }
   _rule_cache_dirty = true;
 
-  const boost::regex msg_separation_regex("^=+\\n+");
+  const boost::regex msg_separation_regex("^\\s*=+\\n+");
 
   std::vector<std::string> split;
   std::vector<const ROSType*> all_types;
