@@ -754,12 +754,12 @@ absl::Span<uint8_t> RosIntrospection::Parser::findSubField(const std::string &ms
   const ROSMessageInfo* msg_info = getMessageInfo(msg_identifier);
   if( msg_info == nullptr)
   {
-    throw std::runtime_error("extractField: msg_identifier not registered. Use registerMessageDefinition" );
+    throw std::runtime_error("findSubField: msg_identifier not registered. Use registerMessageDefinition" );
   }
 
   if( getMessageByType( submessage_type, *msg_info) == nullptr)
   {
-    throw std::runtime_error("extractField: message type doesn't contain this field type" );
+    throw std::runtime_error("findSubField: message type doesn't contain this field type" );
   }
 
   std::function<void(const MessageTreeNode*)> recursiveImpl;
