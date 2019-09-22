@@ -514,10 +514,10 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
   flat_container->blob.resize( blob_index );
   flat_container->blob_storage.resize( blob_storage_index );
 
-  if( buffer_offset != buffer.size() )
-  {
-    throw std::runtime_error("buildRosFlatType: There was an error parsing the buffer" );
-  }
+//  if( buffer_offset != buffer.size() )
+//  {
+//    throw std::runtime_error("buildRosFlatType: There was an error parsing the buffer" );
+//  }
   return entire_message_parse;
 }
 
