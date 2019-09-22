@@ -229,6 +229,12 @@ public:
   template <typename T>
   T extractField(const std::string& msg_identifier, const absl::Span<uint8_t> &buffer);
 
+  // Find where a subfield starts. For instance, given
+  // nav_msg::Odometry, you may find the submessage geometry_msg::Pose
+  // It will stop when the first instance is found.
+  absl::Span<uint8_t> findSubField(const std::string& msg_identifier,
+                                   const ROSType &submessage_type,
+                                   const absl::Span<uint8_t> &buffer );
 
   /// Change where the warning messages are displayed.
   void setWarningsStream(std::ostream* output) { _global_warnings = output; }
@@ -271,86 +277,13 @@ template<typename T> inline
 T Parser::extractField(const std::string &msg_identifier,
                        const absl::Span<uint8_t> &buffer)
 {
-    T out;
-    bool found = false;
-
-    const ROSMessageInfo* msg_info = getMessageInfo(msg_identifier);
-    if( msg_info == nullptr)
-    {
-      throw std::runtime_error("extractField: msg_identifier not registered. Use registerMessageDefinition" );
-    }
-
-    const ROSType monitored_type (ros::message_traits::DataType<T>::value());
-
-    if( getMessageByType( monitored_type, *msg_info) == nullptr)
-    {
-        throw std::runtime_error("extractField: message type doesn't contain this field type" );
-    }
-
-    std::function<void(const MessageTreeNode*)> recursiveImpl;
-    size_t buffer_offset = 0;
-
-    recursiveImpl = [&](const MessageTreeNode* msg_node)
-    {
-      if( found ) return;
-
-      const ROSMessage* msg_definition = msg_node->value();
-      const ROSType& msg_type = msg_definition->type();
-
-      size_t index_m = 0;
-
-      if( msg_type == monitored_type  )
-      {
-            ros::serialization::IStream is( buffer.data() + buffer_offset,
-                                            buffer.size() - buffer_offset );
-            ros::serialization::deserialize(is, out);
-            found = true;
-            return;
-      }
-       // subfields
-      for (const ROSField& field : msg_definition->fields() )
-      {
-        if(field.isConstant() ) continue;
-
-        const ROSType& field_type = field.type();
-
-        int32_t array_size = field.arraySize();
-        if( array_size == -1)
-        {
-          ReadFromBuffer( buffer, buffer_offset, array_size );
-        }
-        //------------------------------------
-        if( field_type.isBuiltin() && field_type != monitored_type )
-        {
-            //fast skip
-            if( field_type.typeSize() >= 1 )
-            {
-                buffer_offset += field_type.typeSize() * array_size;
-            }
-            else{
-                ReadFromBufferToVariant( field_type.typeID(), buffer, buffer_offset );
-            }
-        }
-        else
-        {
-          for (int i=0; i<array_size; i++ )
-          {
-            recursiveImpl( msg_node->child(index_m) );
-            if( found ) return;
-          }
-          index_m++;
-        }
-      } // end for fields
-
-    }; //end lambda
-
-    //start recursion
-    recursiveImpl( msg_info->message_tree.croot() );
-
-    return out;
+  T out;
+  const ROSType submessage_type (ros::message_traits::DataType<T>::value());
+  auto sub_buffer = findSubField(msg_identifier, submessage_type, buffer);
+  ros::serialization::IStream is( sub_buffer.data(), sub_buffer.size() );
+  ros::serialization::deserialize(is, out);
+  return out;
 }
-
-
 
 }
 

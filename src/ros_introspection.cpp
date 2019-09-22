@@ -744,6 +744,86 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
   }
 }
 
+absl::Span<uint8_t> RosIntrospection::Parser::findSubField(const std::string &msg_identifier,
+                                                           const ROSType &submessage_type,
+                                                           const absl::Span<uint8_t> &buffer)
+{
+  absl::Span<uint8_t> out;
+  bool found = false;
+
+  const ROSMessageInfo* msg_info = getMessageInfo(msg_identifier);
+  if( msg_info == nullptr)
+  {
+    throw std::runtime_error("extractField: msg_identifier not registered. Use registerMessageDefinition" );
+  }
+
+  if( getMessageByType( submessage_type, *msg_info) == nullptr)
+  {
+    throw std::runtime_error("extractField: message type doesn't contain this field type" );
+  }
+
+  std::function<void(const MessageTreeNode*)> recursiveImpl;
+  size_t buffer_offset = 0;
+
+  recursiveImpl = [&](const MessageTreeNode* msg_node) -> void
+  {
+    if( found ) return;
+
+    const ROSMessage* msg_definition = msg_node->value();
+    const ROSType& msg_type = msg_definition->type();
+
+    size_t index_m = 0;
+
+    if( msg_type == submessage_type  )
+    {
+      found = true;
+      out =  absl::Span<uint8_t>( buffer.data() + buffer_offset,
+                                  size_t(buffer.size() - buffer_offset) );
+      return;
+    }
+    // subfields
+    for (const ROSField& field : msg_definition->fields() )
+    {
+      if(field.isConstant() ) continue;
+
+      const ROSType& field_type = field.type();
+
+      int32_t array_size = field.arraySize();
+      if( array_size == -1)
+      {
+        ReadFromBuffer( buffer, buffer_offset, array_size );
+      }
+      //------------------------------------
+      if( field_type.isBuiltin() && field_type != submessage_type )
+      {
+        //fast skip
+        if( field_type.typeSize() >= 1 )
+        {
+          buffer_offset += field_type.typeSize() * array_size;
+        }
+        else{
+          ReadFromBufferToVariant( field_type.typeID(), buffer, buffer_offset );
+        }
+      }
+      else
+      {
+        for (int i=0; i<array_size; i++ )
+        {
+          recursiveImpl( msg_node->child(index_m) );
+          if( found ) return;
+        }
+        index_m++;
+      }
+    } // end for fields
+
+  }; //end lambda
+
+  //start recursion
+  recursiveImpl( msg_info->message_tree.croot() );
+
+  return out;
+}
+
 }
 
 
