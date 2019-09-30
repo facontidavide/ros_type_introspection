@@ -95,12 +95,12 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name) con
                         info.message_tree.root());
 }
 
-inline bool operator ==( const std::string& a, const absl::string_view& b)
+inline bool operator ==( const std::string& a, const boost::string_ref& b)
 {
   return (  a.size() == b.size() && std::strncmp( a.data(), b.data(), a.size()) == 0);
 }
 
-inline bool FindPattern(const std::vector<absl::string_view> &pattern,
+inline bool FindPattern(const std::vector<boost::string_ref> &pattern,
                         size_t index, const StringTreeNode *tail,
                         const StringTreeNode **head)
 {
@@ -256,7 +256,7 @@ const ROSMessage* Parser::getMessageByType(const ROSType &type, const ROSMessage
 
 void Parser::applyVisitorToBuffer(const std::string &msg_identifier,
                                   const ROSType& monitored_type,
-                                  absl::Span<uint8_t> &buffer,
+                                  Span<uint8_t> &buffer,
                                   Parser::VisitingCallback callback) const
 {
   const ROSMessageInfo* msg_info = getMessageInfo(msg_identifier);
@@ -319,7 +319,7 @@ void Parser::applyVisitorToBuffer(const std::string &msg_identifier,
     } // end for fields
     if( matching )
     {
-      absl::Span<uint8_t> view( prev_buffer_ptr, buffer_offset - prev_offset);
+      Span<uint8_t> view( prev_buffer_ptr, buffer_offset - prev_offset);
       callback( monitored_type, view );
     }
   }; //end lambda
@@ -329,7 +329,7 @@ void Parser::applyVisitorToBuffer(const std::string &msg_identifier,
 }
 
 bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
-                                          absl::Span<uint8_t> buffer,
+                                          Span<uint8_t> buffer,
                                           FlatMessage* flat_container,
                                           const uint32_t max_array_size ) const
 {
@@ -496,17 +496,22 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
 
   if( buffer_offset != buffer.size() )
   {
-    throw std::runtime_error("buildRosFlatType: There was an error parsing the buffer" );
+      char msg_buff[1000];
+      sprintf(msg_buff, "buildRosFlatType: There was an error parsing the buffer.\n"
+                      "Size %d != %d, while parsing [%s]",
+              (int) buffer_offset, (int)buffer.size(), msg_identifier.c_str() );
+
+      throw std::runtime_error(msg_buff);
   }
   return entire_message_parse;
 }
 
-inline bool isNumberPlaceholder( const absl::string_view& s)
+inline bool isNumberPlaceholder( const boost::string_ref& s)
 {
   return s.size() == 1 && s[0] == '#';
 }
 
-inline bool isSubstitutionPlaceholder( const absl::string_view& s)
+inline bool isSubstitutionPlaceholder( const boost::string_ref& s)
 {
   return s.size() == 1 && s[0] == '@';
 }
@@ -638,7 +643,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
           //--------------------------
           if( new_name )
           {
-            absl::InlinedVector<absl::string_view, 12> concatenated_name;
+            boost::container::small_vector<boost::string_ref, 12> concatenated_name;
 
             const StringTreeNode* node_ptr = leaf.node_ptr;
 
@@ -646,7 +651,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
             while( node_ptr != pattern_head)
             {
-              const absl::string_view& str_val = node_ptr->value();
+              const boost::string_ref& str_val = node_ptr->value();
 
               if( isNumberPlaceholder( str_val ) )
               {
@@ -664,7 +669,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
             for (int s = rule->substitution().size()-1; s >= 0; s--)
             {
-              const absl::string_view& str_val = rule->substitution()[s];
+              const boost::string_ref& str_val = rule->substitution()[s];
 
               if( isSubstitutionPlaceholder(str_val) )
               {
@@ -681,7 +686,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
             while( node_ptr )
             {
-              absl::string_view str_val = node_ptr->value();
+              boost::string_ref str_val = node_ptr->value();
 
               if( isNumberPlaceholder(str_val) )
               {

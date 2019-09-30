@@ -33,18 +33,34 @@
 * *******************************************************************/
 
 #include "ros_type_introspection/substitution_rule.hpp"
-#include <absl/strings/str_split.h>
+#include <boost/algorithm/string/split.hpp>
 
 namespace RosIntrospection{
+
+
+std::vector<boost::string_ref> StrSplit(boost::string_ref str, boost::string_ref delim)
+{
+    std::vector<boost::string_ref> out;
+    size_t p;
+    while (true) {
+        p = str.find_first_of(delim);
+        out.push_back(str.substr(0,p));
+        if (p == boost::string_ref::npos) {
+            break;
+        }
+        str.remove_prefix(p + 1);
+    }
+    return out;
+}
 
 SubstitutionRule::SubstitutionRule(const char *pattern, const char *alias, const char *substitution):
   _full_pattern(pattern),
   _full_alias(alias),
   _full_substitution(substitution)
 {
-  _pattern      = absl::StrSplit(_full_pattern,      absl::ByAnyChar("./"));
-  _alias        = absl::StrSplit(_full_alias,        absl::ByAnyChar("./"));
-  _substitution = absl::StrSplit(_full_substitution, absl::ByAnyChar("./"));
+  _pattern      = StrSplit(_full_pattern,      "./");
+  _alias        = StrSplit(_full_alias,        "./");
+  _substitution = StrSplit(_full_substitution, "./");
 
   size_t h1 = std::hash<std::string>{}(_full_pattern);
   size_t h2 = std::hash<std::string>{}(_full_alias);
@@ -58,9 +74,9 @@ SubstitutionRule& SubstitutionRule::operator= (const SubstitutionRule& other)
     _full_alias = (other._full_alias);
     _full_substitution = (other._full_substitution);
     // this could be optimized...
-    _pattern      = absl::StrSplit(_full_pattern,      absl::ByAnyChar("./"));
-    _alias        = absl::StrSplit(_full_alias,        absl::ByAnyChar("./"));
-    _substitution = absl::StrSplit(_full_substitution, absl::ByAnyChar("./"));
+    _pattern      = StrSplit(_full_pattern,      "./");
+    _alias        = StrSplit(_full_alias,        "./");
+    _substitution = StrSplit(_full_substitution, "./");
 
     _hash = other._hash;
     return *this;

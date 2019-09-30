@@ -38,28 +38,11 @@
 #include <vector>
 #include <map>
 #include <iostream>
-#include <absl/container/inlined_vector.h>
-#include <absl/container/fixed_array.h>
+#include <boost/container/small_vector.hpp>
+#include <boost/container/static_vector.hpp>
 #include "ros_type_introspection/ros_message.hpp"
 
 namespace RosIntrospection{
-
-// Still faster in my benchmark than absl::InlinedVector
-
-template <typename T, size_t N>
-class InlinedVector{
-public:
-    InlinedVector(): _size(0) {}
-    void push_back(T val) { _array[_size++] = val; }
-    const T& back() const { return _array[_size-1]; }
-    T& back()             { return _array[_size-1]; }
-    size_t size() const { return _size; }
-    const T& operator[](size_t index) const { return _array[index]; }
-    T& operator[](size_t index)             { return _array[index]; }
-private:
-    std::array<T,N> _array;
-    size_t _size;
-};
 
 /**
  * @brief The StringTreeLeaf is, as the name suggests, a leaf (terminal node)
@@ -85,7 +68,7 @@ struct StringTreeLeaf{
 
   const StringTreeNode* node_ptr;
 
-  InlinedVector<uint16_t,8> index_array;
+  boost::container::static_vector<uint16_t,8> index_array;
 
   /// Utility functions to print the entire branch
   bool toStr(std::string &destination) const;
@@ -98,8 +81,8 @@ struct StringTreeLeaf{
   constexpr static const char SEPARATOR = '/';
   constexpr static const char NUM_PLACEHOLDER = '#';
 
-  static const absl::string_view& num_placeholder() {
-    constexpr static const absl::string_view nph("#");
+  static const boost::string_ref& num_placeholder() {
+    static const boost::string_ref nph("#");
     return nph;
   }
 };

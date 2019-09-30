@@ -7,7 +7,6 @@ find_package(catkin REQUIRED COMPONENTS
    roscpp 
    rostime 
    roscpp_serialization
-   abseil_cpp
 )
 
 # Build flags
@@ -20,7 +19,6 @@ catkin_package(
    roscpp 
    rostime 
    roscpp_serialization
-   abseil_cpp
    DEPENDS 
 )
 

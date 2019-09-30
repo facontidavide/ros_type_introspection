@@ -37,10 +37,10 @@
 
 #include <type_traits>
 #include <limits>
+#include <boost/utility/string_ref.hpp>
 #include "ros_type_introspection/builtin_types.hpp"
 #include "ros_type_introspection/details/exceptions.hpp"
 #include "ros_type_introspection/details/conversion_impl.hpp"
-#include "absl/strings/string_view.h"
 
 
 namespace RosIntrospection
@@ -140,7 +140,7 @@ inline Variant::Variant(const T& value):
 {
   static_assert (std::numeric_limits<T>::is_specialized ||
                  std::is_same<T, ros::Time>::value ||
-                 std::is_same<T, absl::string_view>::value ||
+                 std::is_same<T, boost::string_ref>::value ||
                  std::is_same<T, std::string>::value ||
                  std::is_same<T, ros::Duration>::value
                  , "not a valid type");
@@ -180,7 +180,7 @@ template<typename T> inline T Variant::extract( ) const
   return * reinterpret_cast<const T*>( &_storage.raw_data[0] );
 }
 
-template<> inline absl::string_view Variant::extract( ) const
+template<> inline boost::string_ref Variant::extract( ) const
 {
 
   if( _type != STRING )
@@ -189,7 +189,7 @@ template<> inline absl::string_view Variant::extract( ) const
   }
   const uint32_t size = *(reinterpret_cast<const uint32_t*>( &_storage.raw_string[0] ));
   char* data = static_cast<char*>(&_storage.raw_string[4]);
-  return absl::string_view(data, size);
+  return boost::string_ref(data, size);
 }
 
 template<> inline std::string Variant::extract( ) const
@@ -239,7 +239,7 @@ inline void Variant::assign(const char* buffer, size_t size)
 
 
 
-template <> inline void Variant::assign(const absl::string_view& value)
+template <> inline void Variant::assign(const boost::string_ref& value)
 {
   assign( value.data(), value.size() );
 }

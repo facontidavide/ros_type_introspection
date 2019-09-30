@@ -7,23 +7,23 @@
   ROS messages which type is unknown at compilation time.
   </description>
 
-  <maintainer email="faconti@icarustechnology.com">Davide Faconti</maintainer>
+  <maintainer email="davide.faconti@gmail.com">Davide Faconti</maintainer>
   <license>BSD</license>
 
 
   <url>http://www.ros.org/wiki/ros_type_introspection</url>
-  <author email="faconti@icarustechnology.com">Davide Faconti</author> 
+  <author email="davide.faconti@gmail.com">Davide Faconti</author>
 
   <buildtool_depend>catkin</buildtool_depend>
   
   <build_depend>roscpp</build_depend>
   <build_depend>roscpp_serialization</build_depend>
   <build_depend>rostime</build_depend>
-  <build_depend>abseil_cpp</build_depend>
+
   
   <run_depend>roscpp</run_depend>
   <run_depend>roscpp_serialization</run_depend>
   <run_depend>rostime</run_depend>
-  <run_depend>abseil_cpp</run_depend>
+
 
 </package>

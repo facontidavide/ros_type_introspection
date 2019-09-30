@@ -35,11 +35,10 @@
 
 #include "ros_type_introspection/ros_type.hpp"
 #include "ros_type_introspection/helper_functions.hpp"
-#include <absl/strings/substitute.h>
 
 namespace RosIntrospection{
 
-ROSType::ROSType(absl::string_view name):
+ROSType::ROSType(boost::string_ref name):
   _base_name(name)
 {
   int pos = -1;
@@ -56,9 +55,9 @@ ROSType::ROSType(absl::string_view name):
     _msg_name = _base_name;
   }
   else{
-    _pkg_name = absl::string_view( _base_name.data(), pos);
+    _pkg_name = boost::string_ref( _base_name.data(), pos);
     pos++;
-    _msg_name = absl::string_view( _base_name.data() + pos, _base_name.size() - pos);
+    _msg_name = boost::string_ref( _base_name.data() + pos, _base_name.size() - pos);
   }
 
   _id   = toBuiltinType( _msg_name );
@@ -69,9 +68,9 @@ ROSType& ROSType::operator= (const ROSType &other)
 {
     int pos = other._pkg_name.size();
     _base_name = other._base_name;
-    _pkg_name = absl::string_view( _base_name.data(), pos);
+    _pkg_name = boost::string_ref( _base_name.data(), pos);
     if( pos > 0) pos++;
-    _msg_name = absl::string_view( _base_name.data() + pos, _base_name.size() - pos);
+    _msg_name = boost::string_ref( _base_name.data() + pos, _base_name.size() - pos);
     _id   = other._id;
     _hash = other._hash;
     return *this;
@@ -81,24 +80,24 @@ ROSType& ROSType::operator= (ROSType &&other)
 {
     int pos = other._pkg_name.size();
     _base_name = std::move( other._base_name );
-    _pkg_name = absl::string_view( _base_name.data(), pos);
+    _pkg_name = boost::string_ref( _base_name.data(), pos);
     if( pos > 0) pos++;
-    _msg_name = absl::string_view( _base_name.data() + pos, _base_name.size() - pos);
+    _msg_name = boost::string_ref( _base_name.data() + pos, _base_name.size() - pos);
     _id   = other._id;
     _hash = other._hash;
     return *this;
 }
 
 
-void ROSType::setPkgName(absl::string_view new_pkg)
+void ROSType::setPkgName(boost::string_ref new_pkg)
 {
   assert(_pkg_name.size() == 0);
 
   int pos = new_pkg.size();
-  _base_name = absl::Substitute("$0/$1", new_pkg, _base_name);
+  _base_name = new_pkg.to_string() + "/" + _base_name;
 
-  _pkg_name = absl::string_view( _base_name.data(), pos++);
-  _msg_name = absl::string_view( _base_name.data() + pos, _base_name.size() - pos);
+  _pkg_name = boost::string_ref( _base_name.data(), pos++);
+  _msg_name = boost::string_ref( _base_name.data() + pos, _base_name.size() - pos);
 
   _hash = std::hash<std::string>{}( _base_name );
 }

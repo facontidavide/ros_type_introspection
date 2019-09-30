@@ -46,7 +46,7 @@ int StringTreeLeaf::toStr(char* buffer) const
     return -1;
   }
 
-  absl::InlinedVector<const std::string*, 16> strings_chain;
+  boost::container::small_vector<const std::string*, 16> strings_chain;
 
   while(leaf_node)
   {
@@ -88,7 +88,7 @@ std::string CreateStringFromTreeLeaf(const StringTreeLeaf& leaf, bool skip_root)
       return {};
   }
 
-  absl::InlinedVector<const std::string*, 16> strings_chain;
+  boost::container::small_vector<const std::string*, 16> strings_chain;
 
   size_t total_size = 0;
 

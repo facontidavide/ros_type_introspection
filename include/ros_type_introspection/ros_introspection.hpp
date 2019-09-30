@@ -36,10 +36,9 @@
 #define ROS_INTROSPECTION_HPP
 
 #include <unordered_set>
-#include "ros_type_introspection/stringtree_leaf.hpp"
-#include "ros_type_introspection/substitution_rule.hpp"
-#include "ros_type_introspection/helper_functions.hpp"
-#include "absl/types/span.h"
+#include <ros_type_introspection/stringtree_leaf.hpp>
+#include <ros_type_introspection/substitution_rule.hpp>
+#include <ros_type_introspection/helper_functions.hpp>
 
 namespace RosIntrospection{
 
@@ -141,7 +140,7 @@ public:
    * skipped because an array has (size > max_array_size)
    */
   bool deserializeIntoFlatContainer(const std::string& msg_identifier,
-                                    absl::Span<uint8_t> buffer,
+                                    Span<uint8_t> buffer,
                                     FlatMessage* flat_container_output,
                                     const uint32_t max_array_size ) const;
 
@@ -169,7 +168,7 @@ public:
                           const FlatMessage& container,
                           RenamedValues* renamed_value , bool dont_add_topicname = false);
 
-  typedef std::function<void(const ROSType&, absl::Span<uint8_t>&)> VisitingCallback;
+  typedef std::function<void(const ROSType&, Span<uint8_t>&)> VisitingCallback;
 
   /**
    * @brief applyVisitorToBuffer is used to pass a callback that is invoked every time
@@ -184,11 +183,11 @@ public:
    * @param callback          The callback.
    */
   void applyVisitorToBuffer(const std::string& msg_identifier, const ROSType &monitored_type,
-                            absl::Span<uint8_t> &buffer,
+                            Span<uint8_t> &buffer,
                             VisitingCallback callback) const;
 
   template <typename T>
-  T extractField(const std::string& msg_identifier, const absl::Span<uint8_t> &buffer);
+  T extractField(const std::string& msg_identifier, const Span<uint8_t> &buffer);
 
 
   /// Change where the warning messages are displayed.
@@ -229,7 +228,7 @@ private:
 
 template<typename T> inline
 T Parser::extractField(const std::string &msg_identifier,
-                       const absl::Span<uint8_t> &buffer)
+                       const Span<uint8_t> &buffer)
 {
     T out;
     bool found = false;

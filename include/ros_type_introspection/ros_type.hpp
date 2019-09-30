@@ -52,7 +52,7 @@ public:
 
   ROSType(){}
 
-  ROSType(absl::string_view name);
+  ROSType(boost::string_ref name);
 
   ROSType(const ROSType& other) {  *this = other; }
 
@@ -67,12 +67,12 @@ public:
   const std::string& baseName() const;
 
   /// ex.: geometry_msgs/Pose -> "Pose"
-  const absl::string_view& msgName()  const;
+  const boost::string_ref& msgName()  const;
 
   /// ex.: geometry_msgs/Pose -> "geometry_msgs"
-  const absl::string_view& pkgName()  const;
+  const boost::string_ref& pkgName()  const;
 
-  void setPkgName(absl::string_view new_pkg);
+  void setPkgName(boost::string_ref new_pkg);
 
   /// True if the type is ROS builtin
   bool isBuiltin() const;
@@ -101,8 +101,8 @@ protected:
 
   BuiltinType _id;
   std::string _base_name;
-  absl::string_view _msg_name;
-  absl::string_view _pkg_name;
+  boost::string_ref _msg_name;
+  boost::string_ref _pkg_name;
   size_t _hash;
 
 };
@@ -114,12 +114,12 @@ inline const std::string &ROSType::baseName() const
   return _base_name;
 }
 
-inline const absl::string_view& ROSType::msgName() const
+inline const boost::string_ref& ROSType::msgName() const
 {
   return _msg_name;
 }
 
-inline const absl::string_view &ROSType::pkgName() const
+inline const boost::string_ref &ROSType::pkgName() const
 {
   return _pkg_name;
 }
@@ -147,8 +147,8 @@ inline std::ostream& operator<<(std::ostream &os, const ROSType& t )
   return os;
 }
 
-inline BuiltinType toBuiltinType(const absl::string_view& s) {
-  static std::map<absl::string_view, BuiltinType> string_to_builtin_map {
+inline BuiltinType toBuiltinType(const boost::string_ref& s) {
+  static std::map<boost::string_ref, BuiltinType> string_to_builtin_map {
     { "bool", BOOL },
     { "byte", BYTE },
     { "char", CHAR },

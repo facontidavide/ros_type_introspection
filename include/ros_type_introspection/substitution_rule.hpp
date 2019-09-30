@@ -37,7 +37,7 @@
 #define ROS_INTROSPECTION_SUBSTITUTION_RULE_H
 
 #include "ros_type_introspection/ros_type.hpp"
-#include <absl/strings/string_view.h>
+#include <boost/utility/string_ref.hpp>
 
 
 namespace RosIntrospection{
@@ -117,9 +117,9 @@ public:
 
   SubstitutionRule& operator= (const SubstitutionRule& other);
 
-  const std::vector<absl::string_view>& pattern() const      { return _pattern; }
-  const std::vector<absl::string_view>& alias() const        { return _alias; }
-  const std::vector<absl::string_view>& substitution() const { return _substitution; }
+  const std::vector<boost::string_ref>& pattern() const      { return _pattern; }
+  const std::vector<boost::string_ref>& alias() const        { return _alias; }
+  const std::vector<boost::string_ref>& substitution() const { return _substitution; }
 
   bool operator == (const SubstitutionRule& other) const
   {
@@ -131,9 +131,9 @@ private:
   std::string _full_pattern;
   std::string _full_alias;
   std::string _full_substitution;
-  std::vector<absl::string_view> _pattern;
-  std::vector<absl::string_view> _alias;
-  std::vector<absl::string_view> _substitution;
+  std::vector<boost::string_ref> _pattern;
+  std::vector<boost::string_ref> _alias;
+  std::vector<boost::string_ref> _substitution;
   size_t _hash;
 } ;
 
