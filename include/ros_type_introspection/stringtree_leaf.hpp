@@ -87,7 +87,7 @@ struct StringTreeLeaf{
   }
 };
 
-std::string CreateStringFromTreeLeaf(const StringTreeLeaf& leaf, bool skip_root);
+void CreateStringFromTreeLeaf(const StringTreeLeaf& leaf, bool skip_root, std::string &out);
 
 //---------------------------------
 

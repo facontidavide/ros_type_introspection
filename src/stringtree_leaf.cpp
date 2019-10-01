@@ -46,7 +46,7 @@ int StringTreeLeaf::toStr(char* buffer) const
     return -1;
   }
 
-  boost::container::small_vector<const std::string*, 16> strings_chain;
+  boost::container::static_vector<const std::string*, 16> strings_chain;
 
   while(leaf_node)
   {
@@ -81,14 +81,15 @@ int StringTreeLeaf::toStr(char* buffer) const
 }
 
 
-std::string CreateStringFromTreeLeaf(const StringTreeLeaf& leaf, bool skip_root)
+void CreateStringFromTreeLeaf(const StringTreeLeaf& leaf, bool skip_root, std::string& out)
 {
   const StringTreeNode* leaf_node = leaf.node_ptr;
   if( !leaf_node ){
-      return {};
+      out.clear();
+      return ;
   }
 
-  boost::container::small_vector<const std::string*, 16> strings_chain;
+  boost::container::static_vector<const std::string*, 16> strings_chain;
 
   size_t total_size = 0;
 
@@ -110,7 +111,6 @@ std::string CreateStringFromTreeLeaf(const StringTreeLeaf& leaf, bool skip_root)
     }
   };
 
-  std::string out;
   out.resize(total_size);
   char* buffer = &out[0];
 
@@ -136,7 +136,6 @@ std::string CreateStringFromTreeLeaf(const StringTreeLeaf& leaf, bool skip_root)
     }
   }
   out.resize(offset);
-  return out;
 }
 
 }

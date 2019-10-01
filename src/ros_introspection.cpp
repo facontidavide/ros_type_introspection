@@ -663,7 +663,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
           //--------------------------
           if( new_name )
           {
-            boost::container::small_vector<boost::string_ref, 12> concatenated_name;
+            boost::container::static_vector<boost::string_ref, 12> concatenated_name;
 
             const StringTreeNode* node_ptr = leaf.node_ptr;
 
@@ -749,7 +749,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
       const std::pair<StringTreeLeaf, Variant> & value_leaf = container.value[value_index];
 
       std::string& destination = (*renamed_value)[value_index].first;
-      destination = CreateStringFromTreeLeaf( value_leaf.first, skip_topicname );
+      CreateStringFromTreeLeaf( value_leaf.first, skip_topicname, destination );
       (*renamed_value)[value_index].second = value_leaf.second ;
     }
   }
