@@ -2,8 +2,8 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.0 (2019-10-01)
+------------------
 * removed abseil
 * Merge branch 'master' of https://github.com/facontidavide/ros_type_introspection
 * minor changes in the API
