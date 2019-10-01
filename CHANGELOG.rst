@@ -2,8 +2,8 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.2 (2019-10-01)
+------------------
 * speed optimization (fix regression in 2.0)
 * Contributors: Davide Faconti
 
