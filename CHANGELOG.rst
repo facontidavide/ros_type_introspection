@@ -2,6 +2,11 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix (old abseil stuff)
+* Contributors: Davide Faconti
+
 2.0.0 (2019-10-01)
 ------------------
 * removed abseil
