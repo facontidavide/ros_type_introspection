@@ -58,7 +58,7 @@ struct FlatMessage {
   /// Store "blobs", i.e all those fields which are vectors of BYTES (AKA uint8_t),
   /// where the vector size is greater than the argument [max_array_size]
   /// passed  to the function deserializeIntoFlatContainer
-  std::vector< std::pair<StringTreeLeaf, absl::Span<uint8_t>>> blob;
+  std::vector< std::pair<StringTreeLeaf, Span<uint8_t>>> blob;
 
   std::vector<std::vector<uint8_t>> blob_storage;
 };

@@ -426,10 +426,10 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
             std::memcpy(storage.data(), &buffer[buffer_offset], array_size);
             blob_storage_index++;
 
-            blob = absl::Span<uint8_t>( storage.data(), storage.size() );
+            blob = Span<uint8_t>( storage.data(), storage.size() );
           }
           else{
-            blob = absl::Span<uint8_t>( &buffer[buffer_offset], array_size);
+            blob = Span<uint8_t>( &buffer[buffer_offset], array_size);
           }
         }
         buffer_offset += array_size;
