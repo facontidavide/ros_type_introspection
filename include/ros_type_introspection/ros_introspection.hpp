@@ -58,7 +58,9 @@ struct FlatMessage {
   /// Store "blobs", i.e all those fields which are vectors of BYTES (AKA uint8_t),
   /// where the vector size is greater than the argument [max_array_size]
   /// passed  to the function deserializeIntoFlatContainer
-  std::vector< std::pair<StringTreeLeaf, std::vector<uint8_t>>> blob;
+  std::vector< std::pair<StringTreeLeaf, absl::Span<uint8_t>>> blob;
+
+  std::vector<std::vector<uint8_t>> blob_storage;
 };
 
 typedef std::vector< std::pair<std::string, Variant> > RenamedValues;
@@ -66,11 +68,48 @@ typedef std::vector< std::pair<std::string, Variant> > RenamedValues;
 class Parser{
 
 public:
-  Parser(): _rule_cache_dirty(true), _global_warnings(&std::cerr), _discard_large_array(true) {}
+  Parser(): _rule_cache_dirty(true),
+            _global_warnings(&std::cerr),
+            _discard_large_array(DISCARD_LARGE_ARRAYS),
+            _blob_policy(STORE_BLOB_AS_COPY)
+ {}
+
+  enum MaxArrayPolicy: bool {
+    DISCARD_LARGE_ARRAYS = true,
+    KEEP_LARGE_ARRAYS = false
+  };
+
+  void setMaxArrayPolicy( MaxArrayPolicy discard_entire_array )
+  {
+      _discard_large_array = discard_entire_array;
+  }
 
   void setMaxArrayPolicy( bool discard_entire_array )
   {
-      _discard_large_array = discard_entire_array;
+    _discard_large_array = static_cast<MaxArrayPolicy>(discard_entire_array);
+  }
+
+  MaxArrayPolicy maxArrayPolicy() const
+  {
+    return _discard_large_array;
+  }
+
+  enum BlobPolicy {
+    STORE_BLOB_AS_COPY,
+    STORE_BLOB_AS_REFERENCE};
+
+  // If set to STORE_BLOB_AS_COPY, a copy of the original vector will be stored in the FlatMessage.
+  // This may have a large impact on performance.
+  // if STOR_BLOB_AS_REFERENCE is used instead, it is dramatically faster, but you must be careful with
+  // dangling pointers.
+  void setBlobPolicy( BlobPolicy policy )
+  {
+    _blob_policy = policy;
+  }
+
+  BlobPolicy blobPolicy() const
+  {
+    return _blob_policy;
   }
 
   /**
@@ -221,7 +260,8 @@ private:
   std::vector<int> _alias_array_pos;
   std::vector<std::string> _formatted_string;
   std::vector<int8_t> _substituted;
-  bool _discard_large_array;
+  MaxArrayPolicy _discard_large_array;
+  BlobPolicy _blob_policy;
 };
 
 //---------------------------------------------------

@@ -197,7 +197,7 @@ void Parser::registerMessageDefinition(const std::string &msg_definition,
   }
   _rule_cache_dirty = true;
 
-  const boost::regex msg_separation_regex("^=+\\n+");
+  const boost::regex msg_separation_regex("^\\s*=+\\n+");
 
   std::vector<std::string> split;
   std::vector<const ROSType*> all_types;
@@ -340,6 +340,8 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
   size_t value_index = 0;
   size_t name_index = 0;
   size_t blob_index = 0;
+  size_t blob_storage_index = 0;
+
 
   if( msg_info == nullptr)
   {
@@ -394,7 +396,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
         }
       }
 
-      if( IS_BLOB ) // special case. This is a "blob", typically an image, a map, etc.
+      if( IS_BLOB ) // special case. This is a "blob", typically an image, a map, pointcloud, etc.
       {
         if( flat_container->blob.size() <= blob_index)
         {
@@ -408,10 +410,27 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
         if( DO_STORE )
         {
           flat_container->blob[blob_index].first  = new_tree_leaf ;
-          std::vector<uint8_t>& blob = flat_container->blob[blob_index].second;
+          auto& blob = flat_container->blob[blob_index].second;
           blob_index++;
-          blob.resize( array_size );
-          std::memcpy( blob.data(), &buffer[buffer_offset], array_size);
+
+          if( _blob_policy == STORE_BLOB_AS_COPY)
+          {
+            if( flat_container->blob_storage.size() <= blob_storage_index)
+            {
+              const size_t increased_size = std::max( size_t(8), flat_container->blob_storage.size() * 2);
+              flat_container->blob_storage.resize( increased_size );
+            }
+
+            auto& storage = flat_container->blob_storage[blob_storage_index];
+            storage.resize(array_size);
+            std::memcpy(storage.data(), &buffer[buffer_offset], array_size);
+            blob_storage_index++;
+
+            blob = absl::Span<uint8_t>( storage.data(), storage.size() );
+          }
+          else{
+            blob = absl::Span<uint8_t>( &buffer[buffer_offset], array_size);
+          }
         }
         buffer_offset += array_size;
       }
@@ -493,6 +512,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
   flat_container->name.resize( name_index );
   flat_container->value.resize( value_index );
   flat_container->blob.resize( blob_index );
+  flat_container->blob_storage.resize( blob_storage_index );
 
   if( buffer_offset != buffer.size() )
   {
