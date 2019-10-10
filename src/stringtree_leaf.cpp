@@ -111,7 +111,7 @@ void CreateStringFromTreeLeaf(const StringTreeLeaf& leaf, bool skip_root, std::s
     }
   };
 
-  out.reserve(total_size);
+  out.resize(total_size);
   char* buffer = &out[0];
 
   std::reverse(strings_chain.begin(),  strings_chain.end() );
