@@ -37,8 +37,6 @@
 
 namespace RosIntrospection{
 
-
-
 int StringTreeLeaf::toStr(char* buffer) const
 {
   const StringTreeNode* leaf_node = this->node_ptr;
@@ -51,7 +49,7 @@ int StringTreeLeaf::toStr(char* buffer) const
   while(leaf_node)
   {
     const auto& str = leaf_node->value();
-    strings_chain.push_back( &str );
+    strings_chain.push_back( &str.name );
     leaf_node = leaf_node->parent();
   };
 
@@ -95,7 +93,7 @@ void CreateStringFromTreeLeaf(const StringTreeLeaf& leaf, bool skip_root, std::s
 
   while(leaf_node)
   {
-    const auto& str = leaf_node->value();
+    const auto& str = leaf_node->value().name;
     leaf_node = leaf_node->parent();
     if( !( leaf_node == nullptr && skip_root) )
     {

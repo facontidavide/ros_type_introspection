@@ -61,12 +61,12 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name) con
       if(field.isConstant() == false) {
 
         // Let's add first a child to string_node
-        string_node->addChild( field.name() );
+        string_node->addChild( MessageField{field.name(), &field.type()} );
         StringTreeNode*  new_string_node = &(string_node->children().back());
         if( field.isArray())
         {
           new_string_node->children().reserve(1);
-          new_string_node = new_string_node->addChild("#");
+          new_string_node = new_string_node->addChild({"#"});
         }
 
         const ROSMessage* next_msg = nullptr;
@@ -86,7 +86,7 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name) con
     } // end of for fields
   };//end of lambda
 
-  info.string_tree.root()->setValue( type_name );
+  info.string_tree.root()->setValue( MessageField(type_name) );
   info.message_tree.root()->setValue( &info.type_list.front() );
   //TODO info.type_tree.root()->value() =
   // start recursion
@@ -104,7 +104,7 @@ inline bool FindPattern(const std::vector<boost::string_ref> &pattern,
                         size_t index, const StringTreeNode *tail,
                         const StringTreeNode **head)
 {
-  if(  tail->value() == pattern[index] )
+  if(  tail->value().name == pattern[index] )
   {
     index++;
   }
@@ -553,7 +553,7 @@ inline int  PatternMatchAndIndexPosition(const StringTreeLeaf& leaf,
   {
     if( node_ptr != pattern_head )
     {
-      if( isNumberPlaceholder( node_ptr->value() ))
+      if( isNumberPlaceholder( node_ptr->value().name ))
       {
         pos--;
       }
@@ -675,7 +675,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
             while( node_ptr != pattern_head)
             {
-              const boost::string_ref& str_val = node_ptr->value();
+              boost::string_ref str_val = node_ptr->value().name;
 
               if( isNumberPlaceholder( str_val ) )
               {
@@ -710,7 +710,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
             while( node_ptr )
             {
-              boost::string_ref str_val = node_ptr->value();
+              boost::string_ref str_val = node_ptr->value().name;
 
               if( isNumberPlaceholder(str_val) )
               {

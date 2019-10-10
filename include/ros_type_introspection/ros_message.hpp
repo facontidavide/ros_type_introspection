@@ -71,8 +71,19 @@ private:
   std::vector<ROSField> _fields;
 };
 
-typedef details::TreeNode<std::string> StringTreeNode;
-typedef details::Tree<std::string> StringTree;
+struct MessageField
+{
+  std::string name;
+  const ROSType* type;
+
+  MessageField():type(nullptr){}
+  MessageField(boost::string_ref field_name, const ROSType* field_type=nullptr):
+   name(field_name.data(),field_name.size()), type(field_type)
+  {}
+};
+
+typedef details::TreeNode<MessageField> StringTreeNode;
+typedef details::Tree<MessageField> StringTree;
 
 typedef details::TreeNode<const ROSMessage*> MessageTreeNode;
 typedef details::Tree<const ROSMessage*> MessageTree;
