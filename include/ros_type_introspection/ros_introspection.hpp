@@ -36,7 +36,7 @@
 #define ROS_INTROSPECTION_HPP
 
 #include <unordered_set>
-#include <ros_type_introspection/stringtree_leaf.hpp>
+#include <ros_type_introspection/fieldtree_leaf.hpp>
 #include <ros_type_introspection/substitution_rule.hpp>
 #include <ros_type_introspection/helper_functions.hpp>
 
@@ -45,20 +45,20 @@ namespace RosIntrospection{
 struct FlatMessage {
 
   /// Tree that the StringTreeLeaf(s) refer to.
-  const StringTree* tree;
+  const FieldsTree* tree;
 
   /// List of all those parsed fields that can be represented by a builtin value different from "string".
   /// This list will be filled by the funtion buildRosFlatType.
-  std::vector< std::pair<StringTreeLeaf, Variant> > value;
+  std::vector< std::pair<FieldTreeLeaf, Variant> > value;
 
   /// List of all those parsed fields that can be represented by a builtin value equal to "string".
   /// This list will be filled by the funtion buildRosFlatType.
-  std::vector< std::pair<StringTreeLeaf, std::string> > name;
+  std::vector< std::pair<FieldTreeLeaf, std::string> > name;
 
   /// Store "blobs", i.e all those fields which are vectors of BYTES (AKA uint8_t),
   /// where the vector size is greater than the argument [max_array_size]
   /// passed  to the function deserializeIntoFlatContainer
-  std::vector< std::pair<StringTreeLeaf, Span<uint8_t>>> blob;
+  std::vector< std::pair<FieldTreeLeaf, Span<uint8_t>>> blob;
 
   std::vector<std::vector<uint8_t>> blob_storage;
 };
@@ -240,8 +240,8 @@ private:
       rule( &r ), pattern_head(nullptr), alias_head(nullptr)
     {}
     const SubstitutionRule* rule;
-    const StringTreeNode* pattern_head;
-    const StringTreeNode* alias_head;
+    const FieldsTreeNode* pattern_head;
+    const FieldsTreeNode* alias_head;
     bool operator==(const RulesCache& other) { return  this->rule == other.rule; }
   };
 

@@ -82,15 +82,15 @@ struct MessageField
   {}
 };
 
-typedef details::TreeNode<MessageField> StringTreeNode;
-typedef details::Tree<MessageField> StringTree;
+typedef details::TreeNode<MessageField> FieldsTreeNode;
+typedef details::Tree<MessageField> FieldsTree;
 
 typedef details::TreeNode<const ROSMessage*> MessageTreeNode;
 typedef details::Tree<const ROSMessage*> MessageTree;
 
 struct ROSMessageInfo
 {
-  StringTree  string_tree;
+  FieldsTree  fields_tree;
   MessageTree message_tree;
   std::vector<ROSMessage> type_list;
 };

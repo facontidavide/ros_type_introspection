@@ -46,9 +46,9 @@ namespace RosIntrospection {
 
 void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name) const
 {
-  std::function<void(const ROSMessage*, StringTreeNode*, MessageTreeNode* )> recursiveTreeCreator;
+  std::function<void(const ROSMessage*, FieldsTreeNode*, MessageTreeNode* )> recursiveTreeCreator;
 
-  recursiveTreeCreator = [&](const ROSMessage* msg_definition, StringTreeNode* string_node, MessageTreeNode* msg_node)
+  recursiveTreeCreator = [&](const ROSMessage* msg_definition, FieldsTreeNode* string_node, MessageTreeNode* msg_node)
   {
     // note: should use reserve here, NOT resize
     const size_t NUM_FIELDS = msg_definition->fields().size();
@@ -62,7 +62,7 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name) con
 
         // Let's add first a child to string_node
         string_node->addChild( MessageField{field.name(), &field.type()} );
-        StringTreeNode*  new_string_node = &(string_node->children().back());
+        FieldsTreeNode*  new_string_node = &(string_node->children().back());
         if( field.isArray())
         {
           new_string_node->children().reserve(1);
@@ -86,12 +86,12 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name) con
     } // end of for fields
   };//end of lambda
 
-  info.string_tree.root()->setValue( MessageField(type_name) );
+  info.fields_tree.root()->setValue(  MessageField(type_name) );
   info.message_tree.root()->setValue( &info.type_list.front() );
   //TODO info.type_tree.root()->value() =
   // start recursion
   recursiveTreeCreator( &info.type_list.front(),
-                        info.string_tree.root(),
+                        info.fields_tree.root(),
                         info.message_tree.root());
 }
 
@@ -101,8 +101,8 @@ inline bool operator ==( const std::string& a, const boost::string_ref& b)
 }
 
 inline bool FindPattern(const std::vector<boost::string_ref> &pattern,
-                        size_t index, const StringTreeNode *tail,
-                        const StringTreeNode **head)
+                        size_t index, const FieldsTreeNode *tail,
+                        const FieldsTreeNode **head)
 {
   if(  tail->value().name == pattern[index] )
   {
@@ -171,8 +171,8 @@ void Parser::updateRuleCache()
         for(const auto& rule: rule_set )
         {
           RulesCache cache(rule);
-          FindPattern( cache.rule->pattern(), 0, msg_info.string_tree.croot(), &cache.pattern_head );
-          FindPattern( cache.rule->alias(),   0, msg_info.string_tree.croot(), &cache.alias_head );
+          FindPattern( cache.rule->pattern(), 0, msg_info.fields_tree.croot(), &cache.pattern_head );
+          FindPattern( cache.rule->alias(),   0, msg_info.fields_tree.croot(), &cache.alias_head );
           if( cache.pattern_head && cache.alias_head
               && std::find( cache_vector.begin(), cache_vector.end(), cache) == cache_vector.end()
               )
@@ -359,11 +359,11 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
   }
   size_t buffer_offset = 0;
 
-  std::function<void(const MessageTreeNode*,StringTreeLeaf,bool)> deserializeImpl;
+  std::function<void(const MessageTreeNode*,FieldTreeLeaf,bool)> deserializeImpl;
 
   deserializeImpl = [&](
       const MessageTreeNode* msg_node,
-      const StringTreeLeaf& tree_leaf,
+      const FieldTreeLeaf& tree_leaf,
       bool DO_STORE)
   {
     const ROSMessage* msg_definition = msg_node->value();
@@ -504,10 +504,10 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
   }; //end of lambda
 
 
-  flat_container->tree = &msg_info->string_tree;
+  flat_container->tree = &msg_info->fields_tree;
 
-  StringTreeLeaf rootnode;
-  rootnode.node_ptr = msg_info->string_tree.croot();
+  FieldTreeLeaf rootnode;
+  rootnode.node_ptr = msg_info->fields_tree.croot();
 
   deserializeImpl( msg_info->message_tree.croot(),
                    rootnode,
@@ -542,10 +542,10 @@ inline bool isSubstitutionPlaceholder( const boost::string_ref& s)
 
 // given a leaf of the tree, that can have multiple index_array,
 // find the only index which corresponds to the # in the pattern
-inline int  PatternMatchAndIndexPosition(const StringTreeLeaf& leaf,
-                                         const StringTreeNode* pattern_head )
+inline int  PatternMatchAndIndexPosition(const FieldTreeLeaf& leaf,
+                                         const FieldsTreeNode* pattern_head )
 {
-  const StringTreeNode* node_ptr = leaf.node_ptr;
+  const FieldsTreeNode* node_ptr = leaf.node_ptr;
 
   int pos = leaf.index_array.size() -1;
 
@@ -623,14 +623,14 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
     for(const RulesCache& cache: rules_cache)
     {
       const SubstitutionRule* rule         = cache.rule;
-      const StringTreeNode*   pattern_head = cache.pattern_head;
-      const StringTreeNode*   alias_head   = cache.alias_head;
+      const FieldsTreeNode*   pattern_head = cache.pattern_head;
+      const FieldsTreeNode*   alias_head   = cache.alias_head;
 
       if( !pattern_head || !alias_head  ) continue;
 
       for (size_t n=0; n<num_names; n++)
       {
-        const StringTreeLeaf& name_leaf = container.name[n].first;
+        const FieldTreeLeaf& name_leaf = container.name[n].first;
         _alias_array_pos[n] = PatternMatchAndIndexPosition(name_leaf, alias_head);
       }
 
@@ -640,7 +640,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
 
         const auto& value_leaf = container.value[value_index];
 
-        const StringTreeLeaf& leaf = value_leaf.first;
+        const FieldTreeLeaf& leaf = value_leaf.first;
 
         int pattern_array_pos = PatternMatchAndIndexPosition(leaf,   pattern_head);
 
@@ -651,7 +651,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
           for (size_t n=0; n < num_names; n++)
           {
             const auto & it = container.name[n];
-            const StringTreeLeaf& alias_leaf = it.first;
+            const FieldTreeLeaf& alias_leaf = it.first;
 
             if( _alias_array_pos[n] >= 0 ) // -1 if pattern doesn't match
             {
@@ -669,7 +669,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
           {
             boost::container::static_vector<boost::string_ref, 12> concatenated_name;
 
-            const StringTreeNode* node_ptr = leaf.node_ptr;
+            const FieldsTreeNode* node_ptr = leaf.node_ptr;
 
             int position = leaf.index_array.size()-1;
 
@@ -750,7 +750,7 @@ void Parser::applyNameTransform(const std::string& msg_identifier,
   {
     if( !_substituted[value_index] )
     {
-      const std::pair<StringTreeLeaf, Variant> & value_leaf = container.value[value_index];
+      const std::pair<FieldTreeLeaf, Variant> & value_leaf = container.value[value_index];
 
       std::string& destination = (*renamed_value)[value_index].first;
       CreateStringFromTreeLeaf( value_leaf.first, skip_topicname, destination );

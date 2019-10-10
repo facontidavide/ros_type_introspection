@@ -39,7 +39,7 @@ include_directories(
 
    src/ros_type.cpp
    src/ros_field.cpp
-   src/stringtree_leaf.cpp
+   src/fieldtree_leaf.cpp
    src/ros_message.cpp
    src/substitution_rule.cpp
    src/ros_introspection.cpp

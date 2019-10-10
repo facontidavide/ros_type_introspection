@@ -62,11 +62,11 @@ namespace RosIntrospection{
  * array_size will be equal to two and index_array will contain these numbers {2,3}
  *
  */
-struct StringTreeLeaf{
+struct FieldTreeLeaf{
 
-  StringTreeLeaf();
+  FieldTreeLeaf();
 
-  const StringTreeNode* node_ptr;
+  const FieldsTreeNode* node_ptr;
 
   boost::container::static_vector<uint16_t,8> index_array;
 
@@ -80,18 +80,13 @@ struct StringTreeLeaf{
 
   constexpr static const char SEPARATOR = '/';
   constexpr static const char NUM_PLACEHOLDER = '#';
-
-  static const boost::string_ref& num_placeholder() {
-    static const boost::string_ref nph("#");
-    return nph;
-  }
 };
 
-void CreateStringFromTreeLeaf(const StringTreeLeaf& leaf, bool skip_root, std::string &out);
+void CreateStringFromTreeLeaf(const FieldTreeLeaf& leaf, bool skip_root, std::string &out);
 
 //---------------------------------
 
-inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
+inline std::ostream& operator<<(std::ostream &os, const FieldTreeLeaf& leaf )
 {
   std::string dest;
   leaf.toStr(dest);
@@ -99,11 +94,11 @@ inline std::ostream& operator<<(std::ostream &os, const StringTreeLeaf& leaf )
   return os;
 }
 
-inline StringTreeLeaf::StringTreeLeaf(): node_ptr(nullptr)
+inline FieldTreeLeaf::FieldTreeLeaf(): node_ptr(nullptr)
 {  }
 
 
-inline bool StringTreeLeaf::toStr(std::string& destination) const
+inline bool FieldTreeLeaf::toStr(std::string& destination) const
 {
   char buffer[256];
   int offset = this->toStr(buffer);

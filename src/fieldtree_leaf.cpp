@@ -32,14 +32,14 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 * *******************************************************************/
 
-#include "ros_type_introspection/stringtree_leaf.hpp"
+#include "ros_type_introspection/fieldtree_leaf.hpp"
 #include "ros_type_introspection/helper_functions.hpp"
 
 namespace RosIntrospection{
 
-int StringTreeLeaf::toStr(char* buffer) const
+int FieldTreeLeaf::toStr(char* buffer) const
 {
-  const StringTreeNode* leaf_node = this->node_ptr;
+  const FieldsTreeNode* leaf_node = this->node_ptr;
   if( !leaf_node ){
     return -1;
   }
@@ -79,9 +79,9 @@ int StringTreeLeaf::toStr(char* buffer) const
 }
 
 
-void CreateStringFromTreeLeaf(const StringTreeLeaf& leaf, bool skip_root, std::string& out)
+void CreateStringFromTreeLeaf(const FieldTreeLeaf& leaf, bool skip_root, std::string& out)
 {
-  const StringTreeNode* leaf_node = leaf.node_ptr;
+  const FieldsTreeNode* leaf_node = leaf.node_ptr;
   if( !leaf_node ){
       out.clear();
       return ;
@@ -93,7 +93,7 @@ void CreateStringFromTreeLeaf(const StringTreeLeaf& leaf, bool skip_root, std::s
 
   while(leaf_node)
   {
-    const auto& str = leaf_node->value().name;
+    const auto& str = leaf_node->value().name ;
     leaf_node = leaf_node->parent();
     if( !( leaf_node == nullptr && skip_root) )
     {
