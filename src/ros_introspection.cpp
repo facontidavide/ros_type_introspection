@@ -48,7 +48,9 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name) con
 {
   std::function<void(const ROSMessage*, FieldsTreeNode*, MessageTreeNode* )> recursiveTreeCreator;
 
-  recursiveTreeCreator = [&](const ROSMessage* msg_definition, FieldsTreeNode* string_node, MessageTreeNode* msg_node)
+  recursiveTreeCreator = [&](const ROSMessage* msg_definition,
+                             FieldsTreeNode* string_node,
+                             MessageTreeNode* msg_node)
   {
     // note: should use reserve here, NOT resize
     const size_t NUM_FIELDS = msg_definition->fields().size();
@@ -61,7 +63,7 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name) con
       if(field.isConstant() == false) {
 
         // Let's add first a child to string_node
-        string_node->addChild( MessageField{field.name(), &field.type()} );
+        string_node->addChild( {field.name(), &field.type() } );
         FieldsTreeNode*  new_string_node = &(string_node->children().back());
         if( field.isArray())
         {
@@ -86,7 +88,7 @@ void Parser::createTrees(ROSMessageInfo& info, const std::string &type_name) con
     } // end of for fields
   };//end of lambda
 
-  info.fields_tree.root()->setValue(  MessageField(type_name) );
+  info.fields_tree.root()->setValue( {type_name, &info.type_list.front().type()} );
   info.message_tree.root()->setValue( &info.type_list.front() );
   //TODO info.type_tree.root()->value() =
   // start recursion
