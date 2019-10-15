@@ -459,7 +459,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
             uint32_t string_size = 0;
             ReadFromBuffer( buffer, buffer_offset, string_size );
 
-            if( buffer_offset + string_size > buffer.size())
+            if( buffer_offset + string_size > static_cast<std::size_t>(buffer.size()))
             {
                 throw std::runtime_error("Buffer overrun in RosIntrospection::ReadFromBuffer");
             }
