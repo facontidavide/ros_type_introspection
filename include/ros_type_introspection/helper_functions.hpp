@@ -79,7 +79,7 @@ inline int print_number(char* buffer, uint16_t value)
 // helper function to deserialize raw memory
 template <typename T> inline void ReadFromBuffer( const Span<uint8_t>& buffer, size_t& offset, T& destination)
 {
-  if ( offset + sizeof(T) > buffer.size() )
+  if ( offset + sizeof(T) > static_cast<std::size_t>(buffer.size()) )
   {
     throw std::runtime_error("Buffer overrun in RosIntrospection::ReadFromBuffer");
   }
@@ -92,7 +92,7 @@ template <> inline void ReadFromBuffer( const Span<uint8_t>& buffer, size_t& off
   uint32_t string_size = 0;
   ReadFromBuffer( buffer, offset, string_size );
 
-  if( offset + string_size > buffer.size())
+  if( offset + string_size > static_cast<std::size_t>(buffer.size()) )
   {
     throw std::runtime_error("Buffer overrun in RosIntrospection::ReadFromBuffer");
   }
@@ -147,7 +147,7 @@ inline Variant ReadFromBufferToVariant(BuiltinType id, const Span<uint8_t>& buff
   case STRING: {
     uint32_t string_size = 0;
     ReadFromBuffer( buffer, offset, string_size );
-    if( offset + string_size > buffer.size()) {
+    if( offset + string_size > static_cast<std::size_t>(buffer.size()) ) {
       throw std::runtime_error("Buffer overrun");
     }
     Variant var_string(reinterpret_cast<const char*>( &buffer[offset] ), string_size  );

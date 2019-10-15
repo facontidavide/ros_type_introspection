@@ -410,7 +410,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
       {
         ExpandVectorIfNecessary( flat_container->blob, blob_index);
 
-        if( buffer_offset + array_size > buffer.size() )
+        if( buffer_offset + array_size > static_cast<std::size_t>(buffer.size()) )
         {
           throw std::runtime_error("Buffer overrun in deserializeIntoFlatContainer (blob)");
         }
@@ -442,7 +442,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
         bool DO_STORE_ARRAY = DO_STORE;
         for (int i=0; i<array_size; i++ )
         {
-          if( DO_STORE_ARRAY && i >= max_array_size )
+          if( DO_STORE_ARRAY && i >= static_cast<int32_t>(max_array_size) )
           {
               DO_STORE_ARRAY = false;
           }
@@ -518,7 +518,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
   flat_container->blob.resize( blob_index );
   flat_container->blob_storage.resize( blob_storage_index );
 
-  if( buffer_offset != buffer.size() )
+  if( buffer_offset != static_cast<std::size_t>(buffer.size()) )
   {
       char msg_buff[1000];
       sprintf(msg_buff, "buildRosFlatType: There was an error parsing the buffer.\n"
