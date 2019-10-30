@@ -2,8 +2,8 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.0.3 (2019-10-30)
+------------------
 * critical bug fix
 * fix warning
   Fix sign comparison warnings
