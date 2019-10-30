@@ -466,8 +466,15 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
 
             if( DO_STORE_ARRAY )
             {
-              const char* buffer_ptr = reinterpret_cast<const char*>( &buffer[buffer_offset] );
-              flat_container->name[name_index].second.assign( buffer_ptr, string_size);
+              if( string_size == 0)
+              {
+                // corner case, when there is an empty string at the end of the message
+                flat_container->name[name_index].second.clear();
+              }
+              else{
+                const char* buffer_ptr = reinterpret_cast<const char*>( buffer.data() + buffer_offset );
+                flat_container->name[name_index].second.assign( buffer_ptr, string_size );
+              }
               flat_container->name[name_index].first = new_tree_leaf ;
               name_index++;
             }
