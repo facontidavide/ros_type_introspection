@@ -364,7 +364,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
   deserializeImpl = [&](
       const MessageTreeNode* msg_node,
       const StringTreeLeaf& tree_leaf,
-      bool DO_STORE)
+      bool store)
   {
     const ROSMessage* msg_definition = msg_node->value();
     size_t index_s = 0;
@@ -372,6 +372,7 @@ bool Parser::deserializeIntoFlatContainer(const std::string& msg_identifier,
 
     for (const ROSField& field : msg_definition->fields() )
     {
+      bool DO_STORE = store;
       if(field.isConstant() ) continue;
 
       const ROSType&  field_type = field.type();
