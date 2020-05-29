@@ -1,5 +1,10 @@
+# This library will be discontinued !!!
+
+A large refactoring has been done to create a better and simpler library. All the development effort will be moved there.
+
+[ros_msg_parser](https://github.com/facontidavide/ros_msg_parser)
+
 # Ros Message Introspection
-### "If you don't know why you need this library, probably you don't need it".
 
 This simple library extracts information from a ROS Message, even when its
 type is unknown at compilation time. 
