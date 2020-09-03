@@ -2,6 +2,12 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Removed flyweight and fixed potential conversion errors
+* Update README.md
+* Contributors: Davide Faconti
+
 2.0.4 (2019-11-07)
 ------------------
 * Fix bug reported in plotjuggler

@@ -216,7 +216,6 @@ template<typename SRC,typename DST,
          typename details::EnableIf< details::is_safe_integer_conversion<SRC, DST>>* = nullptr >
 inline void convert_impl( const SRC& from, DST& target )
 {
-    //std::cout << "is_safe_integer_conversion" << std::endl;
     target = static_cast<DST>( from);
 }
 
@@ -224,9 +223,16 @@ template<typename SRC,typename DST,
          typename details::EnableIf< details::float_conversion<SRC, DST>>* = nullptr >
 inline void convert_impl( const SRC& from, DST& target )
 {
-    //std::cout << "float_conversion" << std::endl;
-    checkTruncation<SRC,DST>(from);
-    target = static_cast<DST>( from );
+    if( std::isnan(from) ){
+      target = std::numeric_limits<DST>::quiet_NaN();
+    }
+    else if( std::isinf(from) ){
+      target = std::numeric_limits<DST>::infinity();
+    }
+    else{
+      checkTruncation<SRC,DST>(from);
+      target = static_cast<DST>( from );
+    }
 }
 
 
@@ -289,8 +295,6 @@ template<typename SRC,typename DST,
          typename details::EnableIf< details::unsigned_to_smaller_signed_conversion<SRC, DST>>* = nullptr   >
 inline void convert_impl( const SRC& from, DST& target )
 {
-    //std::cout << "unsigned_to_smaller_signed_conversion" << std::endl;
-
     checkUpperLimit<SRC,DST>(from);
     target = static_cast<DST>( from);
 }
@@ -299,13 +303,12 @@ template<typename SRC,typename DST,
          typename details::EnableIf< details::floating_to_signed_conversion<SRC, DST>>* = nullptr   >
 inline void convert_impl( const SRC& from, DST& target )
 {
-    //std::cout << "floating_to_signed_conversion" << std::endl;
-
     checkLowerLimitFloat<SRC,DST>(from);
     checkLowerLimitFloat<SRC,DST>(from);
 
-    if( from != static_cast<SRC>(static_cast<DST>( from)))
-        throw RangeException("Floating point truncated");
+    if( from != static_cast<SRC>(static_cast<DST>( from))){
+      throw RangeException("Floating point truncated");
+    }
 
     target = static_cast<DST>( from);
 }
@@ -314,9 +317,9 @@ template<typename SRC,typename DST,
          typename details::EnableIf< details::floating_to_unsigned_conversion<SRC, DST>>* = nullptr   >
 inline void convert_impl( const SRC& from, DST& target )
 {
-    //std::cout << "floating_to_unsigned_conversion" << std::endl;
-    if ( from < 0 )
-        throw RangeException("Value is negative and can't be converted to signed");
+    if ( from < 0 ){
+      throw RangeException("Value is negative and can't be converted to signed");
+    }
 
     checkLowerLimitFloat<SRC,DST>(from);
 
@@ -330,8 +333,6 @@ template<typename SRC,typename DST,
          typename details::EnableIf< details::integer_to_floating_conversion<SRC, DST>>* = nullptr >
 inline void convert_impl( const SRC& from, DST& target )
 {
-    //std::cout << "floating_to_unsigned_conversion" << std::endl;
-
     checkTruncation<SRC,DST>(from);
     target = static_cast<DST>( from);
 }
