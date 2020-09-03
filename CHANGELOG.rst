@@ -2,8 +2,8 @@
 Changelog for package ros_type_introspection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.1.0 (2020-09-03)
+------------------
 * Removed flyweight and fixed potential conversion errors
 * Update README.md
 * Contributors: Davide Faconti

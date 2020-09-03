@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>ros_type_introspection</name>
-  <version>2.0.4</version>
+  <version>2.1.0</version>
   <description>
   The ros_type_introspection package allows the user to parse and deserialize
   ROS messages which type is unknown at compilation time.
